@@ -1,0 +1,7 @@
+
+Examples of heteroskedasticity?
+- temperature (constant variance)
+- air quality (increasing variance)
+- more examples?
+
+Show how weights differ between WLS and OLS. Could be a cool visual.

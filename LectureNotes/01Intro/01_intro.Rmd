@@ -1,0 +1,596 @@
+---
+title: "Introduction and Overview"
+subtitle: "EC 421, Set 1"
+author: "Edward Rubin"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+# date: "08 January 2019"
+output:
+  xaringan::moon_reader:
+    css: ['default', 'metropolis', 'metropolis-fonts', 'my-css.css']
+    # self_contained: true
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+class: inverse, center, middle
+
+```{r Setup, include = F}
+options(htmltools.dir.version = FALSE)
+library(pacman)
+p_load(leaflet, ggplot2, ggthemes, viridis, dplyr, magrittr, knitr)
+# Define pink color
+red_pink <- "#e64173"
+# Notes directory
+dir_slides <- "~/Dropbox/UO/Teaching/EC421W19/LectureNotes/01Intro/"
+# Knitr options
+opts_chunk$set(
+  comment = "#>",
+  fig.align = "center",
+  fig.height = 7,
+  fig.width = 10.5,
+  # dpi = 300,
+  # cache = T,
+  warning = F,
+  message = F
+)
+```
+
+# Prologue
+
+---
+# Why?
+
+## Motivation
+
+Let's start with a few __basic, general questions:__
+
+--
+
+1. What is the goal of econometrics?
+
+2. Why do economists (or other people) study or use econometrics?
+
+--
+
+__One simple answer:__ Learn about the world using data.
+
+--
+
+- _Learn about the world_ = Raise, answer, and challenge questions, theories, assumptions.
+
+- _data_ = Plural of datum.
+
+---
+# Why?
+
+## Example
+
+GPA is an output from endowments (ability) and hours studied (inputs). So, one might hypothesize a model
+
+$\text{GPA}=f(H, \text{SAT}, \text{PCT})$
+
+where $H$ is hours studied, $\text{SAT}$ is SAT score and $\text{PCT}$ is the percentage of classes an individual attended. We expect that GPA will rise with each of these variables ( $H$, $\text{SAT}$, and $\text{PCT}$).
+
+But who needs to _expect_?
+
+We can test these hypotheses __using a regression model__.
+
+---
+layout: true
+# Why?
+
+## Example, cont.
+
+__Regression model:__
+
+$$ \text{GPA}_i = \beta_0 + \beta_1 H_i + \beta_2 \text{SAT}_i + \beta_3 \text{PCT}_i + \varepsilon_i$$
+
+---
+
+We want to test estimate/test the relationship $\text{GPA}=f(H, \text{SAT}, \text{PCT})$.
+
+---
+
+### (Review) Questions
+
+--
+
+- __Q:__ How do we interpret $\beta_1$?
+--
+
+- __A:__ An additional hour in class correlates with a $\beta_1$ unit increase in an individual's GPA.
+
+
+--
+
+- __Q:__ Are the $\beta_k$ terms population parameters or sample statistics?
+--
+
+- __A:__ Greek letters denote __population parameters__. Their estimates get hats, _e.g._, $\hat{\beta}_k$
+
+
+--
+
+- __Q:__ Can we interpret the estimates for $\beta_2$ as causal?
+--
+
+- __A:__ Not without making more assumptions and/or knowing more about the data-generating process.
+
+
+---
+
+### (Review) Questions
+
+- __Q:__ What is $\varepsilon_i$?
+--
+
+- __A:__ An individual's random deviation/disturbance from the population parameters.
+
+
+--
+
+- __Q:__ What are some of the assumptions imposed by the regression model above?
+--
+
+- __A:__
+  - The relationship between the GPA and the explanatory variables is linear in parameters, and $\varepsilon$ enters additively.
+  - The explanatory variables are __exogenous__, _i.e._, $E[\varepsilon|X] = 0$.
+  - You've also typically assumed: $E[\varepsilon_i] = 0$, $E[\varepsilon_i^2] = \sigma^2$, $E[\varepsilon_i \varepsilon_j] = 0$ for $i \neq j$.
+  - And (maybe) $\varepsilon_i$ is distributed normally.
+
+
+---
+layout: false
+
+# Assumptions
+
+## How important can they be?
+
+You've learned how **powerful and flexible** ordinary least squares (**OLS**) regression can be.
+
+However, the results you learned required assumptions.
+
+**Real life often violates these assumptions.**
+
+--
+
+EC421 asks "**what happens when we violate these assumptions?**"
+- Can we find a fix?
+- What happens if we don't (or can't) apply a fix?
+
+OLS still does some amazing things—but you need to know when to be **cautious, confident, or dubious**.
+
+---
+
+# Not everything is causal
+
+```{R, spurious, echo = F, dev = "svg"}
+tmp <- data.frame(
+  year = 1999:2009,
+  count = c(
+    9, 8, 11, 12, 11, 13, 12, 9, 9, 7, 9,
+    6, 5, 5, 10, 8, 14, 10, 4, 8, 5, 6
+  ),
+  type = rep(c("letters", "deaths"), each = 11)
+)
+ggplot(data = tmp, aes(x = year, y = count, color = type)) +
+  geom_path() +
+  geom_point(size = 4) +
+  xlab("Year") +
+  ylab("Count") +
+  scale_color_manual(
+    "",
+    labels = c("Deaths from spiders", "Letters in the winning spelling bee word"),
+    values = c(red_pink, "darkslategray")
+  ) +
+  theme_pander(base_size = 17) +
+  theme(legend.position = "bottom")
+```
+
+---
+
+# Econometrics
+
+An applied econometrician<sup>†</sup> needs a solid grasp on (at least) three areas:
+
+1. The __theory__ underlying econometrics (assumptions, results, strengths, weaknesses).
+
+1. How to __apply theoretical methods__ to actual data.
+
+1. Efficient methods for __working with data__—cleaning, aggregating, joining, visualizing.
+
+.footnote[
+[†]: _Applied econometrician_ .mono[=] Practitioner of econometrics, _e.g._, analyst, consultant, data scientist.
+]
+
+--
+
+__This course__ aims to deepen your knowledge in each of these three areas.
+
+--
+
+- 1: As before.
+- 2–3: __.mono[R]__
+
+---
+class: inverse, center, middle
+# .mono[R]
+
+---
+layout: true
+# .mono[R]
+
+---
+
+## What is .mono[R]?
+
+To quote the [.mono[R] project website](https://www.r-project.org):
+
+> R is a free software environment for statistical computing and graphics. It compiles and runs on a wide variety of UNIX platforms, Windows and MacOS.
+
+--
+
+What does that mean?
+
+- .mono[R] was created for the statistical and graphical work required by econometrics.
+
+- .mono[R] has a vibrant, thriving, and (generally) helpful community. (See: [stack overflow [r]](https://stackoverflow.com/questions/tagged/r))
+
+- Plus it's __free__ and __open source__.
+
+---
+
+## Why are we using .mono[R]?
+
+1. .mono[R] is __free__ and __open source__—saving both you and the university .mono[$$$].
+
+1. _Related:_ Outside of a small group of economists, private- and public-sector __employers favor .mono[R]__ over .mono[Stata] and most competing softwares. (Also: .mono[Python].)
+
+1. .mono[R] is very __flexible and powerful__—adaptable to nearly any task, _e.g._, 'metrics, spatial data analysis, machine learning, web scraping, data cleaning, website building, teaching. My website, the TWEEDS website, and these notes all came out of .mono[R].
+
+1. _Related:_ .mono[R] imposes __no limitations__ on your amount of observations, variables, memory, or processing power. (I'm looking at __you__, .mono[Stata].)
+
+1. If you put in the work,<sup>†</sup> you will come away with a __valuable and marketable__ tool.
+
+1. __.mono[I ♡ R]__
+
+
+.footnote[
+[†]: Learning .mono[R] definitely requires time and effort.
+]
+---
+
+```{R, statistical languages, echo = F, fig.height = 6, fig.width = 9, dev = "svg"}
+# The popularity data
+pop_df <- data.frame(
+  lang = c("SQL", "Python", "R", "SAS", "Matlab", "SPSS", "Stata"),
+  n_jobs = c(107130, 66976, 48772, 25644, 11464, 3717, 1624),
+  free = c(T, T, T, F, F, F, F)
+)
+pop_df %<>% mutate(lang = lang %>% factor(ordered = T))
+# Plot it
+ggplot(data = pop_df, aes(x = lang, y = n_jobs, fill = free)) +
+geom_col() +
+geom_hline(yintercept = 0) +
+aes(x = reorder(lang, -n_jobs), fill = reorder(free, -free)) +
+xlab("Statistical language") +
+scale_y_continuous(label = scales::comma) +
+ylab("Number of jobs") +
+ggtitle(
+  "Comparing statistical languages",
+  subtitle = "Number of job postings on Indeed.com, 2019/01/06"
+) +
+scale_fill_manual(
+  "Free?",
+  labels = c("True", "False"),
+  values = c(red_pink, "darkslategray")
+) +
+theme_pander(base_size = 17) +
+theme(legend.position = "bottom")
+```
+
+---
+
+layout: false
+class: inverse, center, middle
+# .mono[R] + [Examples]
+
+---
+
+# .mono[R] + Regression
+
+```{R, example: lm}
+# A simple regression
+{{fit <- lm(dist ~ 1 + speed, data = cars)}}
+# Show the coefficients
+coef(summary(fit))
+# A nice, clear table
+library(broom)
+tidy(fit)
+```
+
+---
+
+# .mono[R] + Plotting (w/ .mono[plot])
+
+```{R, example: plot, echo = F, dev = "svg"}
+# Load packages with dataset
+library(gapminder)
+# Create dataset
+plot(
+  x = gapminder$gdpPercap, y = gapminder$lifeExp,
+  xlab = "GDP per capita", ylab = "Life Expectancy"
+)
+```
+
+---
+
+# .mono[R] + Plotting (w/ .mono[plot])
+
+```{R, example: plot code, eval = F}
+# Load packages with dataset
+library(gapminder)
+
+# Create dataset
+plot(
+  x = gapminder$gdpPercap, y = gapminder$lifeExp,
+  xlab = "GDP per capita", ylab = "Life Expectancy"
+)
+```
+
+---
+
+# .mono[R] + Plotting (w/ .mono[ggplot2])
+
+```{R, example: ggplot2 v1, echo = F, dev = "svg"}
+# Load packages
+library(gapminder); library(dplyr)
+# Create dataset
+ggplot(data = gapminder, aes(x = gdpPercap, y = lifeExp)) +
+geom_point(alpha = 0.75) +
+scale_x_continuous("GDP per capita", label = scales::comma) +
+ylab("Life Expectancy") +
+theme_pander(base_size = 16)
+```
+
+---
+
+# .mono[R] + Plotting (w/ .mono[ggplot2])
+
+```{R, example: ggplot2 v1 code, eval = F}
+# Load packages
+library(gapminder); library(dplyr)
+
+# Create dataset
+ggplot(data = gapminder, aes(x = gdpPercap, y = lifeExp)) +
+geom_point(alpha = 0.75) +
+scale_x_continuous("GDP per capita", label = scales::comma) +
+ylab("Life Expectancy") +
+theme_pander(base_size = 16)
+```
+
+---
+
+# .mono[R] + More plotting (w/ .mono[ggplot2])
+
+```{R, example: ggplot2 v2, echo = F, dev = "svg"}
+# Load packages
+library(gapminder); library(dplyr)
+# Create dataset
+ggplot(
+  data = filter(gapminder, year %in% c(1952, 2002)),
+  aes(x = gdpPercap, y = lifeExp, color = continent, group = country)
+) +
+geom_path(alpha = 0.25) +
+geom_point(aes(shape = as.character(year), size = pop), alpha = 0.75) +
+scale_x_log10("GDP per capita", label = scales::comma) +
+ylab("Life Expectancy") +
+scale_shape_manual("Year", values = c(1, 17)) +
+scale_color_viridis("Continent", discrete = T, end = 0.95) +
+guides(size = F) +
+theme_pander(base_size = 16)
+```
+
+---
+
+# .mono[R] + More plotting (w/ .mono[ggplot2])
+
+```{R, example: ggplot2 v2 code, eval = F}
+# Load packages
+library(gapminder); library(dplyr)
+
+# Create dataset
+ggplot(
+  data = filter(gapminder, year %in% c(1952, 2002)),
+  aes(x = gdpPercap, y = lifeExp, color = continent, group = country)
+) +
+geom_path(alpha = 0.25) +
+geom_point(aes(shape = as.character(year), size = pop), alpha = 0.75) +
+scale_x_log10("GDP per capita", label = scales::comma) +
+ylab("Life Expectancy") +
+scale_shape_manual("Year", values = c(1, 17)) +
+scale_color_viridis("Continent", discrete = T, end = 0.95) +
+guides(size = F) +
+theme_pander(base_size = 16)
+```
+
+---
+
+# .mono[R] + Animated plots (w/ .mono[gganimate])
+
+```{R, example: gganimate, include = F, cache = T}
+# The package for animating ggplot2
+library(gganimate)
+# As before
+gg <- ggplot(
+  data = gapminder %>% filter(continent != "Oceania"),
+  aes(gdpPercap, lifeExp, size = pop, color = country)
+) +
+geom_point(alpha = 0.7, show.legend = FALSE) +
+scale_colour_manual(values = country_colors) +
+scale_size(range = c(2, 12)) +
+scale_x_log10("GDP per capita", label = scales::comma) +
+facet_wrap(~continent) +
+theme_pander(base_size = 16) +
+theme(panel.border = element_rect(color = "grey90", fill = NA)) +
+# Here comes the gganimate-specific bits
+labs(title = "Year: {frame_time}") +
+ylab("Life Expectancy") +
+transition_time(year) +
+ease_aes("linear")
+# Save the animation
+anim_save(
+  animation = gg,
+  filename = "ex_gganimate.gif",
+  path = dir_slides,
+  width = 10.5,
+  height = 7,
+  units = "in",
+  res = 150,
+  nframes = 56
+)
+```
+
+.center[![Gapminder](ex_gganimate.gif)]
+---
+
+# .mono[R] + Animated plots (w/ .mono[gganimate])
+
+```{R, example: gganimate code, eval = F}
+# The package for animating ggplot2
+library(gganimate)
+# As before
+ggplot(
+  data = gapminder %>% filter(continent != "Oceania"),
+  aes(gdpPercap, lifeExp, size = pop, color = country)
+) +
+geom_point(alpha = 0.7, show.legend = FALSE) +
+scale_colour_manual(values = country_colors) +
+scale_size(range = c(2, 12)) +
+scale_x_log10("GDP per capita", label = scales::comma) +
+facet_wrap(~continent) +
+theme_pander(base_size = 16) +
+theme(panel.border = element_rect(color = "grey90", fill = NA)) +
+# Here comes the gganimate-specific bits
+labs(title = "Year: {frame_time}") +
+ylab("Life Expectancy") +
+transition_time(year) +
+ease_aes("linear")
+```
+
+---
+
+# .mono[R] + Maps
+
+```{R, example: leaflet, fig.height = 6, dev = "svg"}
+library(leaflet)
+leaflet() %>%
+  addTiles() %>%
+  addMarkers(lng = -123.075, lat = 44.045, popup = "The University of Oregon")
+```
+
+---
+class: inverse, center, middle
+# Getting started with .mono[R]
+
+---
+layout: true
+# Starting .mono[R]
+
+---
+
+## Installation
+
+- Install [.mono[R]](https://www.r-project.org/).
+
+- Install [.mono[RStudio]](https://www.rstudio.com/products/rstudio/download/preview/).
+
+- __Optional/Overkill:__ [Git](https://git-scm.com/downloads)
+  - Create an account on [GitHub](https://github.com/)
+  - Register for a student/educator [discount](https://education.github.com/discount_requests/new).
+  - For installation guidance and troubleshooting, check out Jenny Bryan's [website](http://happygitwithr.com/).
+
+- __Note:__ The lab in 442 McKenzie has .mono[R] installed and ready. That said, having a copy of .mono[R] on your own computer will likely be very convenient for homework, projects, _etc._
+
+---
+
+## Resources
+
+### Free(-ish)
+
+- Google (which inevitably leads to StackOverflow)
+- Time
+- Your classmates
+- Your GEs
+- Me
+- .mono[R] resources [here](http://edrub.in/ARE212/resources.html)
+
+### Money
+
+- Book: [_R for Stata Users_](http://r4stats.com/books/r4stata/)
+- Short online course: [DataCamp](https://www.datacamp.com)
+
+
+---
+
+## Some .mono[R] basics
+
+You will dive deeper into .mono[R] in lab, but here six big points about .mono[R]:
+
+.pull-left[
+
+1. Everything is an __object__.
+
+1. Every object has a __name__ and __value__.
+
+1. You use __functions__ on these objects.
+
+1. Functions come in __libraries__ (__packages__)
+
+1. .mono[R] will try to __help__ you.
+
+1. .mono[R] has its __quirks__.
+
+]
+
+.pull-right[
+
+`foo`
+
+`foo <- 2`
+
+`mean(foo)`
+
+`library(dplyr)`
+
+`?dplyr`
+
+`NA; error; warning`
+
+]
+
+---
+
+## .mono[R] _vs._ .mono[Stata]
+
+Coming from .mono[Stata], here are a few important changes (benefits):
+
+- Multiple objects and arrays (_e.g._, data frames) can exist in the same workspace (in memory). No more `keep`, `preserve`, `restore`, `snapshot` nonsense!
+
+- (Base) .mono[R] comes with lots of useful built-in functions—and provides all the tools necessary for you to build your own functions. However, many of the _best_ functions come from external libraries.
+
+- You don't need to `tset` or `xtset` data (you can if you really want to... `ts`).
+
+---
+layout: false
+class: inverse, center, middle
+
+# Next: Metrics review
+
+---
+exclude: true
+
+```{R, generate pdfs, include = F}
+system("decktape remark 01_intro.html 01_intro.pdf --chrome-arg=--allow-file-access-from-files")
+```

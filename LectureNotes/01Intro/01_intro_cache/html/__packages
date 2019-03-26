@@ -1,0 +1,14 @@
+base
+pacman
+leaflet
+ggplot2
+ggthemes
+viridisLite
+viridis
+dplyr
+magrittr
+bindrcpp
+broom
+gapminder
+gganimate
+knitr

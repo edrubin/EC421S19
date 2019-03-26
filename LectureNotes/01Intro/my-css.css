@@ -1,0 +1,16 @@
+
+/* Create a highlighted class called 'hi'  */
+.hi {
+  font-style: oblique;
+}
+/* Mono-spaced font */
+.mono {
+  font-family: monospace;
+}
+
+.title-slide > h2  {
+  color: rgba(249, 38, 114, 0.75);
+  /* color: #afafaf; */
+}
+
+.remark-code-line-highlighted     { background-color: rgba(249, 39, 114, 0.75); }

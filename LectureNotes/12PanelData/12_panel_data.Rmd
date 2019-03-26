@@ -1,0 +1,687 @@
+---
+title: "Panel Data"
+subtitle: "EC 421, Set 11"
+author: "Edward Rubin"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  xaringan::moon_reader:
+    css: ['default', 'metropolis', 'metropolis-fonts', 'my-css.css']
+    # self_contained: true
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+class: inverse, middle
+
+```{R, setup, include = F}
+# devtools::install_github("dill/emoGG")
+library(pacman)
+p_load(
+  broom, here, tidyverse,
+  emoGG, latex2exp, ggplot2, ggthemes, ggforce, viridis, extrafont, gridExtra,
+  wooldridge,
+  kableExtra, snakecase, janitor,
+  data.table, dplyr, estimatr,
+  lubridate,
+  lfe,
+  magrittr, knitr, parallel
+)
+# Define pink color
+red_pink <- "#e64173"
+turquoise <- "#20B2AA"
+orange <- "#FFA500"
+red <- "#fb6107"
+blue <- "#2b59c3"
+green <- "#8bb174"
+grey_light <- "grey70"
+grey_mid <- "grey50"
+grey_dark <- "grey20"
+purple <- "#6A5ACD"
+slate <- "#314f4f"
+# Dark slate grey: #314f4f
+# Knitr options
+opts_chunk$set(
+  comment = "#>",
+  fig.align = "center",
+  fig.height = 7,
+  fig.width = 10.5,
+  warning = F,
+  message = F
+)
+opts_chunk$set(dev = "svg")
+options(device = function(file, width, height) {
+  svg(tempfile(), width = width, height = height)
+})
+options(crayon.enabled = F)
+options(knitr.table.format = "html")
+# A blank theme for ggplot
+theme_empty <- theme_bw() + theme(
+  line = element_blank(),
+  rect = element_blank(),
+  strip.text = element_blank(),
+  axis.text = element_blank(),
+  plot.title = element_blank(),
+  axis.title = element_blank(),
+  plot.margin = structure(c(0, 0, -0.5, -1), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_simple <- theme_bw() + theme(
+  line = element_blank(),
+  panel.grid = element_blank(),
+  rect = element_blank(),
+  strip.text = element_blank(),
+  axis.text.x = element_text(size = 18, family = "STIXGeneral"),
+  axis.text.y = element_blank(),
+  axis.ticks = element_blank(),
+  plot.title = element_blank(),
+  axis.title = element_blank(),
+  # plot.margin = structure(c(0, 0, -1, -1), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_axes_math <- theme_void() + theme(
+  text = element_text(family = "MathJax_Math"),
+  axis.title = element_text(size = 22),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, 0.15, 0, 0, unit = "lines")),
+  axis.line = element_line(
+    color = "grey70",
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.15, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_axes_serif <- theme_void() + theme(
+  text = element_text(family = "MathJax_Main"),
+  axis.title = element_text(size = 22),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, 0.15, 0, 0, unit = "lines")),
+  axis.line = element_line(
+    color = "grey70",
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.15, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_axes <- theme_void() + theme(
+  text = element_text(family = "Fira Sans Book"),
+  axis.title = element_text(size = 18),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, 0.15, 0, 0, unit = "lines")),
+  axis.line = element_line(
+    color = grey_light,
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.15, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_set(theme_gray(base_size = 20))
+# Column names for regression results
+reg_columns <- c("Term", "Est.", "S.E.", "t stat.", "p-Value")
+# Function for formatting p values
+format_pvi <- function(pv) {
+  return(ifelse(
+    pv < 0.0001,
+    "<0.0001",
+    round(pv, 4) %>% format(scientific = F)
+  ))
+}
+format_pv <- function(pvs) lapply(X = pvs, FUN = format_pvi) %>% unlist()
+# Tidy regression results table
+tidy_table <- function(x, terms, highlight_row = 1, highlight_color = "black", highlight_bold = T, digits = c(NA, 3, 3, 2, 5), title = NULL) {
+  x %>%
+    tidy() %>%
+    select(1:5) %>%
+    mutate(
+      term = terms,
+      p.value = p.value %>% format_pv()
+    ) %>%
+    kable(
+      col.names = reg_columns,
+      escape = F,
+      digits = digits,
+      caption = title
+    ) %>%
+    kable_styling(font_size = 20) %>%
+    row_spec(1:nrow(tidy(x)), background = "white") %>%
+    row_spec(highlight_row, bold = highlight_bold, color = highlight_color)
+}
+```
+
+# Prologue
+
+---
+name: schedule
+
+# Schedule
+
+## Last Time
+
+Instrumental variables and causality
+
+## Today
+
+Panel data
+
+## Upcoming
+
+- Assignment due .hi[Saturday]
+- Final on Monday
+---
+name: final_review
+# Final
+## Information
+
+1. The final is .hi[Monday].
+  - The final will .hi[cover *all* material] from this course.
+  - Expect .hi[recent topics] (time series to today) to dominate.
+  - Don't neglect .hi[major topics] (_e.g._, omitted-variable bias).
+1. This week's .hi[labs] will cover IV and homework.
+1. .hi[Review session] this weekend w/ GEs.
+---
+layout: false
+class: inverse, middle
+# Panel data
+---
+layout: true
+# Panel data
+## Intro
+---
+exlcude: true
+
+```{R, load_data, include = F, cache = T}
+panel_df <- read_csv("ukcpr.csv") %>%
+  clean_names() %>%
+  group_by(state_name, year) %>%
+  transmute(
+    min_wage = max(federal_minimum_wage, state_minimum_wage),
+    poverty_rate = poverty_rate
+  ) %>%
+  ungroup() %>%
+  rename(state = state_name)
+```
+
+
+---
+name: intro
+
+We've considered two types of data (each with one dimension):
+
+--
+
+.pull-left[
+.hi-orange[Cross-sectional data:] individual $i$
+```{R, cross_sectional_data, echo = F}
+panel_df %>% filter(year == 2017) %>% data.frame() %>% tail(7)
+```
+]
+
+--
+
+.pull-right[
+.hi-purple[Time-series data:] time $t$
+```{R, time_series_data, echo = F}
+panel_df %>% filter(state == "OR") %>% data.frame() %>% tail(7)
+```
+]
+---
+count: false
+
+We've considered two types of data (each with one dimension):
+
+.pull-left[
+.hi-orange[Cross-sectional data:] individual $i$
+```{R, cross_sectional_plot, echo = F}
+panel_df %>% filter(year == 2017) %>%
+  ggplot(data = ., aes(x = min_wage, y = poverty_rate)) +
+  geom_point(size = 6, alpha = 0.9, color = orange) +
+  xlab("Min. wage") +
+  ylab("Poverty rate") +
+  theme_pander(base_size = 40, base_family = "Fira Sans Book")
+```
+]
+
+.pull-right[
+.hi-purple[Time-series data:] time $t$
+```{R, time_series_plot, echo = F}
+panel_df %>% filter(state == "OR") %>%
+  ggplot(data = ., aes(x = year, y = poverty_rate)) +
+  geom_line(size = 0.8, color = purple, alpha = 0.9) +
+  geom_point(size = 6, alpha = 1, color = purple) +
+  xlab("Year") +
+  ylab("Poverty rate") +
+  theme_pander(base_size = 40, base_family = "Fira Sans Book")
+```
+]
+
+--
+
+.hi-pink[*Panel data*] combine these data types/dimensions: individual $i$ **at** time $t$.
+---
+layout: false
+class: clear
+
+.hi-pink[*Panel data*] combine these data types/dimensions: individual $i$ **at** time $t$.
+
+```{R, panel_plot, echo = F}
+panel_df %>% filter(state %in% c("CA", "OR", "WA")) %>%
+  ggplot(data = ., aes(x = year, y = poverty_rate, color = state)) +
+  geom_point(size = 3.5, alpha = 0.4) +
+  geom_line(size = 0.5) +
+  xlab("Year") +
+  ylab("Poverty rate") +
+  scale_color_viridis_d("State", option = "C", end = 0.9) +
+  theme_pander(base_size = 18, base_family = "Fira Sans Book") +
+  theme(legend.position = "bottom")
+```
+---
+layout: true
+# Panel data
+---
+name: definition
+
+## Definition
+
+.pull-left[
+
+With .hi-pink[*panel data*], we have
+
+- .hi-purple[repeated observations] $(t)$
+- on .hi-orange[multiple indiviuals] $(i)$.
+]
+
+--
+
+.pull-right[
+```{R, panel_data, echo = F}
+panel_df %>%
+  filter(state %in% c("CA", "OR", "WA")) %>%
+  filter(year %in% c(1990, 2000, 2010)) %>%
+  select(state, year, poverty_rate, min_wage) %>%
+  arrange(state, year) %>%
+  data.frame()
+```
+]
+
+--
+
+Thus, our regression equation with a panel dataset looks like
+$$
+\begin{align}
+  y_{\color{#FFA500}{i}\color{#6A5ACD}{t}} = \beta_0 + \beta_1 x_{\color{#FFA500}{i}\color{#6A5ACD}{t}} + u_{\color{#FFA500}{i}\color{#6A5ACD}{t}}
+\end{align}
+$$
+for .orange[individual] $\color{#FFA500}{i}$ in .purple[time] $\color{#6A5ACD}{t}$.
+---
+name: ex_wage
+
+## Example
+
+Minimum-wage laws involve many contentious/important policy questions.
+
+- Do minimum-wage laws .hi[increase well-being] for minimum-wage earners and their families?
+- Do minimum-wage laws .hi[increase unemployment]?
+- Overall, do minimum-wage laws .hi[decrease poverty]?
+
+--
+
+We want to know the causal effect of the minimum wage, _i.e._, $\beta_1$ in
+$$
+\begin{align}
+  \left( \text{Poverty Rate} \right)_{it} = \beta_0 + \beta_1 \left( \text{Min. Wage} \right)_{it} + u_{it}
+\end{align}
+$$
+where $i$ denotes state and $t$ indexes year.
+---
+
+## Example
+
+If we go ahead and run OLS in our panel, we find
+
+--
+
+```{R, wage_ols, echo = F, escape = F}
+lm(poverty_rate ~ min_wage, data = panel_df) %>%
+  tidy_table(c("Intercept", "Min. Wage"), 2, red_pink, title = "OLS w/ outcome variable 'poverty rate'")
+```
+
+--
+
+which suggests that a one-dollar increase in the minimum wage significantly .pink[*reduces*] poverty by approximately 0.203 percentage points.
+
+--
+
+Surprising?
+
+---
+
+## Example: Causality is still hard
+
+To isolate the causal effect of minimum wage on poverty in
+$$
+\begin{align}
+  \left( \text{Poverty Rate} \right)_{it} = \beta_0 + \beta_1 \left( \text{Min. Wage} \right)_{it} + u_{it}
+\end{align}
+$$
+We still need exogeneity, _i.e._, $\mathop{\boldsymbol{E}}\left[ u_{it} \mid \left( \text{Min. Wage} \right) \right] = 0$.
+
+--
+
+.hi[Exogeneity with *panel data:*] Are there omitted factors that affect both a state's minimum wage *and* its poverty rate?
+
+--
+
+We are going to discuss two common panel-data strategies:
+
+1. .hi[Fixed effects]
+2. .hi[First differences]
+---
+name: fe
+
+## Fixed effects
+
+.hi[*Fixed effects*] are binary indicator variables that *help* control for unobserved differences across individuals or time periods.
+
+For example, we can include a .hi-orange[fixed effect for each individual state] $\color{#FFA500}{i}$ to control for unobserved, time-invariant differences between states:
+
+--
+
+$$
+\begin{align}
+  \left( \text{Poverty Rate} \right)_{it} = \beta_0 + \beta_1 \left( \text{Min. Wage} \right)_{it} + \color{#FFA500}{\text{State}_i} + u_{it}
+\end{align}
+$$
+
+--
+
+```{R, ex_state_fe, echo = F}
+panel_df %>%
+  filter(state %in% c("CA", "OR", "WA")) %>%
+  filter(year %in% c(2000, 2010)) %>%
+  select(state, year, poverty_rate, min_wage) %>%
+  arrange(state, year) %>%
+  mutate(
+    fe_ca = 1 * (state == "CA"),
+    fe_or = 1 * (state == "OR"),
+    fe_wa = 1 * (state == "WA"),
+  ) %>%
+  data.frame()
+```
+---
+
+## Fixed effects
+
+Notice that these individual fixed effects are just .pink[individual-specific intercepts]—now each unit/individual gets her own intercept.
+
+--
+
+**Q:** What are these individual-level fixed effects (FEs) doing?
+
+--
+
+**A.sub[1]:** They remove each individual's mean, _i.e._, $y_{it} - \overline{y}_i$ and $x_{it} - \overline{x}_i$.
+
+--
+
+**A.sub[2]:** They control for unobserved, time-invariant differences between units.<sup>.pink[†]</sup>
+
+.footnote[
+.pink[†] By *time-invariance differences* we mean differences between individuals that do not change over time.
+]
+---
+layout: false
+class: clear
+
+In the raw data (no fixed effects/demeaning), individuals differ in levels.
+
+```{R, panel_plot_raw, echo = F}
+panel_df %>% filter(state %in% c("CA", "OR", "WA")) %>%
+  ggplot(data = ., aes(x = year, y = poverty_rate, color = state)) +
+  geom_point(size = 3.5, alpha = 0.4) +
+  geom_line(size = 0.5) +
+  xlab("Year") +
+  ylab("Poverty rate") +
+  scale_color_viridis_d("State", option = "C", end = 0.9) +
+  theme_pander(base_size = 18, base_family = "Fira Sans Book") +
+  theme(legend.position = "bottom")
+```
+---
+class: clear
+
+Individual-fixed effects remove individuals' means.
+
+```{R, panel_plot_fe, echo = F}
+panel_df %>% filter(state %in% c("CA", "OR", "WA")) %>%
+  group_by(state) %>%
+  mutate(poverty_rate = poverty_rate - mean(poverty_rate)) %>%
+  ggplot(data = ., aes(x = year, y = poverty_rate, color = state)) +
+  geom_point(size = 3.5, alpha = 0.4) +
+  geom_line(size = 0.5) +
+  xlab("Year") +
+  ylab("Poverty rate, demeaned") +
+  scale_color_viridis_d("State", option = "C", end = 0.9) +
+  theme_pander(base_size = 18, base_family = "Fira Sans Book") +
+  theme(legend.position = "bottom")
+```
+---
+layout: true
+# Panel data
+## Fixed effects
+---
+
+Fixed effects are one method econometricians try to "match" individuals to generate a valid control group for our treated individuals.
+
+Toward this goal, we include .hi-purple[fixed effects for each time period] $\color{#6A5ACD}{t}$, to (attempt to) control for shocks that affected all observations.
+
+--
+
+$$
+\begin{align}
+  \left( \text{Poverty Rate} \right)_{it} = \beta_0 + \beta_1 \left( \text{Min. Wage} \right)_{it} + \color{#FFA500}{\text{State}_i} + \color{#6A5ACD}{\text{Year}_t} + u_{it}
+\end{align}
+$$
+
+```{R, ex_both_fe, echo = F}
+panel_df %>%
+  filter(state %in% c("CA", "OR", "WA")) %>%
+  filter(year %in% c(2000, 2010)) %>%
+  select(state, year, poverty_rate, min_wage) %>%
+  arrange(state, year) %>%
+  mutate(
+    fe_ca = 1 * (state == "CA"),
+    fe_or = 1 * (state == "OR"),
+    fe_wa = 1 * (state == "WA"),
+    fe_2000 = 1 * (year == 2000),
+    fe_2010 = 1 * (year == 2010)
+  ) %>%
+  data.frame()
+```
+---
+layout: true
+# Panel data
+## Fixed-effects estimation in .mono[R]
+---
+
+.mono[R] makes estimation with fixed-effects really easy.
+
+--
+
+As always, you have options.
+
+We're going to use the `felm()` function from the `lfe` package.
+
+--
+
+.hi[General notation:]<br> `felm(y ~ x1 + x2 + ⋯ | fe1 + fe2 ⋯, data = some_data)`
+
+--
+
+.hi[Our example:]<br> `felm(poverty_rate ~ min_wage | state + year, data = panel_df)`
+---
+
+`felm(poverty_rate ~ min_wage | state + year, data = panel_df)`
+
+--
+
+```{R, wage_fe, echo = F}
+felm(poverty_rate ~ min_wage | state + year, data = panel_df) %>%
+  tidy_table(c("Min. Wage"), 1, orange, title = "Fixed effects w/ outcome variable 'poverty rate'")
+```
+
+--
+
+`lm(poverty_rate ~ min_wage, data = panel_df)`
+
+```{R, wage_ols2, echo = F}
+lm(poverty_rate ~ min_wage, data = panel_df) %>%
+  tidy_table(c("Intercept", "Min. Wage"), 2, slate, title = "OLS w/ outcome variable 'poverty rate'")
+```
+---
+
+**Q:** Which set of estimates should we believe?
+
+--
+
+**A:** The set that you believe meets our exogeneity requirement.
+---
+layout: true
+# Panel data
+## First differences
+---
+name: diff
+
+Another route—related to our time-series studies—uses .hi[*first differences*].
+
+--
+
+The .hi[*first difference*] for variable $y$ is the difference between individual $i$'s current value of $y$ (_i.e._, $y_{i,t}$) and his previous (lagged) value of $y$ (_i.e._, $y_{i,t-1}$).
+
+--
+
+We write the first difference as
+
+$$
+\begin{align}
+  \Delta y_{it} = y_{i,t} - y_{i,t-1}
+\end{align}
+$$
+---
+
+From our example, write the model for $t$ and $t-1$
+
+$$
+\begin{align}
+  \left( \text{Poverty Rate} \right)_{i,t} &= \beta_0 + \beta_1 \left( \text{Min. Wage} \right)_{i,t} + u_{i,t} \tag{t} \\
+  \left( \text{Poverty Rate} \right)_{i,t-1} &= \beta_0 + \beta_1 \left( \text{Min. Wage} \right)_{i,t-1} + u_{i,t-1} \tag{t-1}
+\end{align}
+$$
+
+--
+
+taking the difference between $(t)$ and $(t-1)$ gives
+
+$$
+\begin{align}
+  \left( \text{Poverty Rate} \right)_{i,t} - \left( \text{Poverty Rate} \right)_{i,t-1} =& \\
+  \beta_0 - \beta_0 + \beta_1 \left( \text{Min. Wage} \right)_{i,t} - &\beta_1 \left( \text{Min. Wage} \right)_{i,t-1} + u_{i,t} - u_{i,t-1}
+\end{align}
+$$
+
+--
+
+which implies
+
+$$
+\begin{align}
+  \Delta\left( \text{Poverty Rate} \right)_{i,t} &= \beta_1 \Delta \left( \text{Min. Wage} \right)_{i,t} + \Delta u_{i,t}
+\end{align}
+$$
+---
+
+Estimating our model via first differences gives us the results
+
+```{R, wage_fd, echo = F}
+# Create first-differenced data
+fd_df <- panel_df %>%
+  group_by(state) %>%
+  arrange(state, year) %>%
+  mutate(
+    poverty_diff = poverty_rate - lag(poverty_rate),
+    wage_diff = min_wage - lag(min_wage)
+  )
+lm(poverty_diff ~ wage_diff, data = fd_df) %>%
+  tidy_table(
+    c("Intercept", "Min. Wage"),
+    2, red_pink,
+    title = "First diff. w/ outcome variable 'poverty rate'"
+  )
+```
+.white[space]
+<br>
+
+--
+
+.pull-left[
+```{R, fd_compare_fe, echo = F}
+felm(poverty_rate ~ min_wage | state + year, data = panel_df) %>%
+  tidy_table(c("Min. Wage"), 1, orange, title = "Fixed effects w/ outcome variable 'poverty rate'")
+```
+]
+
+--
+
+.pull-right[
+```{R, fd_compare_ols, echo = F}
+lm(poverty_rate ~ min_wage, data = panel_df) %>%
+  tidy_table(c("Intercept", "Min. Wage"), 2, slate, title = "OLS w/ outcome variable 'poverty rate'")
+```
+]
+
+---
+layout: false
+class: clear, middle
+
+**Q:** Conclusions?
+
+--
+
+**A:** Models (and their requirements) can .hi[*really*] affect your results
+---
+class: clear, middle
+
+Evaluations
+
+---
+layout: false
+# Table of contents
+
+.pull-left[
+### Admin
+.smallest[
+
+1. [Schedule](#schedule)
+1. [Final info](#final_review)
+]
+]
+
+.pull-right[
+### Panel data
+.smallest[
+
+1. [Introduction](#intro)
+1. [Definition](#definition)
+1. [Example: Minimum wage](#ex_wage)
+1. [Fixed effects](#fe)
+1. [Fixed effects in .mono[R]](#fe_r)
+1. [First differences](#diff)
+]
+]
+---
+exclude: true
+
+```{R, generate pdfs, include = F, eval = T}
+system("decktape remark 12_panel_data.html 12_panel_data.pdf --chrome-arg=--allow-file-access-from-files")
+```

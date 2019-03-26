@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Causality</title>
+    <meta charset="utf-8">
+    <meta name="author" content="Edward Rubin" />
+    <meta name="date" content="2019-02-28" />
+    <link href="10_causality_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="10_causality_files/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+    <link href="10_causality_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
+    <script src="10_causality_files/kePrint-0.0.1/kePrint.js"></script>
+    <link rel="stylesheet" href="my-css.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Causality
+## EC 421, Set 10
+### Edward Rubin
+### 28 February 2019
+
+---
+
+class: inverse, middle
+
+
+
+# Prologue
+
+---
+name: schedule
+
+# Schedule
+
+## Last Time
+
+- Autocorrelation, nonstationarity, 'in-class' analysis
+- **Follow up:** .mono[EC422] (time series) is only offered in the winter. 😢
+- **Follow up:** .mono[EC410] (computational economics) in the spring! 😃
+- **Follow up:** .mono[R] is mainly written in .mono[C], .mono[R], and .mono[Fortran].
+
+## Today
+
+- Return to our in-class examples
+- Causality
+
+## Upcoming
+
+**Assignment** due Sunday. Another one coming soon.
+---
+layout: true
+# .mono[R] showcase
+---
+name: r_showcase
+
+## Problems and strategies
+
+
+**Step 1:** Define the problem.
+&lt;br&gt;.hi[Q:] What was the problem/goal/objective for the analysis?
+--
+&lt;br&gt;.hi[A:] For `\(y_1\)` and `\(y_2\)` each, find the .hi[true] model.
+
+--
+
+**Clarification:**
+&lt;br&gt;.hi[Q:] What does the .pink[*true model*] for `\(y_1\)` mean?
+&lt;br&gt;  (**A**) The variables that best explain/predict `\(y_1\)`.
+&lt;br&gt;  (**B**) The variables that are statistically significant.
+&lt;br&gt;  (**C**) The variables that actually generated `\(y_1\)`.
+&lt;br&gt;  (**D**) Something else?
+--
+&lt;br&gt;.hi[A:] .hi[(C)] We want to know variables and coefficients generated `\(y_1\)`.
+--
+&lt;br&gt; The .hi[true data-generating process] (DGP).
+
+---
+
+## Problems and strategies
+
+**Step 2:** Define your strategy
+
+How did you approach this problem?
+
+--
+
+A few options:
+
+1. Find the combination of variables that .hi[maximize R.super[2]] or .hi[adjusted R.super[2]].
+1. First .hi[include all] variables. Keep statistically .hi[significant variables].
+1. Iterate with (2.): .hi[Drop non-significant variables] until nothing changes.
+1. .hi[Add variables one by one]. Keep statistically .hi[significant variables].
+1. .hi[Plot] variables' (or residuals') relationships with `\(y\)`.
+
+---
+layout: false
+class: clear
+
+
+```r
+# Load the data
+fun_df &lt;- read_csv("fun_data.csv")
+# Separate into two datasets
+y1_df &lt;- fun_df %&gt;% select(-y2)
+y2_df &lt;- fun_df %&gt;% select(-y1)
+# Peak at the data
+y1_df
+```
+
+```
+#&gt; # A tibble: 100 x 10
+#&gt;          y1     x1    x2     x3    x4     x5    x6       x7    x8
+#&gt;       &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt; &lt;dbl&gt;
+#&gt;  1   3.08   -0.777 0.405  1.23  0.762 -0.232  1.17  0.111       1
+#&gt;  2   6.04    0.473 1.59   0.584 1.53   0.349  1.52 -0.00994     2
+#&gt;  3   9.57    2.30  3.52  -0.976 3.32   0.581  1.50  0.974       3
+#&gt;  4  11.4     2.46  5.33  -1.77  4.64  -0.576  1.92  2.53        4
+#&gt;  5  -0.0319  0.313 2.09  -2.59  1.37  -0.717  3.76  2.14        5
+#&gt;  6   5.21    1.37  1.23   2.34  2.21  -1.40   3.55  1.17        6
+#&gt;  7   7.97    1.73  3.46   0.584 2.24  -1.31   3.77  1.92        7
+#&gt;  8  -5.17    2.60  4.09  -4.15  4.13  -2.57   4.60  0.886       8
+#&gt;  9   1.57    0.877 3.96   2.08  1.42  -2.89   3.68  1.32        9
+#&gt; 10   3.97   -0.197 0.875 -0.760 0.697 -1.92   1.90  1.85       10
+#&gt; # … with 90 more rows, and 1 more variable: x9 &lt;dbl&gt;
+```
+
+---
+layout: true
+# .mono[R] showcase
+## `gather`ing data
+---
+name: gather
+
+Let's plot `\(y_1\)` against the nine potential explanatory variables, `\(x_1\)` to `\(x_9\)`.
+
+--
+
+We'll use two new functions to streamline this process.
+
+- `gather()` (from `dplyr`): *Stacks* variables (names and values).
+- `facet_wrap()`: Creates multiple plots grouped by a variable.
+
+---
+
+*Example*: `gather` all variables in our dataset.
+
+
+```r
+data.frame(w = 0:1, x = 2:3, y = 4:5, z = 6:7) %&gt;%
+  gather(key = "var", value = "value")
+```
+
+```
+#&gt;   var value
+#&gt; 1   w     0
+#&gt; 2   w     1
+#&gt; 3   x     2
+#&gt; 4   x     3
+#&gt; 5   y     4
+#&gt; 6   y     5
+#&gt; 7   z     6
+#&gt; 8   z     7
+```
+---
+
+*Example*: `gather` all variables in our dataset except .mono[w].
+
+
+```r
+data.frame(w = 0:1, x = 2:3, y = 4:5, z = 6:7) %&gt;%
+  gather(-w, key = "var", value = "value")
+```
+
+```
+#&gt;   w var value
+#&gt; 1 0   x     2
+#&gt; 2 1   x     3
+#&gt; 3 0   y     4
+#&gt; 4 1   y     5
+#&gt; 5 0   z     6
+#&gt; 6 1   z     7
+```
+---
+
+Adding these new functions to our previous `ggplot2` work...
+
+
+```r
+y1_df %&gt;% gather(-y1, key = "var", value = "value") %&gt;%
+  ggplot(aes(x = value, y = y1)) +
+  geom_point(alpha = 0.4, size = 1.5) +
+  facet_wrap(~ var, scales = "free") +
+  theme_pander(base_size = 16)
+```
+---
+layout: false
+class: clear
+
+.hi-slate[Plot:] .hi-orange[y.sub[1]] against x.sub[1] through x.sub[9]
+
+&lt;img src="10_causality_files/figure-html/rshow1-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+class: clear
+
+.hi-slate[Simple linear regressions:] .hi-orange[y.sub[1]] against x.sub[1] through x.sub[9]
+
+&lt;img src="10_causality_files/figure-html/rshow2-2.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+
+.hi-slate[Linear regressions with quadratic RHS:] .hi-orange[y.sub[1]] against x.sub[1] through x.sub[9]
+
+&lt;img src="10_causality_files/figure-html/rshow3-1.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+
+.hi-slate[Linear regressions with quadratic RHS:] .hi-purple[y.sub[2]] against x.sub[1] through x.sub[9]
+
+&lt;img src="10_causality_files/figure-html/rshow4-1.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+
+.hi-slate[Simple linear regressions:] .hi-purple[y.sub[2]] against x.sub[1] through x.sub[9]
+
+&lt;img src="10_causality_files/figure-html/rshow5-1.svg" style="display: block; margin: auto;" /&gt;
+---
+layout: true
+# Searching for the unknown model
+---
+name: results
+
+## Results
+
+.hi-slate[Your responses:] Percentage who said .mono[TRUE] (29 responses)
+
+&lt;table class="table table-condensed" style="margin-left: auto; margin-right: auto;"&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt;   &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; X1 &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; X2 &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; X3 &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; X4 &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; X5 &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; X6 &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; X7 &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; X8 &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; X9 &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;font-weight: bold;"&gt; y1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 78.6 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 7.1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 60.7 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 39.3 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 28.6 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 28.6 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 17.9 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 17.9 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 25.0 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;font-weight: bold;"&gt; y2 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 46.4 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 50.0 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 64.3 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 10.7 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 75.0 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 57.1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 75.0 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 53.6 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 46.4 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+--
+
+.hi[Truth:] The true data-generating processes
+
+$$
+`\begin{align}
+  y_1 &amp;= 3 + x_1 - x_3^2 + 2 x_4 + u \\
+  y_2 &amp;= 1 + x_3 + x_5 + x_7 + v
+\end{align}`
+$$
+
+--
+
+**Q:** Is it worse include an incorrect variable or exlcude a correct variable?
+---
+layout: false
+class: inverse, middle
+# Causality
+---
+layout: true
+name: intro
+# Causality
+---
+name: intro
+
+## Intro
+
+Most tasks in econometrics boil down to one of two goals:
+
+$$
+`\begin{align}
+  y = \beta_0 + \beta_1 x_1 + \beta_2 x_2 + \cdots + \beta_k x_k + u
+\end{align}`
+$$
+
+--
+
+1. .hi-purple[Prediction:] Accurately and dependably .purple[predict/forecast] `\(\color{#6A5ACD}{y}\)` using on some set of explanatory variables—doesn't need to be `\(x_1\)` through `\(x_k\)`. Focuses on `\(\color{#6A5ACD}{\hat{y}}\)`. `\(\beta_j\)` doesn't really matter.
+
+--
+
+1. .hi[Causal estimation:].super[.pink[†]] Estimate the actual data-generating process—learning about the true, population model that explains .pink[how] `\(\color{#e64173}{y}\)` .pink[changes when we change] `\(\color{#e64173}{x_j}\)`—focuses on `\(\color{#e64173}{\beta_j}\)`. Accuracy of `\(\hat{y}\)` is not important.
+
+.footnote[
+.pink[†] Often called *causal identification*.
+]
+
+--
+
+For the rest of the term, we will focus on .hi[causally estimating] `\(\color{#e64173}{\beta_j}\)`.
+---
+name: challenges
+
+## The challenges
+
+As you saw in the data-analysis exercise, determining and estimating the true model can be pretty difficult—both .purple[practically] and .pink[econometrically].
+
+--
+
+.pull-left[.purple[
+**Practical challenges**
+
+- Which variables?
+- Which functional form(s)?
+- Do data exist? How much?
+- Is the sample representative?
+]]
+
+--
+
+.pull-right[.pink[
+**Econometric challenges**
+
+- Omitted-variable bias
+- Reverse causality
+- Measurement error
+- How precise can/must we be?
+]]
+
+--
+
+Many of these challenges relate to .hi-slate[exogeneity], _i.e._, `\(\color{#314f4f}{\mathop{\boldsymbol{E}}\left[ u_i | X \right] = 0}\)`.
+--
+&lt;br&gt;Causality requires us to .hi-slate[hold all else constant] (*ceterus paribus*).
+
+---
+
+## It's complicated
+
+Occasionally, .hi[*causal*] relationships are simply/easily understood, _e.g._,
+
+--
+
+- What .pink[caused] the forest fire?
+- .pink[How] did this baby get here?
+
+--
+
+Generally, .hi[*causal*] relationships are complex and challenging to answer, _e.g._,
+
+--
+
+- What .pink[causes] some countries to grow and others to decline?
+- What .pink[caused] President Trump's 2016 election?
+- .pink[How] does the number of police officers affect crime?
+- What is the .pink[effect] of better air quality on test scores?
+- Do longer prison sentences .pink[decrease] crime?
+- How did cannabis legalization .pink[affect] mental health/opioid addiction?
+---
+
+## Correlation ≠ Causation
+
+You've likely heard the saying
+
+&gt; Correlation is not causation.
+
+The saying is just pointing out that there are violations of exogeneity.
+
+--
+
+Although correlation is not causation, .hi[causation *requires* correlation].
+
+--
+
+.hi-slate[New saying:]
+
+&gt; Correlation plus exogeneity is causation.
+
+---
+layout: false
+class: clear, middle
+
+Let's work through a few examples.
+---
+layout: true
+# Causation
+---
+name: fertilizer
+
+## Example: The causal effect of fertilizer.super[.pink[†]]
+
+.footnote[
+.pink[†] Many of the early statistical and econometric studies involved agricultural field trials.
+]
+
+Suppose we want to know the causal effect of fertilizer on corn yield.
+
+--
+
+**Q:** Could we simply regress yield on fertilizer?
+--
+&lt;br&gt;**A:** Probably not (if we want the causal effect).
+--
+&lt;br&gt;&lt;br&gt;**Q:** Why not?
+--
+&lt;br&gt;**A:** Omitted-variable bias: Farmers may apply less fertilizer in areas that are already worse on other dimensions that affect yield (soil, slope, water).&lt;br&gt;.pink[Violates *all else equal* (exogeneity). Biased and/or spurious results.]
+--
+&lt;br&gt;&lt;br&gt;**Q:** So what *should* we do?
+--
+&lt;br&gt;**A:** .hi[Run an experiment!]
+--
+ 💩
+---
+
+## Example: The causal effect of fertilizer
+
+Randomized experiments help us maintain *all else equal* (exogeneity).
+
+--
+
+We often call these experiments .hi[*randomized control trials*] (RCTs)..super[.pink[†]]
+
+.footnote[
+.pink[†] Econometrics (and statistics) borrows this language from biostatistics and pharmaceutical trials.
+]
+
+--
+
+Imagine an RCT where we have two groups:
+
+- .hi-slate[Treatment:] We apply fertilizer.
+- .hi-slate[Control:] We do not apply fertilizer.
+
+--
+
+By randomizing plots of land into .hi-slate[treatment] or .hi-slate[control], we will, on average, include all kinds of land (soild, slope, water, *etc.*) in both groups.
+
+--
+
+*All else equal*!
+---
+class: clear
+
+.hi-slate[54 equal-sized plots]
+&lt;img src="10_causality_files/figure-html/fertilizer_plot1-1.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+count: false
+
+.hi-slate[54 equal-sized plots] .hi[of varying quality]
+&lt;img src="10_causality_files/figure-html/fertilizer_plot2-1.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+count: false
+
+.hi-slate[54 equal-sized plots] .hi[of varying quality] .hi-orange[plus randomly assigned treatment]
+&lt;img src="10_causality_files/figure-html/fertilizer_plot3_1-1.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+count: false
+
+.hi-slate[54 equal-sized plots] .hi[of varying quality] .hi-orange[plus randomly assigned treatment]
+&lt;img src="10_causality_files/figure-html/fertilizer_plot3_2-1.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+count: false
+
+.hi-slate[54 equal-sized plots] .hi[of varying quality] .hi-orange[plus randomly assigned treatment]
+&lt;img src="10_causality_files/figure-html/fertilizer_plot3_3-1.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+count: false
+
+.hi-slate[54 equal-sized plots] .hi[of varying quality] .hi-orange[plus randomly assigned treatment]
+&lt;img src="10_causality_files/figure-html/fertilizer_plot3_4-1.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+count: false
+
+.hi-slate[54 equal-sized plots] .hi[of varying quality] .hi-orange[plus randomly assigned treatment]
+&lt;img src="10_causality_files/figure-html/fertilizer_plot3_5-1.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+count: false
+
+.hi-slate[54 equal-sized plots] .hi[of varying quality] .hi-orange[plus randomly assigned treatment]
+&lt;img src="10_causality_files/figure-html/fertilizer_plot3_6-1.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+count: false
+
+.hi-slate[54 equal-sized plots] .hi[of varying quality] .hi-orange[plus randomly assigned treatment]
+&lt;img src="10_causality_files/figure-html/fertilizer_plot3_7-1.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+count: false
+
+.hi-slate[54 equal-sized plots] .hi[of varying quality] .hi-orange[plus randomly assigned treatment]
+&lt;img src="10_causality_files/figure-html/fertilizer_plot3_8-1.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+count: false
+
+.hi-slate[54 equal-sized plots] .hi[of varying quality] .hi-orange[plus randomly assigned treatment]
+&lt;img src="10_causality_files/figure-html/fertilizer_plot3_9-1.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+count: false
+
+.hi-slate[54 equal-sized plots] .hi[of varying quality] .hi-orange[plus randomly assigned treatment]
+&lt;img src="10_causality_files/figure-html/fertilizer_plot3_10-1.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+count: false
+
+.hi-slate[54 equal-sized plots] .hi[of varying quality] .hi-orange[plus randomly assigned treatment]
+&lt;img src="10_causality_files/figure-html/fertilizer_plot3_11-1.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+count: false
+
+.hi-slate[54 equal-sized plots] .hi[of varying quality] .hi-orange[plus randomly assigned treatment]
+&lt;img src="10_causality_files/figure-html/fertilizer_plot3_12-1.svg" style="display: block; margin: auto;" /&gt;
+---
+
+## Example: The causal effect of fertilizer
+
+We can estimate the .hi[causal effect] of fertilizer on crop yield by comparing the average yield in the treatment group (💩) with the control group (no 💩).
+
+$$
+`\begin{align}
+  \overline{\text{Yield}}_\text{Treatment} - \overline{\text{Yield}}_\text{Control}
+\end{align}`
+$$
+
+--
+
+Alternatively, we can use the regression
+
+--
+
+$$
+`\begin{align}
+  \text{Yield}_i = \beta_0 + \beta_1 \text{Trt}_i + u_i \tag{1}
+\end{align}`
+$$
+
+where `\(\text{Trt}_i\)` is a binary variable (=1 if plot `\(i\)` received the fertilizer treatment).
+
+--
+
+**Q:** Should we expect `\((1)\)` to satisfy exogeneity? Why?
+--
+&lt;br&gt;**A:** On average, .hi[randomly assigning treatment should balance] trt. and control across the other dimensions that affect yield (soil, slope, water).
+---
+layout: true
+# Causality
+## Example: Returns to education
+---
+name: returns
+
+Labor economists, policy makers, parents, and students are all interested in the (monetary) *return to education.*
+
+--
+
+.hi-slate[Thought experiment:]
+- Randomly select an individual.
+- Give her an additional year of education.
+- How much do her earnings increase?
+
+This change in earnings gives the .hi-slate[causal effect] of education on earnings.
+---
+
+**Q:** Could we simply regress earnings on education?
+--
+&lt;br&gt;**A:** Again, probably not if we want the true, causal effect.
+
+--
+1. People *choose* education based upon many factors, *e.g.*, ability.
+1. Education likely reduces experience (time out of the workforce).
+1. Education is .hi[*endogenous*] (violates *exogeneity*).
+
+--
+
+The point (2) above also illustrates the difficulty in learning about educations while *holding all else constant*.
+
+Many important variables have the same challenge—gender, race, income.
+---
+
+**Q:** So how can we estimate the returns to education?
+
+--
+
+.hi-slate[Option 1:] Run an .hi[experiment].
+
+--
+
+- Randomly .pink[assign education] (might be difficult).
+- Randomly .pink[encourage education] (might work).
+- Randomly .pink[assign programs] that affect education (*e.g.*, mentoring).
+
+--
+
+.hi-slate[Option 2:] Look for a .hi-purple[*natural experiment*]—a policy or accident in society that arbitrarily increased education for one subset of people.
+
+--
+
+- Admissions .purple[cutoffs]
+- .purple[Lottery] enrollment and/or capacity .purple[constraints]
+---
+layout: true
+# Causality
+---
+name: real
+
+## Real-world experiments
+
+Both examples consider .hi-slate[real experiments] that isolate causal effects.
+
+.hi-slate[Characteristics]
+
+- .purple[Feasible]—we can actually (potentially) run the experiment.
+- .purple[Compare individuals] randomized into treatment against individuals randomized into control.
+- .purple[Require "good" randomization] to get *all else equal* (exogeneity).
+
+--
+
+*Note:* Your experiment's results are only as good as your randomization.
+---
+class: clear
+count: false
+
+.hi-slate[Unfortunate randomization]
+&lt;img src="10_causality_files/figure-html/fertilizer_plot3_bad-1.svg" style="display: block; margin: auto;" /&gt;
+---
+layout: true
+# Causality
+## The ideal experiment
+---
+name: ideal
+
+The .hi[ideal experiment] would be subtly different.
+
+Rather than comparing units randomized as .pink[treatment] vs. .pink[control], the ideal experiment would compare treatment and control .hi[for the same, exact unit].
+
+--
+
+$$
+`\begin{align}
+  y_{\text{Treatment},i} - y_{\text{Control},i}
+\end{align}`
+$$
+
+--
+
+which we will write (for simplicity) as
+
+$$
+`\begin{align}
+  y_{1,i} - y_{0,i}
+\end{align}`
+$$
+
+--
+
+This .pink[*ideal experiment*] is clearly infeasible.super[.pink[†]], but it creates nice notation for causality (the Rubin causal model/Neyman potential outcomes framework).
+
+.footnote[
+.pink[†] Without (1) God-like abilities and multiple universes or (2) a time machine.
+]
+---
+
+.pull-left[
+The *ideal* data for 10 people
+
+```
+#&gt;     i trt  y1i  y0i
+#&gt; 1   1   1 5.01 2.56
+#&gt; 2   2   1 8.85 2.53
+#&gt; 3   3   1 6.31 2.67
+#&gt; 4   4   1 5.97 2.79
+#&gt; 5   5   1 7.61 4.34
+#&gt; 6   6   0 7.63 4.15
+#&gt; 7   7   0 4.75 0.56
+#&gt; 8   8   0 5.77 3.52
+#&gt; 9   9   0 7.47 4.49
+#&gt; 10 10   0 7.79 1.40
+```
+]
+
+--
+
+.pull-right[
+Calculate the causal effect of trt.
+$$
+`\begin{align}
+  \tau_i = y_{1,i} -  y_{0,i}
+\end{align}`
+$$
+for each individual `\(i\)`.
+]
+---
+count: false
+
+.pull-left[
+The *ideal* data for 10 people
+
+```
+#&gt;     i trt  y1i  y0i effect_i
+#&gt; 1   1   1 5.01 2.56     2.45
+#&gt; 2   2   1 8.85 2.53     6.32
+#&gt; 3   3   1 6.31 2.67     3.64
+#&gt; 4   4   1 5.97 2.79     3.18
+#&gt; 5   5   1 7.61 4.34     3.27
+#&gt; 6   6   0 7.63 4.15     3.48
+#&gt; 7   7   0 4.75 0.56     4.19
+#&gt; 8   8   0 5.77 3.52     2.25
+#&gt; 9   9   0 7.47 4.49     2.98
+#&gt; 10 10   0 7.79 1.40     6.39
+```
+]
+
+.pull-right[
+Calculate the causal effect of trt.
+$$
+`\begin{align}
+  \tau_i = y_{1,i} -  y_{0,i}
+\end{align}`
+$$
+for each individual `\(i\)`.
+]
+---
+count: false
+
+.pull-left[
+The *ideal* data for 10 people
+
+```
+#&gt;     i trt  y1i  y0i effect_i
+#&gt; 1   1   1 5.01 2.56     2.45
+#&gt; 2   2   1 8.85 2.53     6.32
+#&gt; 3   3   1 6.31 2.67     3.64
+#&gt; 4   4   1 5.97 2.79     3.18
+#&gt; 5   5   1 7.61 4.34     3.27
+#&gt; 6   6   0 7.63 4.15     3.48
+#&gt; 7   7   0 4.75 0.56     4.19
+#&gt; 8   8   0 5.77 3.52     2.25
+#&gt; 9   9   0 7.47 4.49     2.98
+#&gt; 10 10   0 7.79 1.40     6.39
+```
+]
+
+.pull-right[
+Calculate the causal effect of trt.
+$$
+`\begin{align}
+  \tau_i = y_{1,i} -  y_{0,i}
+\end{align}`
+$$
+for each individual `\(i\)`.
+
+The mean of `\(\tau_i\)` is the&lt;br&gt;.hi[average treatment effect] (.pink[ATE]).
+
+Thus, `\(\color{#e64173}{\overline{\tau} = 3.82}\)`
+]
+
+---
+
+This model highlights the fundamental problem of causal inference.
+$$
+`\begin{align}
+  \tau_i = \color{#e64173}{y_{1,i}} &amp;- \color{#6A5ACD}{y_{0,i}}
+\end{align}`
+$$
+
+--
+
+.hi-slate[The challenge:]
+
+If we observe `\(\color{#e64173}{y_{1,i}}\)`, then we cannot observe `\(\color{#6A5ACD}{y_{0,i}}\)`.
+&lt;br&gt;If we observe `\(\color{#6A5ACD}{y_{0,i}}\)`, then we cannot observe `\(\color{#e64173}{y_{1,i}}\)`.
+---
+
+So a dataset that we actually observe for 6 people will look something like
+.pull-left[
+
+```
+#&gt;     i trt  y1i  y0i
+#&gt; 1   1   1 5.01   NA
+#&gt; 2   2   1 8.85   NA
+#&gt; 3   3   1 6.31   NA
+#&gt; 4   4   1 5.97   NA
+#&gt; 5   5   1 7.61   NA
+#&gt; 6   6   0   NA 4.15
+#&gt; 7   7   0   NA 0.56
+#&gt; 8   8   0   NA 3.52
+#&gt; 9   9   0   NA 4.49
+#&gt; 10 10   0   NA 1.40
+```
+]
+
+--
+
+.pull-right[
+We can't observe `\(\color{#e64173}{y_{1,i}}\)` and `\(\color{#6A5ACD}{y_{0,i}}\)`.
+
+But, we do observe
+- `\(\color{#e64173}{y_{1,i}}\)` for `\(i\)` in 1, 2, 3, 4, 5
+- `\(\color{#6A5ACD}{y_{0,j}}\)` for `\(j\)` in 6, 7, 8, 9, 10
+
+]
+
+--
+
+**Q:** How do we "fill in" the `NA`s and estimate `\(\overline{\tau}\)`?
+---
+layout: true
+# Causality
+## Causally estimating the treatment effect
+---
+name: estimation
+
+.hi-slate[Notation:] Let `\(D_i\)` be a binary indicator variable such that
+
+- `\(\color{#e64173}{D_i=1}\)` .pink[if individual] `\(\color{#e64173}{i}\)` .pink[is treated].
+- `\(\color{#6A5ACD}{D_i=0}\)` .purple[if individual] `\(\color{#6A5ACD}{i}\)` .purple[is not treated (*control* group).]
+
+--
+
+Then, rephrasing the previous slide,
+
+- We only observe `\(\color{#e64173}{y_{1,i}}\)` when `\(\color{#e64173}{D_{i}=1}\)`.
+- We only observe `\(\color{#6A5ACD}{y_{0,i}}\)` when `\(\color{#6A5ACD}{D_{i}=0}\)`.
+
+--
+
+**Q:** How can we estimate `\(\overline{\tau}\)` using only `\(\left(\color{#e64173}{y_{1,i}|D_i=1}\right)\)` and `\(\left(\color{#6A5ACD}{y_{0,i}|D_i=0}\right)\)`?
+
+---
+
+**Q:** How can we estimate `\(\overline{\tau}\)` using only `\(\left(\color{#e64173}{y_{1,i}|D_i=1}\right)\)` and `\(\left(\color{#6A5ACD}{y_{0,i}|D_i=0}\right)\)`?
+
+--
+
+**Idea:** What if we compare the groups' means? _I.e._,
+$$
+`\begin{align}
+  \color{#e64173}{\mathop{Avg}\left( y_i\mid D_i = 1 \right)} - \color{#6A5ACD}{\mathop{Avg}\left( y_i\mid D_i =0 \right)}
+\end{align}`
+$$
+
+--
+
+**Q:** When does this simple difference in groups' means provide information on the .hi-slate[causal effect] of the treatment?
+
+--
+
+**Q.sub[2.0]:** Is `\(\color{#e64173}{\mathop{Avg}\left( y_i\mid D_i = 1 \right)} - \color{#6A5ACD}{\mathop{Avg}\left( y_i\mid D_i =0 \right)}\)` a *good* estimator for `\(\overline{\tau}\)`?
+
+--
+
+Time for math! .bigger[🎉]
+---
+
+.hi-slate[Assumption:] Let `\(\tau_i = \tau\)` for all `\(i\)`.
+
+This assumption says that the treatment effect is equal (constant) across all individuals `\(i\)`.
+
+--
+
+.hi-slate[Note:] We defined
+
+$$
+`\begin{align}
+  \tau_i = \tau = \color{#e64173}{y_{1,i}} - \color{#6A5ACD}{y_{0,i}}
+\end{align}`
+$$
+
+which implies
+
+$$
+`\begin{align}
+   \color{#e64173}{y_{1,i}} = \color{#6A5ACD}{y_{0,i}} + \tau
+\end{align}`
+$$
+
+---
+layout: false
+class: clear
+name: derivation
+
+**Q.sub[3.0]:** Is `\(\color{#e64173}{\mathop{Avg}\left( y_i\mid D_i = 1 \right)} - \color{#6A5ACD}{\mathop{Avg}\left( y_i\mid D_i =0 \right)}\)` a *good* estimator for `\(\tau\)`?
+
+--
+
+Difference in groups' means
+--
+&lt;br&gt; `\(\quad \color{#ffffff}{\Bigg|}=\color{#e64173}{\mathop{Avg}\left( y_i\mid D_i = 1 \right)} - \color{#6A5ACD}{\mathop{Avg}\left( y_i\mid D_i =0 \right)}\)`
+--
+&lt;br&gt; `\(\quad \color{#ffffff}{\Bigg|}=\color{#e64173}{\mathop{Avg}\left( y_{1,i}\mid D_i = 1 \right)} - \color{#6A5ACD}{\mathop{Avg}\left( y_{0,i}\mid D_i =0 \right)}\)`
+--
+&lt;br&gt; `\(\quad \color{#ffffff}{\Bigg|}=\color{#e64173}{\mathop{Avg}\left( \color{#000000}{\tau \: +} \: \color{#6A5ACD}{y_{0,i}} \mid D_i = 1 \right)} - \color{#6A5ACD}{\mathop{Avg}\left( y_{0,i}\mid D_i =0 \right)}\)`
+--
+&lt;br&gt; `\(\quad \color{#ffffff}{\Bigg|}=\tau + \color{#e64173}{\mathop{Avg}\left(\color{#6A5ACD}{y_{0,i}} \mid D_i = 1 \right)} - \color{#6A5ACD}{\mathop{Avg}\left( y_{0,i}\mid D_i =0 \right)}\)`
+--
+&lt;br&gt; `\(\quad \color{#ffffff}{\Bigg|}= \text{Average causal effect} + \color{#FFA500}{\text{Selection bias}}\)`
+
+--
+
+So our proposed group-difference estimator give us the sum of
+
+1. `\(\tau\)`, the .hi-slate[causal, averate treatment effect] that we want
+2. .hi-orange[Selection bias:] How much trt. and control groups differ (on average).
+---
+class: clear, middle
+
+.hi-slate[Next time:] Solving selection bias.
+
+---
+layout: false
+# Table of contents
+
+.pull-left[
+### Admin
+.smallest[
+
+1. [Schedule](#schedule)
+1. [.mono[R] showcase](#r_showcase)
+  - [Strategizing](#r_showcase)
+  - [`gather`-ing](#gather)
+  - [Results](#results)
+]
+]
+
+.pull-right[
+### Causality
+.smallest[
+
+1. [Introduction](#intro)
+1. [The challenges](#challenges)
+1. Examples
+  - [Fertilizer](#fertilizer)
+  - [Returns to education](#returns)
+1. [*Real* experiments](#real)
+1. [The ideal experiment](#ideal)
+1. [Estimation](#estimation)
+1. [Derivation](#derivation)
+]
+]
+---
+exclude: true
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script>
+(function() {
+  var i, text, code, codes = document.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+})();
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

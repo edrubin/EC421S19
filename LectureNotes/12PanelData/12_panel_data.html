@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Panel Data</title>
+    <meta charset="utf-8">
+    <meta name="author" content="Edward Rubin" />
+    <meta name="date" content="2019-03-12" />
+    <link href="12_panel_data_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="12_panel_data_files/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+    <link href="12_panel_data_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
+    <script src="12_panel_data_files/kePrint-0.0.1/kePrint.js"></script>
+    <link rel="stylesheet" href="my-css.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Panel Data
+## EC 421, Set 11
+### Edward Rubin
+### 12 March 2019
+
+---
+
+class: inverse, middle
+
+
+
+# Prologue
+
+---
+name: schedule
+
+# Schedule
+
+## Last Time
+
+Instrumental variables and causality
+
+## Today
+
+Panel data
+
+## Upcoming
+
+- Assignment due .hi[Saturday]
+- Final on Monday
+---
+name: final_review
+# Final
+## Information
+
+1. The final is .hi[Monday].
+  - The final will .hi[cover *all* material] from this course.
+  - Expect .hi[recent topics] (time series to today) to dominate.
+  - Don't neglect .hi[major topics] (_e.g._, omitted-variable bias).
+1. This week's .hi[labs] will cover IV and homework.
+1. .hi[Review session] this weekend w/ GEs.
+---
+layout: false
+class: inverse, middle
+# Panel data
+---
+layout: true
+# Panel data
+## Intro
+---
+exlcude: true
+
+
+
+
+---
+name: intro
+
+We've considered two types of data (each with one dimension):
+
+--
+
+.pull-left[
+.hi-orange[Cross-sectional data:] individual `\(i\)`
+
+```
+#&gt;    state year min_wage poverty_rate
+#&gt; 45    UT 2017     7.25          8.6
+#&gt; 46    VT 2017    10.00         10.2
+#&gt; 47    VA 2017     7.25         10.3
+#&gt; 48    WA 2017    11.00          9.9
+#&gt; 49    WV 2017     8.75         17.3
+#&gt; 50    WI 2017     7.25          9.5
+#&gt; 51    WY 2017     7.25         12.4
+```
+]
+
+--
+
+.pull-right[
+.hi-purple[Time-series data:] time `\(t\)`
+
+```
+#&gt;    state year min_wage poverty_rate
+#&gt; 32    OR 2011     8.50         14.4
+#&gt; 33    OR 2012     8.80         13.5
+#&gt; 34    OR 2013     8.95         15.1
+#&gt; 35    OR 2014     9.10         14.4
+#&gt; 36    OR 2015     9.25         11.9
+#&gt; 37    OR 2016     9.75         11.8
+#&gt; 38    OR 2017     9.75         10.2
+```
+]
+---
+count: false
+
+We've considered two types of data (each with one dimension):
+
+.pull-left[
+.hi-orange[Cross-sectional data:] individual `\(i\)`
+&lt;img src="12_panel_data_files/figure-html/cross_sectional_plot-1.svg" style="display: block; margin: auto;" /&gt;
+]
+
+.pull-right[
+.hi-purple[Time-series data:] time `\(t\)`
+&lt;img src="12_panel_data_files/figure-html/time_series_plot-1.svg" style="display: block; margin: auto;" /&gt;
+]
+
+--
+
+.hi-pink[*Panel data*] combine these data types/dimensions: individual `\(i\)` **at** time `\(t\)`.
+---
+layout: false
+class: clear
+
+.hi-pink[*Panel data*] combine these data types/dimensions: individual `\(i\)` **at** time `\(t\)`.
+
+&lt;img src="12_panel_data_files/figure-html/panel_plot-1.svg" style="display: block; margin: auto;" /&gt;
+---
+layout: true
+# Panel data
+---
+name: definition
+
+## Definition
+
+.pull-left[
+
+With .hi-pink[*panel data*], we have
+
+- .hi-purple[repeated observations] `\((t)\)`
+- on .hi-orange[multiple indiviuals] `\((i)\)`.
+]
+
+--
+
+.pull-right[
+
+```
+#&gt;   state year poverty_rate min_wage
+#&gt; 1    CA 1990         13.9     4.25
+#&gt; 2    CA 2000         12.7     6.25
+#&gt; 3    CA 2010         16.3     8.00
+#&gt; 4    OR 1990          9.2     4.25
+#&gt; 5    OR 2000         10.9     6.50
+#&gt; 6    OR 2010         14.2     8.40
+#&gt; 7    WA 1990          8.9     4.25
+#&gt; 8    WA 2000         10.8     6.50
+#&gt; 9    WA 2010         11.5     8.55
+```
+]
+
+--
+
+Thus, our regression equation with a panel dataset looks like
+$$
+`\begin{align}
+  y_{\color{#FFA500}{i}\color{#6A5ACD}{t}} = \beta_0 + \beta_1 x_{\color{#FFA500}{i}\color{#6A5ACD}{t}} + u_{\color{#FFA500}{i}\color{#6A5ACD}{t}}
+\end{align}`
+$$
+for .orange[individual] `\(\color{#FFA500}{i}\)` in .purple[time] `\(\color{#6A5ACD}{t}\)`.
+---
+name: ex_wage
+
+## Example
+
+Minimum-wage laws involve many contentious/important policy questions.
+
+- Do minimum-wage laws .hi[increase well-being] for minimum-wage earners and their families?
+- Do minimum-wage laws .hi[increase unemployment]?
+- Overall, do minimum-wage laws .hi[decrease poverty]?
+
+--
+
+We want to know the causal effect of the minimum wage, _i.e._, `\(\beta_1\)` in
+$$
+`\begin{align}
+  \left( \text{Poverty Rate} \right)_{it} = \beta_0 + \beta_1 \left( \text{Min. Wage} \right)_{it} + u_{it}
+\end{align}`
+$$
+where `\(i\)` denotes state and `\(t\)` indexes year.
+---
+
+## Example
+
+If we go ahead and run OLS in our panel, we find
+
+--
+
+&lt;table class="table" style="font-size: 20px; margin-left: auto; margin-right: auto;"&gt;
+&lt;caption style="font-size: initial !important;"&gt;OLS w/ outcome variable 'poverty rate'&lt;/caption&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Term &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Est. &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; S.E. &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; t stat. &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; p-Value &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;background-color: white;"&gt; Intercept &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 14.196 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 0.283 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 50.21 &lt;/td&gt;
+   &lt;td style="text-align:left;background-color: white;"&gt; &amp;lt;0.0001 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;background-color: white;font-weight: bold;color: #e64173;"&gt; Min. Wage &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #e64173;"&gt; -0.203 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #e64173;"&gt; 0.051 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #e64173;"&gt; -3.99 &lt;/td&gt;
+   &lt;td style="text-align:left;background-color: white;font-weight: bold;color: #e64173;"&gt; &amp;lt;0.0001 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+--
+
+which suggests that a one-dollar increase in the minimum wage significantly .pink[*reduces*] poverty by approximately 0.203 percentage points.
+
+--
+
+Surprising?
+
+---
+
+## Example: Causality is still hard
+
+To isolate the causal effect of minimum wage on poverty in
+$$
+`\begin{align}
+  \left( \text{Poverty Rate} \right)_{it} = \beta_0 + \beta_1 \left( \text{Min. Wage} \right)_{it} + u_{it}
+\end{align}`
+$$
+We still need exogeneity, _i.e._, `\(\mathop{\boldsymbol{E}}\left[ u_{it} \mid \left( \text{Min. Wage} \right) \right] = 0\)`.
+
+--
+
+.hi[Exogeneity with *panel data:*] Are there omitted factors that affect both a state's minimum wage *and* its poverty rate?
+
+--
+
+We are going to discuss two common panel-data strategies:
+
+1. .hi[Fixed effects]
+2. .hi[First differences]
+---
+name: fe
+
+## Fixed effects
+
+.hi[*Fixed effects*] are binary indicator variables that *help* control for unobserved differences across individuals or time periods.
+
+For example, we can include a .hi-orange[fixed effect for each individual state] `\(\color{#FFA500}{i}\)` to control for unobserved, time-invariant differences between states:
+
+--
+
+$$
+`\begin{align}
+  \left( \text{Poverty Rate} \right)_{it} = \beta_0 + \beta_1 \left( \text{Min. Wage} \right)_{it} + \color{#FFA500}{\text{State}_i} + u_{it}
+\end{align}`
+$$
+
+--
+
+
+```
+#&gt;   state year poverty_rate min_wage fe_ca fe_or fe_wa
+#&gt; 1    CA 2000         12.7     6.25     1     0     0
+#&gt; 2    CA 2010         16.3     8.00     1     0     0
+#&gt; 3    OR 2000         10.9     6.50     0     1     0
+#&gt; 4    OR 2010         14.2     8.40     0     1     0
+#&gt; 5    WA 2000         10.8     6.50     0     0     1
+#&gt; 6    WA 2010         11.5     8.55     0     0     1
+```
+---
+
+## Fixed effects
+
+Notice that these individual fixed effects are just .pink[individual-specific intercepts]—now each unit/individual gets her own intercept.
+
+--
+
+**Q:** What are these individual-level fixed effects (FEs) doing?
+
+--
+
+**A.sub[1]:** They remove each individual's mean, _i.e._, `\(y_{it} - \overline{y}_i\)` and `\(x_{it} - \overline{x}_i\)`.
+
+--
+
+**A.sub[2]:** They control for unobserved, time-invariant differences between units.&lt;sup&gt;.pink[†]&lt;/sup&gt;
+
+.footnote[
+.pink[†] By *time-invariance differences* we mean differences between individuals that do not change over time.
+]
+---
+layout: false
+class: clear
+
+In the raw data (no fixed effects/demeaning), individuals differ in levels.
+
+&lt;img src="12_panel_data_files/figure-html/panel_plot_raw-1.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+
+Individual-fixed effects remove individuals' means.
+
+&lt;img src="12_panel_data_files/figure-html/panel_plot_fe-1.svg" style="display: block; margin: auto;" /&gt;
+---
+layout: true
+# Panel data
+## Fixed effects
+---
+
+Fixed effects are one method econometricians try to "match" individuals to generate a valid control group for our treated individuals.
+
+Toward this goal, we include .hi-purple[fixed effects for each time period] `\(\color{#6A5ACD}{t}\)`, to (attempt to) control for shocks that affected all observations.
+
+--
+
+$$
+`\begin{align}
+  \left( \text{Poverty Rate} \right)_{it} = \beta_0 + \beta_1 \left( \text{Min. Wage} \right)_{it} + \color{#FFA500}{\text{State}_i} + \color{#6A5ACD}{\text{Year}_t} + u_{it}
+\end{align}`
+$$
+
+
+```
+#&gt;   state year poverty_rate min_wage fe_ca fe_or fe_wa fe_2000 fe_2010
+#&gt; 1    CA 2000         12.7     6.25     1     0     0       1       0
+#&gt; 2    CA 2010         16.3     8.00     1     0     0       0       1
+#&gt; 3    OR 2000         10.9     6.50     0     1     0       1       0
+#&gt; 4    OR 2010         14.2     8.40     0     1     0       0       1
+#&gt; 5    WA 2000         10.8     6.50     0     0     1       1       0
+#&gt; 6    WA 2010         11.5     8.55     0     0     1       0       1
+```
+---
+layout: true
+# Panel data
+## Fixed-effects estimation in .mono[R]
+---
+
+.mono[R] makes estimation with fixed-effects really easy.
+
+--
+
+As always, you have options.
+
+We're going to use the `felm()` function from the `lfe` package.
+
+--
+
+.hi[General notation:]&lt;br&gt; `felm(y ~ x1 + x2 + ⋯ | fe1 + fe2 ⋯, data = some_data)`
+
+--
+
+.hi[Our example:]&lt;br&gt; `felm(poverty_rate ~ min_wage | state + year, data = panel_df)`
+---
+
+`felm(poverty_rate ~ min_wage | state + year, data = panel_df)`
+
+--
+
+&lt;table class="table" style="font-size: 20px; margin-left: auto; margin-right: auto;"&gt;
+&lt;caption style="font-size: initial !important;"&gt;Fixed effects w/ outcome variable 'poverty rate'&lt;/caption&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Term &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Est. &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; S.E. &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; t stat. &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; p-Value &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;background-color: white;font-weight: bold;color: #FFA500;"&gt; Min. Wage &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #FFA500;"&gt; 0.374 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #FFA500;"&gt; 0.109 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #FFA500;"&gt; 3.43 &lt;/td&gt;
+   &lt;td style="text-align:left;background-color: white;font-weight: bold;color: #FFA500;"&gt; 0.0006 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+--
+
+`lm(poverty_rate ~ min_wage, data = panel_df)`
+
+&lt;table class="table" style="font-size: 20px; margin-left: auto; margin-right: auto;"&gt;
+&lt;caption style="font-size: initial !important;"&gt;OLS w/ outcome variable 'poverty rate'&lt;/caption&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Term &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Est. &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; S.E. &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; t stat. &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; p-Value &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;background-color: white;"&gt; Intercept &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 14.196 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 0.283 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 50.21 &lt;/td&gt;
+   &lt;td style="text-align:left;background-color: white;"&gt; &amp;lt;0.0001 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;background-color: white;font-weight: bold;color: #314f4f;"&gt; Min. Wage &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #314f4f;"&gt; -0.203 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #314f4f;"&gt; 0.051 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #314f4f;"&gt; -3.99 &lt;/td&gt;
+   &lt;td style="text-align:left;background-color: white;font-weight: bold;color: #314f4f;"&gt; &amp;lt;0.0001 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+---
+
+**Q:** Which set of estimates should we believe?
+
+--
+
+**A:** The set that you believe meets our exogeneity requirement.
+---
+layout: true
+# Panel data
+## First differences
+---
+name: diff
+
+Another route—related to our time-series studies—uses .hi[*first differences*].
+
+--
+
+The .hi[*first difference*] for variable `\(y\)` is the difference between individual `\(i\)`'s current value of `\(y\)` (_i.e._, `\(y_{i,t}\)`) and his previous (lagged) value of `\(y\)` (_i.e._, `\(y_{i,t-1}\)`).
+
+--
+
+We write the first difference as
+
+$$
+`\begin{align}
+  \Delta y_{it} = y_{i,t} - y_{i,t-1}
+\end{align}`
+$$
+---
+
+From our example, write the model for `\(t\)` and `\(t-1\)`
+
+$$
+`\begin{align}
+  \left( \text{Poverty Rate} \right)_{i,t} &amp;= \beta_0 + \beta_1 \left( \text{Min. Wage} \right)_{i,t} + u_{i,t} \tag{t} \\
+  \left( \text{Poverty Rate} \right)_{i,t-1} &amp;= \beta_0 + \beta_1 \left( \text{Min. Wage} \right)_{i,t-1} + u_{i,t-1} \tag{t-1}
+\end{align}`
+$$
+
+--
+
+taking the difference between `\((t)\)` and `\((t-1)\)` gives
+
+$$
+`\begin{align}
+  \left( \text{Poverty Rate} \right)_{i,t} - \left( \text{Poverty Rate} \right)_{i,t-1} =&amp; \\
+  \beta_0 - \beta_0 + \beta_1 \left( \text{Min. Wage} \right)_{i,t} - &amp;\beta_1 \left( \text{Min. Wage} \right)_{i,t-1} + u_{i,t} - u_{i,t-1}
+\end{align}`
+$$
+
+--
+
+which implies
+
+$$
+`\begin{align}
+  \Delta\left( \text{Poverty Rate} \right)_{i,t} &amp;= \beta_1 \Delta \left( \text{Min. Wage} \right)_{i,t} + \Delta u_{i,t}
+\end{align}`
+$$
+---
+
+Estimating our model via first differences gives us the results
+
+&lt;table class="table" style="font-size: 20px; margin-left: auto; margin-right: auto;"&gt;
+&lt;caption style="font-size: initial !important;"&gt;First diff. w/ outcome variable 'poverty rate'&lt;/caption&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Term &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Est. &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; S.E. &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; t stat. &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; p-Value &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;background-color: white;"&gt; Intercept &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; -0.064 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 0.047 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; -1.34 &lt;/td&gt;
+   &lt;td style="text-align:left;background-color: white;"&gt; 0.1811 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;background-color: white;font-weight: bold;color: #e64173;"&gt; Min. Wage &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #e64173;"&gt; 0.221 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #e64173;"&gt; 0.157 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #e64173;"&gt; 1.41 &lt;/td&gt;
+   &lt;td style="text-align:left;background-color: white;font-weight: bold;color: #e64173;"&gt; 0.1584 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+.white[space]
+&lt;br&gt;
+
+--
+
+.pull-left[
+&lt;table class="table" style="font-size: 20px; margin-left: auto; margin-right: auto;"&gt;
+&lt;caption style="font-size: initial !important;"&gt;Fixed effects w/ outcome variable 'poverty rate'&lt;/caption&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Term &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Est. &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; S.E. &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; t stat. &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; p-Value &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;background-color: white;font-weight: bold;color: #FFA500;"&gt; Min. Wage &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #FFA500;"&gt; 0.374 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #FFA500;"&gt; 0.109 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #FFA500;"&gt; 3.43 &lt;/td&gt;
+   &lt;td style="text-align:left;background-color: white;font-weight: bold;color: #FFA500;"&gt; 0.0006 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+]
+
+--
+
+.pull-right[
+&lt;table class="table" style="font-size: 20px; margin-left: auto; margin-right: auto;"&gt;
+&lt;caption style="font-size: initial !important;"&gt;OLS w/ outcome variable 'poverty rate'&lt;/caption&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Term &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Est. &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; S.E. &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; t stat. &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; p-Value &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;background-color: white;"&gt; Intercept &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 14.196 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 0.283 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 50.21 &lt;/td&gt;
+   &lt;td style="text-align:left;background-color: white;"&gt; &amp;lt;0.0001 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;background-color: white;font-weight: bold;color: #314f4f;"&gt; Min. Wage &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #314f4f;"&gt; -0.203 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #314f4f;"&gt; 0.051 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #314f4f;"&gt; -3.99 &lt;/td&gt;
+   &lt;td style="text-align:left;background-color: white;font-weight: bold;color: #314f4f;"&gt; &amp;lt;0.0001 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+]
+
+---
+layout: false
+class: clear, middle
+
+**Q:** Conclusions?
+
+--
+
+**A:** Models (and their requirements) can .hi[*really*] affect your results
+---
+class: clear, middle
+
+Evaluations
+
+---
+layout: false
+# Table of contents
+
+.pull-left[
+### Admin
+.smallest[
+
+1. [Schedule](#schedule)
+1. [Final info](#final_review)
+]
+]
+
+.pull-right[
+### Panel data
+.smallest[
+
+1. [Introduction](#intro)
+1. [Definition](#definition)
+1. [Example: Minimum wage](#ex_wage)
+1. [Fixed effects](#fe)
+1. [Fixed effects in .mono[R]](#fe_r)
+1. [First differences](#diff)
+]
+]
+---
+exclude: true
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script>
+(function() {
+  var i, text, code, codes = document.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+})();
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
