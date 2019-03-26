@@ -1,4 +1,4 @@
-This is LuaTeX, Version 1.07.0 (TeX Live 2018)  (format=lualatex 2018.4.16)  25 MAR 2019 17:19
+This is LuaTeX, Version 1.07.0 (TeX Live 2018)  (format=lualatex 2018.4.16)  25 MAR 2019 17:57
  restricted system commands enabled.
 **syllabus.tex
 (./syllabus.tex
@@ -35,7 +35,7 @@ Inserting `luaotfload.aux.set_capheight' at position 3 in `luaotfload.patch_font
 '.
 Inserting `luaotfload.rewrite_fontname' at position 4 in `luaotfload.patch_font'
 .
-luaotfload | main : initialization completed in 0.096 seconds
+luaotfload | main : initialization completed in 0.108 seconds
 Babel <3.18> and hyphenation patterns for 1 language(s) loaded.
 (/usr/local/texlive/2018/texmf-dist/tex/latex/base/article.cls
 Document Class: article 2014/09/29 v1.4h Standard LaTeX document class
@@ -1260,7 +1260,7 @@ Here is how much of LuaTeX's memory you used:
  529 words of node memory still in use:
    6 hlist, 2 vlist, 2 rule, 2 glue, 1 kern, 8 attribute, 63 glue_spec, 8 attrib
 ute_list, 1 write, 1 pdf_action nodes
-   avail lists: 1:1,2:685,3:84,4:39,5:656,6:24,7:3633,8:51,9:181,10:6,11:253
+   avail lists: 1:1,2:685,3:84,4:41,5:656,6:24,7:3633,8:51,9:181,10:6,11:253
  26213 multiletter control sequences out of 65536+600000
  89 fonts using 16073719 bytes
  39i,12n,67p,807b,733s stack positions out of 5000i,500n,10000p,200000b,100000s
@@ -1273,10 +1273,10 @@ rs/edwardarubin/Library/Fonts/FiraSans-Regular.otf></Users/edwardarubin/Library/
 Fonts/FiraCode-Regular.ttf></Users/edwardarubin/Library/Fonts/FiraCode-Bold.ttf>
 </usr/local/texlive/2018/texmf-dist/fonts/type1/public/lm/lmr10.pfb></usr/local/
 texlive/2018/texmf-dist/fonts/type1/public/lm/lmsy10.pfb>
-Output written on syllabus.pdf (5 pages, 70380 bytes).
+Output written on syllabus.pdf (5 pages, 70449 bytes).
 
-PDF statistics: 145 PDF objects out of 1000 (max. 8388607)
- 113 compressed objects within 2 object streams
+PDF statistics: 146 PDF objects out of 1000 (max. 8388607)
+ 114 compressed objects within 2 object streams
  33 named destinations out of 1000 (max. 131072)
  1 words of extra memory for PDF output out of 10000 (max. 100000000)
 
