@@ -4,7 +4,7 @@
     <title>Introduction and Overview</title>
     <meta charset="utf-8">
     <meta name="author" content="Edward Rubin" />
-    <meta name="date" content="2019-01-08" />
+    <meta name="date" content="2019-04-01" />
     <link href="01_intro_files/remark-css/default.css" rel="stylesheet" />
     <link href="01_intro_files/remark-css/metropolis.css" rel="stylesheet" />
     <link href="01_intro_files/remark-css/metropolis-fonts.css" rel="stylesheet" />
@@ -26,11 +26,11 @@ class: center, middle, inverse, title-slide
 # Introduction and Overview
 ## EC 421, Set 1
 ### Edward Rubin
-### 08 January 2019
+### 01 April 2019
 
 ---
 
-class: inverse, center, middle
+class: inverse, middle
 
 
 
@@ -107,8 +107,9 @@ We want to test estimate/test the relationship `\(\text{GPA}=f(H, \text{SAT}, \t
 
 - __A:__ Greek letters denote __population parameters__. Their estimates get hats, _e.g._, `\(\hat{\beta}_k\)`
 
+---
 
---
+### (Review) Questions
 
 - __Q:__ Can we interpret the estimates for `\(\beta_2\)` as causal?
 --
@@ -116,9 +117,7 @@ We want to test estimate/test the relationship `\(\text{GPA}=f(H, \text{SAT}, \t
 - __A:__ Not without making more assumptions and/or knowing more about the data-generating process.
 
 
----
-
-### (Review) Questions
+--
 
 - __Q:__ What is `\(\varepsilon_i\)`?
 --
@@ -126,15 +125,17 @@ We want to test estimate/test the relationship `\(\text{GPA}=f(H, \text{SAT}, \t
 - __A:__ An individual's random deviation/disturbance from the population parameters.
 
 
---
+---
 
-- __Q:__ What are some of the assumptions imposed by the regression model above?
+### (Review) Questions
+
+- __Q:__ Which assumptions do we impose when estimating with OLS?
 --
 
 - __A:__
   - The relationship between the GPA and the explanatory variables is linear in parameters, and `\(\varepsilon\)` enters additively.
   - The explanatory variables are __exogenous__, _i.e._, `\(E[\varepsilon|X] = 0\)`.
-  - You've also typically assumed: `\(E[\varepsilon_i] = 0\)`, `\(E[\varepsilon_i^2] = \sigma^2\)`, `\(E[\varepsilon_i \varepsilon_j] = 0\)` for `\(i \neq j\)`.
+  - You've also typically assumed something along the lines of:&lt;br&gt; `\(E[\varepsilon_i] = 0\)`, `\(E[\varepsilon_i^2] = \sigma^2\)`, `\(E[\varepsilon_i \varepsilon_j] = 0\)` for `\(i \neq j\)`.
   - And (maybe) `\(\varepsilon_i\)` is distributed normally.
 
 
@@ -191,7 +192,7 @@ __This course__ aims to deepen your knowledge in each of these three areas.
 - 2–3: __.mono[R]__
 
 ---
-class: inverse, center, middle
+class: inverse, middle
 # .mono[R]
 
 ---
@@ -212,7 +213,7 @@ What does that mean?
 
 - .mono[R] was created for the statistical and graphical work required by econometrics.
 
-- .mono[R] has a vibrant, thriving, and (generally) helpful community. (See: [stack overflow [r]](https://stackoverflow.com/questions/tagged/r))
+- .mono[R] has a vibrant, thriving online community. ([stack overflow](https://stackoverflow.com/questions/tagged/r))
 
 - Plus it's __free__ and __open source__.
 
@@ -220,17 +221,21 @@ What does that mean?
 
 ## Why are we using .mono[R]?
 
-1. .mono[R] is __free__ and __open source__—saving both you and the university .mono[$$$].
+1\. .mono[R] is __free__ and __open source__—saving both you and the university 💰💵💰.
 
-1. _Related:_ Outside of a small group of economists, private- and public-sector __employers favor .mono[R]__ over .mono[Stata] and most competing softwares. (Also: .mono[Python].)
+2\. _Related:_ Outside of a small group of economists, private- and public-sector __employers favor .mono[R]__ over .mono[Stata] and most competing softwares.
 
-1. .mono[R] is very __flexible and powerful__—adaptable to nearly any task, _e.g._, 'metrics, spatial data analysis, machine learning, web scraping, data cleaning, website building, teaching. My website, the TWEEDS website, and these notes all came out of .mono[R].
+3\. .mono[R] is very __flexible and powerful__—adaptable to nearly any task, _e.g._, 'metrics, spatial data analysis, machine learning, web scraping, data cleaning, website building, teaching. My website, the TWEEDS website, and these notes all came out of .mono[R].
 
-1. _Related:_ .mono[R] imposes __no limitations__ on your amount of observations, variables, memory, or processing power. (I'm looking at __you__, .mono[Stata].)
+---
 
-1. If you put in the work,&lt;sup&gt;†&lt;/sup&gt; you will come away with a __valuable and marketable__ tool.
+## Why are we using .mono[R]?
 
-1. __.mono[I ♡ R]__
+4\. _Related:_ .mono[R] imposes __no limitations__ on your amount of observations, variables, memory, or processing power. (I'm looking at __you__, .mono[Stata].)
+
+5\. If you put in the work,&lt;sup&gt;†&lt;/sup&gt; you will come away with a __valuable and marketable__ tool.
+
+6\. I 💖 __.mono[R]__
 
 
 .footnote[
@@ -243,7 +248,7 @@ What does that mean?
 ---
 
 layout: false
-class: inverse, center, middle
+class: inverse, middle
 # .mono[R] + [Examples]
 
 ---
@@ -399,11 +404,11 @@ leaflet() %&gt;%
   addMarkers(lng = -123.075, lat = 44.045, popup = "The University of Oregon")
 ```
 
-<div id="htmlwidget-c260cf2f10915b3b1a3c" style="width:756px;height:432px;" class="leaflet html-widget"></div>
-<script type="application/json" data-for="htmlwidget-c260cf2f10915b3b1a3c">{"x":{"options":{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}}},"calls":[{"method":"addTiles","args":["//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",null,null,{"minZoom":0,"maxZoom":18,"tileSize":256,"subdomains":"abc","errorTileUrl":"","tms":false,"noWrap":false,"zoomOffset":0,"zoomReverse":false,"opacity":1,"zIndex":1,"detectRetina":false,"attribution":"&copy; <a href=\"http://openstreetmap.org\">OpenStreetMap<\/a> contributors, <a href=\"http://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA<\/a>"}]},{"method":"addMarkers","args":[44.045,-123.075,null,null,null,{"interactive":true,"draggable":false,"keyboard":true,"title":"","alt":"","zIndexOffset":0,"opacity":1,"riseOnHover":false,"riseOffset":250},"The University of Oregon",null,null,null,null,{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},null]}],"limits":{"lat":[44.045,44.045],"lng":[-123.075,-123.075]}},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-1a44ef12889cad9af79e" style="width:756px;height:432px;" class="leaflet html-widget"></div>
+<script type="application/json" data-for="htmlwidget-1a44ef12889cad9af79e">{"x":{"options":{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}}},"calls":[{"method":"addTiles","args":["//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",null,null,{"minZoom":0,"maxZoom":18,"tileSize":256,"subdomains":"abc","errorTileUrl":"","tms":false,"noWrap":false,"zoomOffset":0,"zoomReverse":false,"opacity":1,"zIndex":1,"detectRetina":false,"attribution":"&copy; <a href=\"http://openstreetmap.org\">OpenStreetMap<\/a> contributors, <a href=\"http://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA<\/a>"}]},{"method":"addMarkers","args":[44.045,-123.075,null,null,null,{"interactive":true,"draggable":false,"keyboard":true,"title":"","alt":"","zIndexOffset":0,"opacity":1,"riseOnHover":false,"riseOffset":250},"The University of Oregon",null,null,null,null,{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},null]}],"limits":{"lat":[44.045,44.045],"lng":[-123.075,-123.075]}},"evals":[],"jsHooks":[]}</script>
 
 ---
-class: inverse, center, middle
+class: inverse, middle
 # Getting started with .mono[R]
 
 ---
@@ -436,7 +441,7 @@ layout: true
 - Your classmates
 - Your GEs
 - Me
-- .mono[R] resources [here](http://edrub.in/ARE212/resources.html)
+- .mono[R] resources [here](http://edrub.in/ARE212/resources.html) and [here](https://www.rstudio.com/online-learning/)
 
 ### Money
 
@@ -450,7 +455,7 @@ layout: true
 
 You will dive deeper into .mono[R] in lab, but here six big points about .mono[R]:
 
-.pull-left[
+.more-left[
 
 1. Everything is an __object__.
 
@@ -466,7 +471,7 @@ You will dive deeper into .mono[R] in lab, but here six big points about .mono[R
 
 ]
 
-.pull-right[
+.less-right[
 
 `foo`
 
@@ -492,11 +497,11 @@ Coming from .mono[Stata], here are a few important changes (benefits):
 
 - (Base) .mono[R] comes with lots of useful built-in functions—and provides all the tools necessary for you to build your own functions. However, many of the _best_ functions come from external libraries.
 
-- You don't need to `tset` or `xtset` data (you can if you really want to... `ts`).
+- You don't need to `tset` or `xtset` data (you can if you really want... `ts`).
 
 ---
 layout: false
-class: inverse, center, middle
+class: inverse, middle
 
 # Next: Metrics review
 

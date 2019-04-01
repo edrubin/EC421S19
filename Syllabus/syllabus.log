@@ -1,4 +1,4 @@
-This is LuaTeX, Version 1.07.0 (TeX Live 2018)  (format=lualatex 2018.4.16)  25 MAR 2019 17:57
+This is LuaTeX, Version 1.07.0 (TeX Live 2018)  (format=lualatex 2018.4.16)  1 APR 2019 07:59
  restricted system commands enabled.
 **syllabus.tex
 (./syllabus.tex
@@ -35,7 +35,7 @@ Inserting `luaotfload.aux.set_capheight' at position 3 in `luaotfload.patch_font
 '.
 Inserting `luaotfload.rewrite_fontname' at position 4 in `luaotfload.patch_font'
 .
-luaotfload | main : initialization completed in 0.108 seconds
+luaotfload | main : initialization completed in 0.122 seconds
 Babel <3.18> and hyphenation patterns for 1 language(s) loaded.
 (/usr/local/texlive/2018/texmf-dist/tex/latex/base/article.cls
 Document Class: article 2014/09/29 v1.4h Standard LaTeX document class
@@ -1242,25 +1242,25 @@ LaTeX Font Info:    External font `lmex10' loaded for size
  [1
 
 {/usr/local/texlive/2018/texmf-var/fonts/map/pdftex/updmap/pdftex.map}] [2] [3]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 240.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 239.
  [4] [5]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 240.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 239.
 
 (./syllabus.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 240.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 240.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 239.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 239.
 Package rerunfilecheck Info: File `syllabus.out' has not changed.
 (rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 240.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 239.
 )
 
 Here is how much of LuaTeX's memory you used:
- 22719 strings out of 494413
+ 22720 strings out of 494413
  100000,662416 words of node,token memory allocated
  529 words of node memory still in use:
    6 hlist, 2 vlist, 2 rule, 2 glue, 1 kern, 8 attribute, 63 glue_spec, 8 attrib
 ute_list, 1 write, 1 pdf_action nodes
-   avail lists: 1:1,2:685,3:84,4:41,5:656,6:24,7:3633,8:51,9:181,10:6,11:253
+   avail lists: 1:1,2:743,3:84,4:41,5:657,6:24,7:3633,8:55,9:192,10:6,11:253
  26213 multiletter control sequences out of 65536+600000
  89 fonts using 16073719 bytes
  39i,12n,67p,807b,733s stack positions out of 5000i,500n,10000p,200000b,100000s
@@ -1273,10 +1273,10 @@ rs/edwardarubin/Library/Fonts/FiraSans-Regular.otf></Users/edwardarubin/Library/
 Fonts/FiraCode-Regular.ttf></Users/edwardarubin/Library/Fonts/FiraCode-Bold.ttf>
 </usr/local/texlive/2018/texmf-dist/fonts/type1/public/lm/lmr10.pfb></usr/local/
 texlive/2018/texmf-dist/fonts/type1/public/lm/lmsy10.pfb>
-Output written on syllabus.pdf (5 pages, 70449 bytes).
+Output written on syllabus.pdf (5 pages, 70701 bytes).
 
-PDF statistics: 146 PDF objects out of 1000 (max. 8388607)
- 114 compressed objects within 2 object streams
- 33 named destinations out of 1000 (max. 131072)
+PDF statistics: 147 PDF objects out of 1000 (max. 8388607)
+ 115 compressed objects within 2 object streams
+ 34 named destinations out of 1000 (max. 131072)
  1 words of extra memory for PDF output out of 10000 (max. 100000000)
 

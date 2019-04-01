@@ -13,7 +13,7 @@ output:
       highlightLines: true
       countIncrementalSlides: false
 ---
-class: inverse, center, middle
+class: inverse, middle
 
 ```{r Setup, include = F}
 options(htmltools.dir.version = FALSE)
@@ -109,8 +109,9 @@ We want to test estimate/test the relationship $\text{GPA}=f(H, \text{SAT}, \tex
 
 - __A:__ Greek letters denote __population parameters__. Their estimates get hats, _e.g._, $\hat{\beta}_k$
 
+---
 
---
+### (Review) Questions
 
 - __Q:__ Can we interpret the estimates for $\beta_2$ as causal?
 --
@@ -118,9 +119,7 @@ We want to test estimate/test the relationship $\text{GPA}=f(H, \text{SAT}, \tex
 - __A:__ Not without making more assumptions and/or knowing more about the data-generating process.
 
 
----
-
-### (Review) Questions
+--
 
 - __Q:__ What is $\varepsilon_i$?
 --
@@ -128,15 +127,17 @@ We want to test estimate/test the relationship $\text{GPA}=f(H, \text{SAT}, \tex
 - __A:__ An individual's random deviation/disturbance from the population parameters.
 
 
---
+---
 
-- __Q:__ What are some of the assumptions imposed by the regression model above?
+### (Review) Questions
+
+- __Q:__ Which assumptions do we impose when estimating with OLS?
 --
 
 - __A:__
   - The relationship between the GPA and the explanatory variables is linear in parameters, and $\varepsilon$ enters additively.
   - The explanatory variables are __exogenous__, _i.e._, $E[\varepsilon|X] = 0$.
-  - You've also typically assumed: $E[\varepsilon_i] = 0$, $E[\varepsilon_i^2] = \sigma^2$, $E[\varepsilon_i \varepsilon_j] = 0$ for $i \neq j$.
+  - You've also typically assumed something along the lines of:<br> $E[\varepsilon_i] = 0$, $E[\varepsilon_i^2] = \sigma^2$, $E[\varepsilon_i \varepsilon_j] = 0$ for $i \neq j$.
   - And (maybe) $\varepsilon_i$ is distributed normally.
 
 
@@ -214,7 +215,7 @@ __This course__ aims to deepen your knowledge in each of these three areas.
 - 2–3: __.mono[R]__
 
 ---
-class: inverse, center, middle
+class: inverse, middle
 # .mono[R]
 
 ---
@@ -235,7 +236,7 @@ What does that mean?
 
 - .mono[R] was created for the statistical and graphical work required by econometrics.
 
-- .mono[R] has a vibrant, thriving, and (generally) helpful community. (See: [stack overflow [r]](https://stackoverflow.com/questions/tagged/r))
+- .mono[R] has a vibrant, thriving online community. ([stack overflow](https://stackoverflow.com/questions/tagged/r))
 
 - Plus it's __free__ and __open source__.
 
@@ -243,17 +244,21 @@ What does that mean?
 
 ## Why are we using .mono[R]?
 
-1. .mono[R] is __free__ and __open source__—saving both you and the university .mono[$$$].
+1\. .mono[R] is __free__ and __open source__—saving both you and the university 💰💵💰.
 
-1. _Related:_ Outside of a small group of economists, private- and public-sector __employers favor .mono[R]__ over .mono[Stata] and most competing softwares. (Also: .mono[Python].)
+2\. _Related:_ Outside of a small group of economists, private- and public-sector __employers favor .mono[R]__ over .mono[Stata] and most competing softwares.
 
-1. .mono[R] is very __flexible and powerful__—adaptable to nearly any task, _e.g._, 'metrics, spatial data analysis, machine learning, web scraping, data cleaning, website building, teaching. My website, the TWEEDS website, and these notes all came out of .mono[R].
+3\. .mono[R] is very __flexible and powerful__—adaptable to nearly any task, _e.g._, 'metrics, spatial data analysis, machine learning, web scraping, data cleaning, website building, teaching. My website, the TWEEDS website, and these notes all came out of .mono[R].
 
-1. _Related:_ .mono[R] imposes __no limitations__ on your amount of observations, variables, memory, or processing power. (I'm looking at __you__, .mono[Stata].)
+---
 
-1. If you put in the work,<sup>†</sup> you will come away with a __valuable and marketable__ tool.
+## Why are we using .mono[R]?
 
-1. __.mono[I ♡ R]__
+4\. _Related:_ .mono[R] imposes __no limitations__ on your amount of observations, variables, memory, or processing power. (I'm looking at __you__, .mono[Stata].)
+
+5\. If you put in the work,<sup>†</sup> you will come away with a __valuable and marketable__ tool.
+
+6\. I 💖 __.mono[R]__
 
 
 .footnote[
@@ -293,7 +298,7 @@ theme(legend.position = "bottom")
 ---
 
 layout: false
-class: inverse, center, middle
+class: inverse, middle
 # .mono[R] + [Examples]
 
 ---
@@ -491,7 +496,7 @@ leaflet() %>%
 ```
 
 ---
-class: inverse, center, middle
+class: inverse, middle
 # Getting started with .mono[R]
 
 ---
@@ -524,7 +529,7 @@ layout: true
 - Your classmates
 - Your GEs
 - Me
-- .mono[R] resources [here](http://edrub.in/ARE212/resources.html)
+- .mono[R] resources [here](http://edrub.in/ARE212/resources.html) and [here](https://www.rstudio.com/online-learning/)
 
 ### Money
 
@@ -538,7 +543,7 @@ layout: true
 
 You will dive deeper into .mono[R] in lab, but here six big points about .mono[R]:
 
-.pull-left[
+.more-left[
 
 1. Everything is an __object__.
 
@@ -554,7 +559,7 @@ You will dive deeper into .mono[R] in lab, but here six big points about .mono[R
 
 ]
 
-.pull-right[
+.less-right[
 
 `foo`
 
@@ -580,11 +585,11 @@ Coming from .mono[Stata], here are a few important changes (benefits):
 
 - (Base) .mono[R] comes with lots of useful built-in functions—and provides all the tools necessary for you to build your own functions. However, many of the _best_ functions come from external libraries.
 
-- You don't need to `tset` or `xtset` data (you can if you really want to... `ts`).
+- You don't need to `tset` or `xtset` data (you can if you really want... `ts`).
 
 ---
 layout: false
-class: inverse, center, middle
+class: inverse, middle
 
 # Next: Metrics review
 
