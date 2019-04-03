@@ -13,7 +13,7 @@ output:
       highlightLines: true
       countIncrementalSlides: false
 ---
-class: inverse, center, middle
+class: inverse, middle
 
 ```{r Setup, include = F}
 options(htmltools.dir.version = FALSE)
@@ -73,7 +73,7 @@ Because part of this course is about learning and implementing .mono[R], I'm goi
 
 - .mono[R]-based web application
 - Maps your location data (as tracked by Google)
-- Great example of .mono[R]'s ability to extend beyond traditional statistical programming
+- Great example of .mono[R]'s ability to extend beyond statistical programming
 - (Visualization matters.)
 
 **[The .mono[rayshader] package](https://github.com/tylermorganwall/rayshader)**
@@ -120,7 +120,7 @@ These notes continue the review, building the foundation for some new topics (so
 
 ---
 layout: false
-class: inverse, center, middle
+class: inverse, middle
 # Review
 
 ---
@@ -150,14 +150,14 @@ layout: true
 
 # Population *vs.* sample
 
-**Question:** Why are we so worked up about the distinction between *population* and *sample*?
+**Question:** Why do we care about *population vs. sample*?
 
 ---
 
 --
 
 ```{R, gen dataset, include = F, cache = T}
-# Set population and sample sizes 
+# Set population and sample sizes
 n_p <- 100
 n_s <- 30
 # Set the seed
@@ -255,14 +255,17 @@ scale_shape_manual(values = c(1, 19)) +
 theme_empty
 ```
 
-.center[**Population relationship**]
+.center[
 
-$$ y_i = `r round(lm0$coefficients[1], 2)` + `r round(lm0$coefficients[2], 2)` x_i + u_i $$
+**Population relationship**
+<br>
+$y_i = `r round(lm0$coefficients[1], 2)` + `r round(lm0$coefficients[2], 2)` x_i + u_i$
 
-.center[**Sample relationship**]
+**Sample relationship**
+<br>
+$\hat{y}_i = `r round(lm1$coefficients[1], 2)` + `r round(lm1$coefficients[2], 2)` x_i$
 
-$$ \hat{y}_i = `r round(lm1$coefficients[1], 2)` + `r round(lm1$coefficients[2], 2)` x_i $$
-
+]
 
 ]
 
@@ -303,14 +306,17 @@ scale_shape_manual(values = c(1, 19)) +
 theme_empty
 ```
 
-.center[**Population relationship**]
+.center[
 
-$$ y_i = `r round(lm0$coefficients[1], 2)` + `r round(lm0$coefficients[2], 2)` x_i + u_i $$
+**Population relationship**
+<br>
+$y_i = `r round(lm0$coefficients[1], 2)` + `r round(lm0$coefficients[2], 2)` x_i + u_i$
 
-.center[**Sample relationship**]
+**Sample relationship**
+<br>
+$\hat{y}_i = `r round(lm2$coefficients[1], 2)` + `r round(lm2$coefficients[2], 2)` x_i$
 
-$$ \hat{y}_i = `r round(lm2$coefficients[1], 2)` + `r round(lm2$coefficients[2], 2)` x_i $$
-
+]
 
 ]
 ---
@@ -354,19 +360,23 @@ scale_shape_manual(values = c(1, 19)) +
 theme_empty
 ```
 
-.center[**Population relationship**]
+.center[
 
-$$ y_i = `r round(lm0$coefficients[1], 2)` + `r round(lm0$coefficients[2], 2)` x_i + u_i $$
+**Population relationship**
+<br>
+$y_i = `r round(lm0$coefficients[1], 2)` + `r round(lm0$coefficients[2], 2)` x_i + u_i$
 
-.center[**Sample relationship**]
+**Sample relationship**
+<br>
+$\hat{y}_i = `r round(lm3$coefficients[1], 2)` + `r round(lm3$coefficients[2], 2)` x_i$
 
-$$ \hat{y}_i = `r round(lm3$coefficients[1], 2)` + `r round(lm3$coefficients[2], 2)` x_i $$
+]
 
 ]
 
 ---
 layout: false
-class: inverse, center, middle
+class: clear, middle
 
 Let's repeat this **10,000 times**.
 
@@ -379,7 +389,7 @@ layout: true
 ---
 
 ```{R, simulation scatter, echo = F, dev = "png", dpi = 300, cache = T}
-# Reshape sim_df 
+# Reshape sim_df
 line_df <- tibble(
   intercept = sim_df %>% filter(term != "x") %>% select(estimate) %>% unlist(),
   slope = sim_df %>% filter(term == "x") %>% select(estimate) %>% unlist()
@@ -398,13 +408,13 @@ theme_empty
 layout: true
 # Population *vs.* sample
 
-**Question:** Why are we so worked up about the distinction between *population* and *sample*?
+**Question:** Why do we care about *population vs. sample*?
 
 ---
 
 .pull-left[
 ```{R, simulation scatter2, echo = F, dev = "png", dpi = 300, cache = T}
-# Reshape sim_df 
+# Reshape sim_df
 line_df <- tibble(
   intercept = sim_df %>% filter(term != "x") %>% select(estimate) %>% unlist(),
   slope = sim_df %>% filter(term == "x") %>% select(estimate) %>% unlist()
@@ -422,8 +432,6 @@ theme_empty
 
 .pull-right[
 
-What do you notice?
-
 - On **average**, our regression lines match the population line very nicely.
 
 - However, **individual lines** (samples) can really miss the mark.
@@ -432,9 +440,13 @@ What do you notice?
 
 ]
 
+---
+
+**Question:** Why do we care about *population vs. sample*?
+
 --
 
-**Answer:** **Uncertainty matters.**
+**Answer:** Uncertainty matters.
 
 $\hat{\beta}$ itself is a random variable—dependent upon the random sample. When we take a sample and run a regression, we don't know if it's a 'good' sample ( $\hat{\beta}$ is close to $\beta$) or a 'bad sample' (our sample differs greatly from the population).
 
@@ -454,7 +466,7 @@ Keeping track of this uncertainty will be a key concept throughout our class.
 
 --
 
-But first, let's remind ourselves of how we get these (uncertain) regression estimates.
+First, let's refresh on how we get these (uncertain) regression estimates.
 
 ---
 # Linear regression
@@ -479,24 +491,18 @@ layout: false
 
 **Answers:**
 
-- In general,<sup>†</sup> *best-fit line* means the line that minimizes the sum of squared errors (SSE):
+- In general (econometrics), *best-fit line* means the line that minimizes the sum of squared errors (SSE):
 
-$$ \text{SSE} = \sum_{i = 1}^{n} e_i^2 $$
+.center[
 
-<center>where</center>
+$\text{SSE} = \sum_{i = 1}^{n} e_i^2\quad$ where $\quad e_i = y_i - \hat{y}_i$
 
-$$ e_i = y_i - \hat{y}_i $$
+]
 
 - Ordinary **least squares** (**OLS**) minimizes the sum of the squared errors.
 - Based upon a set of (mostly palatable) assumptions, OLS
   - Is unbiased (and consistent)
-  - Is the *best*<sup>††</sup> linear unbiased estimator (BLUE)
-
-.footnote[
-[†]: *In general* here means *generally in econometrics*. It's possible to have other definitions (common in machine learning).
-
-[††]: In the case of BLUE, *best* means minimum variance.
-]
+  - Is the *best* (minimum variance) linear unbiased estimator (BLUE)
 
 ---
 layout: true
@@ -515,9 +521,9 @@ theme_empty
 ---
 count: false
 
-For any line (_i.e._, $\hat{y} = \hat{\beta}_0 + \hat{\beta}_1 x$) that we draw
+For any line $\left(\hat{y} = \hat{\beta}_0 + \hat{\beta}_1 x\right)$
 
-```{R, ols vs lines 2, echo = F, dev = "svg", fig.height = 6}
+```{R, vs lines 2, echo = F, dev = "svg", fig.height = 6}
 # Define a function
 y_hat <- function(x, b0, b1) {b0 + b1 * x}
 # Define line's parameters
@@ -534,7 +540,7 @@ theme_empty
 ---
 count: false
 
-For any line (_i.e._, $\hat{y} = \hat{\beta}_0 + \hat{\beta}_1 x$) that we draw, we can calculate the errors: $e_i = y_i - \hat{y}_i$
+For any line $\left(\hat{y} = \hat{\beta}_0 + \hat{\beta}_1 x\right)$, we can calculate errors: $e_i = y_i - \hat{y}_i$
 
 ```{R, ols vs lines 3, echo = F, dev = "svg", fig.height = 6}
 # Define a function
@@ -553,7 +559,7 @@ theme_empty
 ---
 count: false
 
-For any line (_i.e._, $\hat{y} = \hat{\beta}_0 + \hat{\beta}_1 x$) that we draw, we can calculate the errors: $e_i = y_i - \hat{y}_i$
+For any line $\left(\hat{y} = \hat{\beta}_0 + \hat{\beta}_1 x\right)$, we can calculate errors: $e_i = y_i - \hat{y}_i$
 
 ```{R, ols vs lines 4, echo = F, dev = "svg", fig.height = 6}
 # Define a function
@@ -572,7 +578,7 @@ theme_empty
 ---
 count: false
 
-For any line (_i.e._, $\hat{y} = \hat{\beta}_0 + \hat{\beta}_1 x$) that we draw, we can calculate the errors: $e_i = y_i - \hat{y}_i$
+For any line $\left(\hat{y} = \hat{\beta}_0 + \hat{\beta}_1 x\right)$, we can calculate errors: $e_i = y_i - \hat{y}_i$
 
 ```{R, ols vs lines 5, echo = F, dev = "svg", fig.height = 6}
 # Define a function
@@ -591,7 +597,7 @@ theme_empty
 ---
 count: false
 
-Because SSE squares the errors (_i.e._, $\sum e_i^2$), big errors are penalized more than small ones.
+SSE squares the errors $\left(\sum e_i^2\right)$: bigger errors get bigger penalties.
 
 ```{R, ols vs lines 6, echo = F, dev = "svg", fig.height = 6}
 # Define a function
@@ -621,9 +627,10 @@ b0 <- lm0$coefficients[1]
 b1 <- lm0$coefficients[2]
 # The plot
 ggplot(data = pop_df, aes(x = x, y = y)) +
-geom_segment(aes(x = x, xend = x, y = y, yend = y_hat(x, b0, b1)), size = 0.5, alpha = 0.2) +
+geom_segment(aes(x = x, xend = x, y = y, yend = y_hat(x, b0, b1), color = (y - y_hat(x, b0, b1))^2), size = 0.5, alpha = 0.8) +
 geom_point(size = 5, color = "darkslategray", alpha = 0.9) +
 geom_abline(intercept = b0, slope = b1, color = red_pink, size = 2, alpha = 0.9) +
+scale_color_viridis(option = "cividis", direction = -1) +
 theme_empty
 ```
 
@@ -641,11 +648,7 @@ $$ \min_{\hat{\beta}_0,\, \hat{\beta}_1} \text{SSE} $$
 
 --
 
-But we already know
-
-$$ \text{SSE} = \sum_i e_i^2 $$
-
-Now we use the definitions of $e_i$ and $\hat{y}$ (plus and some algebra)
+but we already know $\text{SSE} = \sum_i e_i^2$. Now use the definitions of $e_i$ and $\hat{y}$.
 
 $$
 \begin{aligned}
@@ -656,15 +659,15 @@ $$
 
 --
 
-**Recall:** Minimizing a multivariate function requires (**1**) first derivatives equal zero (the *first-order conditions*) and (**2**) second-order conditions on concavity.
+**Recall:** Minimizing a multivariate function requires (**1**) first derivatives equal zero (the *1.super[st]-order conditions*) and (**2**) second-order conditions (concavity).
 
 ---
 
-We're getting close. We need to **minimize SSE**, and we've just shown how SSE relates to our sample (our data, _i.e._, $x$ and $y$) and our estimates (_i.e._, $\hat{\beta}_0$ and $\hat{\beta}_1$).
+We're getting close. We need to **minimize SSE**. We've showed how SSE relates to our sample (our data: $x$ and $y$) and our estimates (_i.e._, $\hat{\beta}_0$ and $\hat{\beta}_1$).
 
 $$ \text{SSE} = \sum_i e_i^2 = \sum_i \left( y_i^2 - 2 y_i \hat{\beta}_0 - 2 y_i \hat{\beta}_1 x_i + \hat{\beta}_0^2 + 2 \hat{\beta}_0 \hat{\beta}_1 x_i + \hat{\beta}_1^2 x_i^2 \right) $$
 
-For the first-order conditions of minimization, we now take the first derivates<sup>†</sup> of SSE with respect to $\hat{\beta}_0$ and $\hat{\beta}_1$.
+For the first-order conditions of minimization, we now take the first derivates of SSE with respect to $\hat{\beta}_0$ and $\hat{\beta}_1$.
 
 $$
 \begin{aligned}
@@ -673,11 +676,7 @@ $$
 \end{aligned}
 $$
 
-where $\overline{x} = \frac{\sum x_i}{n}$ and $\overline{y} = \frac{\sum y_i}{n}$ give the sample means of $x$ and $y$ (sample size $n$).
-
-.footnote[
-[†]: I'll leave the second-order conditions for you...
-]
+where $\overline{x} = \frac{\sum x_i}{n}$ and $\overline{y} = \frac{\sum y_i}{n}$ are sample means of $x$ and $y$ (size $n$).
 
 ---
 
@@ -738,7 +737,7 @@ and the intercept
 
 $$ \hat{\beta}_0 = \overline{y} - \hat{\beta}_1 \overline{x} $$
 
-Plus, you know what the *least squares* part of ordinary least squares means. ☺
+And now you know where the *least squares* part of ordinary least squares comes from. 🎊
 
 --
 
@@ -746,7 +745,7 @@ We now turn to the assumptions and (implied) properties of OLS.
 
 ---
 layout: false
-class: inverse, center, middle
+class: inverse, middle
 
 # OLS: Assumptions and properties
 
@@ -755,15 +754,15 @@ layout: true
 # OLS: Assumptions and properties
 
 ## Properties
+---
 
 **Question:** What properties might we care about for an estimator?
 
----
-count: false
-
 --
 
-***
+**Tangent:** Let's review statistical properies first.
+
+---
 
 **Refresher:** Density functions
 
@@ -772,8 +771,6 @@ Recall that we use **probability density functions** (PDFs) to describe the prob
 These PDFs characterize probability distributions, and the most common/famous/popular distributions get names (_e.g._, normal, *t*, Gamma).
 
 ---
-count: false
-***
 
 **Refresher:** Density functions
 
@@ -792,8 +789,6 @@ theme_simple
 ```
 
 ---
-count: false
-***
 
 **Refresher:** Density functions
 
@@ -812,8 +807,6 @@ theme_simple
 ```
 
 ---
-count: false
-***
 
 **Refresher:** Density functions
 
@@ -856,6 +849,10 @@ theme(axis.text.x = element_text(size = 20))
 ```
 
 ---
+
+**Question:** What properties might we care about for an estimator?
+
+--
 
 **Answer one: Bias.**
 
@@ -975,9 +972,12 @@ As you might have guessed by now,
 - OLS is **unbiased**.
 - OLS has the **minimum variance** of all unbiased linear estimators.
 
---
+---
+# OLS: Assumptions and properties
 
-These (very nice) properties depend upon a set of assumptions:
+## Properties
+
+But... these (very nice) properties depend upon a set of assumptions:
 
 1. The population relationship is linear in parameters with an additive disturbance.
 
@@ -992,21 +992,20 @@ These (very nice) properties depend upon a set of assumptions:
 
 ## Assumptions
 
-- Assumptions (1), (2), and (3) make OLS unbiased.
+Different assumptions guarantee different properties:
 
+- Assumptions (1), (2), and (3) make OLS unbiased.
 - Assumption (4) gives us an unbiased estimator for the variance of our OLS estimator.
 
 During our course, we will discuss the many ways real life may **violate these assumptions**. For instance:
 
 - Non-linear relationships in our parameters/disturbances (or misspecification).
-
 - Disturbances that are not identically distributed and/or not independent.
-
 - Violations of exogeneity (especially omitted-variable bias).
 
 ---
 layout: false
-class: inverse, middle, center
+class: inverse, middle
 # Uncertainty and inference
 
 ---
@@ -1014,6 +1013,7 @@ layout: true
 # Uncertainty and inference
 
 ---
+
 ## Is there more?
 
 Up to this point, we know OLS has some nice properties, and we know how to estimate an intercept and slope coefficient via OLS.
@@ -1023,6 +1023,11 @@ Our current workflow:
 - Regress $y$ on $x$
 - Plot the OLS line (_i.e._, $\hat{y} = \hat{\beta}_0 + \hat{\beta}_1$)
 - Done?
+
+But how do we actually **learn** something from this exercise?
+---
+
+## There is more
 
 But how do we actually **learn** something from this exercise?
 
@@ -1039,7 +1044,7 @@ layout: true
 
 ---
 
-As our previous simulation pointed out, our problem with **uncertainty** is that we don't know whether our sample estimate is *close* or *far* from the unknown population parameter.<sup>†</sup>
+As our previous simulation pointed out, our problem with **uncertainty** is that we don't know whether our sample estimate is *close* or *far* from the unknown population parameter.<sup>.pink[†]</sup>
 
 However, all is not lost. We can use the errors $\left(e_i = y_i - \hat{y}_i\right)$ to get a sense of how well our model explains the observed variation in $y$.
 
@@ -1048,7 +1053,7 @@ When our model appears to be doing a "nice" job, we might be a little more confi
 Now we just need to formalize what a "nice job" actually means.
 
 .footnote[
-[†]: Except when we run the simulation ourselves—which is why we like simulations.
+.pink[†]: Except when we run the simulation ourselves—which is why we like simulations.
 ]
 
 ---
@@ -1080,27 +1085,27 @@ $$ \mathop{\hat{\text{SE}}} \left( \hat{\beta}_1 \right) = \sqrt{\dfrac{s^2}{\su
 
 *Recall:* The standard error of an estimator is the standard deviation of the estimator's distribution.
 
+---
+
 Standard error output is standard in .mono[R]'s `lm`:
 
 ```{R, se}
 tidy(lm(y ~ x, pop_df))
 ```
-
-
 ---
 
 We use the standard error of $\hat{\beta}_1$, along with $\hat{\beta}_1$ itself, to learn about the parameter $\beta_1$.
 
-After deriving the distribution of $\hat{\beta}_1$,<sup>†</sup> we have two (related) options for formal statistical inference (learning) about our unknown parameter $\beta_1$:
+After deriving the distribution of $\hat{\beta}_1$,<sup>.pink[†]</sup> we have two (related) options for formal statistical inference (learning) about our unknown parameter $\beta_1$:
 
-- **Confidence intervals:** Use the estimate and its standard error to create an interval that, when repeated, will generally<sup>††</sup> contain the true parameter.
+- **Confidence intervals:** Use the estimate and its standard error to create an interval that, when repeated, will generally<sup>.pink[††]</sup> contain the true parameter.
 
 - **Hypothesis tests:** Determine whether there is statistically significant evidence to reject a hypothesized value or range of values.
 
 .footnote[
-[†]: *Hint:* it's normal with the mean and variance we've derived/discussed above)
-
-[††]: _E.g._, Similarly constructed 95% confidence intervals will contain the true parameter 95% of the time.
+.pink[†]: *Hint:* it's normal with the mean and variance we've derived/discussed above)
+<br>
+.pink[††]: _E.g._, Similarly constructed 95% confidence intervals will contain the true parameter 95% of the time.
 ]
 
 ---
@@ -1108,15 +1113,14 @@ layout: true
 # Uncertainty and inference
 ## Confidence intervals
 
-Under our assumptions, we can construct $(1-\alpha)$-level confidence intervals for $\beta_1$ as
-
+We construct $(1-\alpha)$-level confidence intervals for $\beta_1$
 $$ \hat{\beta}\_1 \pm t\_{\alpha/2,\text{df}} \, \mathop{\hat{\text{SE}}} \left( \hat{\beta}\_1 \right) $$
-
-$t_{\alpha/2,\text{df}}$ denotes the $\alpha/2$ quantile of a $t$ distribution with $n-k$ degrees of freedom.
 
 ---
 
---
+$t_{\alpha/2,\text{df}}$ denotes the $\alpha/2$ quantile of a $t$ dist. with $n-k$ degrees of freedom.
+
+---
 
 For example, 100 obs., two coefficients (_i.e._, $\hat{\beta}_0$ and $\hat{\beta}_1 \implies k = 2$), and $\alpha = 0.05$ (for a 95% confidence interval) gives us $t_{0.025,\,98} = `r qt(0.025, 98) %>% round(2)`$
 
@@ -1133,7 +1137,6 @@ theme(axis.text.x = element_text(size = 12))
 ```
 
 ---
-count: false
 
 **Example:**
 ```{R ci r output, echo = T, highlight.output = 5}
@@ -1142,9 +1145,7 @@ lm(y ~ x, data = pop_df) %>% tidy()
 
 --
 
-Our 95% confidence interval is thus
-
-$$ 0.567 \pm 1.98 \times 0.0793 = \left[ 0.410,\, 0.724 \right] $$
+Our 95% confidence interval is thus $0.567 \pm 1.98 \times 0.0793 = \left[ 0.410,\, 0.724 \right]$
 
 ---
 layout: true
@@ -1222,29 +1223,23 @@ In many applications, we want to know more than a point estimate or a range of v
 
 We want to test hypotheses posed by officials, politicians, economists, scientists, friends, weird neighbors, *etc.*
 
-**Examples**
+.hi-slate[Examples]
 
 - Does increasing police presence **reduce crime**?
-
 - Does building a giant wall **reduce crime**?
-
 - Does shutting down a government **adversely affect the economy**?
-
-- Does legalizing cannabis **reduce drunk driving** and/or **reduce opiod use**?
-
-- Do more stringent air quality standards **increase birthweights** and/or **reduce jobs**?
+- Does legal cannabis **reduce drunk driving** or **reduce opiod use**?
+- Do air quality standards **increase health** and/or **reduce jobs**?
 
 ---
 
-Hypothesis testing relies upon very similar results and intuition as confidence intervals.
+Hypothesis testing relies upon very similar results and intuition.
 
-While uncertainty certainly exists, we can build statistical tests that generally get the answers right (rejecting or failing to reject a posited hypothesis).
+While uncertainty certainly exists, we can still build *reliable* statistical tests (rejecting or failing to reject a posited hypothesis).
 
 --
 
-**OLS $t$ test**
-
-Imagine a (null) hypothesis which states that $\beta_1$ is equal to some value $c$, _i.e._, $H_o:\: \beta_1 = c$
+.hi-slate[OLS *t* test] Our (null) hypothesis states that $\beta_1$ equals a value $c$, _i.e._, $H_o:\: \beta_1 = c$
 
 From OLS's properties, we can show that the test statistic
 
@@ -1278,16 +1273,13 @@ lm(y ~ x, data = pop_df) %>% tidy()
 $H_o:\: \beta_1 = 0$ and $H_a:\: \beta_1 \neq 0$
 
 --
-
-$t_\text{stat} = 7.15$ and $t_\text{0.975, 28} = `r qt(0.975, 28) %>% round(2)`$
-
---
-
-$\text{p-value} < 0.05$
+<br>$t_\text{stat} = 7.15$ and $t_\text{0.975, 28} = `r qt(0.975, 28) %>% round(2)`$
 
 --
+<br>$\text{p-value} < 0.05$
 
-Reject $H_o$
+--
+<br>Reject $H_o$
 
 ---
 
@@ -1389,6 +1381,11 @@ Imagine that we might want to test whether money received as income actually has
 
 $$ \text{Consumption}\_i = \beta\_0 + \beta\_1 \text{Income}\_{i} + \beta\_2 \text{Rebate}\_i + u\_i $$
 
+---
+
+**Example, continued**
+
+
 We can write our null hypothesis as
 
 $$ H_o:\: \beta_1 = \beta_2 \iff H_o :\: \beta_1 - \beta_2 = 0 $$
@@ -1400,13 +1397,17 @@ $$ \text{Consumption}\_i = \beta\_0 + \beta\_1 \left( \text{Income}\_{i} + \text
 
 ---
 
-**Example**
+**Example, continued**
 
 To this the null hypothesis $H_o :\: \beta_1 = \beta_2$ against $H_a :\: \beta_1 \neq \beta_2$, we use the $F$ statistic
 
 $$ F\_{q,\,n-k} = \dfrac{\left(\text{SSE}\_r - \text{SSE}\_u\right)/q}{\text{SSE}\_u/(n-k-1)} $$
 
 which (as its name suggests) follows the $F$ distribution with $q$ numerator degrees of freedom and $n-k$ denominator degrees of freedom.
+
+---
+
+**Example, continued**
 
 The term $\text{SSE}_r$ is the sum of squared errors (SSE) from our **restricted model**
 $$ \text{Consumption}\_i = \beta\_0 + \beta\_1 \left( \text{Income}\_{i} + \text{Rebate}\_i \right) + u\_i $$
@@ -1417,6 +1418,6 @@ $$ \text{Consumption}\_i = \beta\_0 + \beta\_1 \text{Income}\_{i} + \beta\_2 \te
 ---
 exclude: true
 
-```{R, generate pdfs, include = F}
+```{R, generate pdfs, include = F, eval = F}
 system("decktape remark 02_review.html 02_review.pdf --chrome-arg=--allow-file-access-from-files")
 ```

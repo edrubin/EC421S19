@@ -1,0 +1,51 @@
+
+/* Create a highlighted class called 'hi'  */
+.hi {
+  font-style: oblique;
+}
+/* Mono-spaced font */
+.mono {
+  font-family: monospace;
+}
+
+.title-slide > h2  {
+  color: rgba(249, 38, 114, 0.75);
+  /* color: #afafaf; */
+}
+
+.remark-code-line-highlighted     { background-color: rgba(249, 39, 114, 0.5); }
+
+.remark-slide-content {
+  background-color: #ffffff;
+}
+
+.inverse {
+  background-color: #23373B;
+  text-shadow: 0 0 20px #333;
+  /* text-shadow: none; */
+}
+
+.title-slide {
+  background-color: #FAFAFA;
+}
+
+.footnote {
+  bottom: 1.5em;
+  font-size: 70%;
+}
+
+.dark-slide {
+  background-color: #23373B;
+  border-top: 0px solid #23373B;
+}
+.dark-slide .remark-slide-number {
+  display: none;
+}
+
+.white-slide {
+  background-color: #ffffff;
+  border-top: 0px solid #ffffff;
+}
+.white-slide .remark-slide-number {
+  display: none;
+}
