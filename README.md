@@ -10,10 +10,11 @@ The slides below (linked by their topic) are .html files that will only work pro
 
 1. [The introduction to "Introduction to Econometrics"](https://raw.githack.com/edrubin/EC421S19/master/LectureNotes/01Intro/01_intro.html) <br> [PDF](https://raw.githack.com/edrubin/EC421S19/master/LectureNotes/01Intro/01_intro.pdf) | [.Rmd](https://github.com/edrubin/EC421S19/blob/master/LectureNotes/01Intro/01_intro.Rmd)
 2. [Review of key math/stat/metrics topics](https://raw.githack.com/edrubin/EC421S19/master/LectureNotes/02Review/02_review.html)<br>Density functions, deriving the OLS estimators, properties of estimators, statistical inference (standard errors, confidence intervals, hypothesis testing), simulation
+3. [Review of key topics from EC320](https://raw.githack.com/edrubin/EC421S19/master/LectureNotes/03Review/03_review.html)<br>(the first course in our intro-to-metrics sequence) <br> [PDF](https://raw.githack.com/edrubin/EC421S19/master/LectureNotes/03Review/03_review.pdf) | [.Rmd](https://github.com/edrubin/EC421S19/blob/master/LectureNotes/03Review/03_review.Rmd)
 
 ## Problem sets
 
-1. Problem set 1: Review of OLS
+1. [Problem set 1: Review of OLS](https://raw.githack.com/edrubin/EC421S19/master/ProblemSets/PS01/ps01.html) <br> [PDF](https://raw.githack.com/edrubin/EC421S19/master/ProblemSets/PS01/ps01.pdf) | [Data](https://raw.githack.com/edrubin/EC421S19/master/ProblemSets/PS01/ps01_data.csv)
 
 ## Midterm
 
