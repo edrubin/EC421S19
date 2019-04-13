@@ -4,7 +4,7 @@
     <title>Metrics Review, Part 2</title>
     <meta charset="utf-8">
     <meta name="author" content="Edward Rubin" />
-    <meta name="date" content="2019-01-16" />
+    <meta name="date" content="2019-04-10" />
     <link href="03_review_files/remark-css/default.css" rel="stylesheet" />
     <link href="03_review_files/remark-css/metropolis.css" rel="stylesheet" />
     <link href="03_review_files/remark-css/metropolis-fonts.css" rel="stylesheet" />
@@ -17,11 +17,13 @@ class: center, middle, inverse, title-slide
 # Metrics Review, Part 2
 ## EC 421, Set 3
 ### Edward Rubin
-### 16 January 2019
+### 10 April 2019
 
 ---
 
-class: inverse, center, middle
+class: inverse, middle
+
+
 
 
 
@@ -46,42 +48,24 @@ class: inverse, center, middle
   - [Traveling salesman](https://gallery.shinyapps.io/shiny-salesman/)
 
 ---
+name: schedule
 
 # Schedule
 
-## Last Time
+### Last Time
 
 We reviewed the fundamentals of statistics and econometrics.
 
-**Follow up 1:** Someone asked about differences in R for Windows *vs.* Mac. One difference:  the characters you use for navigating the directory (file paths) within your computer.
-- **Windows:**
-  - *Option 1:* `"C:\\MyName\\Folder1\\Folder2"`
-  - *Option 2:* `"C:/MyName/Folder1/Folder2"`
-- **OSX** and **Linux:**: `"/User/MyName/Folder1/Folder2"`
-
---
-
-**Follow up 2:** Is this font size better?
-
-$$ \text{Diet} = \mathop{f}(\text{tacos},\, \text{pho},\, \text{kale},\, \text{water}) $$
-
-
----
-
-# Schedule
-
-## Today
+### Today
 
 We review more of the main/basic results in metrics.
 
-## This week
+### This week
 
-Will post the **first assignment** as the end of the week.
-
-You will have a week to complete it.
+We will post the **first assignment** Saturday (4/13). Due 4/21.
 
 ---
-class: inverse, middle, center
+class: inverse, middle
 
 # Multiple regression
 
@@ -93,19 +77,19 @@ layout: true
 
 ## More explanatory variables
 
-We're moving from **simple linear regression** (one outcome variable and one explanatory variable)
+We're moving from **simple linear regression** (one .pink[outcome variable] and one .purple[explanatory variable])
 
-$$ y_i = \beta_0 + \beta_1 x_i + u_i $$
+$$ \color{#e64173}{y_i} = \beta_0 + \beta_1 \color{#6A5ACD}{x_i} + u_i $$
 
-to the land of **multiple linear regression** (one outcome variable and multiple explanatory variables)
+to the land of **multiple linear regression** (one .pink[outcome variable] and multiple .purple[explanatory variables])
 
-$$ y\_i = \beta\_0 + \beta\_1 x\_{1i} + \beta\_2 x\_{2i} + \cdots + \beta\_k x\_{ki} + u\_i $$
+$$ \color{#e64173}{y\_i} = \beta\_0 + \beta\_1 \color{#6A5ACD}{x\_{1i}} + \beta\_2 \color{#6A5ACD}{x\_{2i}} + \cdots + \beta\_k \color{#6A5ACD}{x\_{ki}} + u\_i $$
 
 --
 
 **Why?**
 --
- Better explain the variation in `\(y\)`, improve predictions, avoid omitted-variable bias, ...
+ We can better explain the variation in `\(y\)`, improve predictions, avoid omitted-variable bias, ...
 
 ---
 
@@ -177,8 +161,8 @@ Our residualized `\(x_{1}\)` (which we named `\(\color{#e64173}{\tilde{x}_1}\)`)
 
 $$
 `\begin{aligned}
-  \hat{x}\_{1i} &amp;= \hat{\gamma}\_0 + \hat{\gamma}\_2 \, x\_{2i} + \hat{\gamma}\_3 \, x\_{3i} \\
-  \color{#e64173}{\tilde{x}\_{1i}} &amp;= x\_{1i} - \hat{x}\_{1i}
+  \hat{x}_{1i} &amp;= \hat{\gamma}_0 + \hat{\gamma}_2 \, x_{2i} + \hat{\gamma}_3 \, x_{3i} \\
+  \color{#e64173}{\tilde{x}_{1i}} &amp;= x_{1i} - \hat{x}_{1i}
 \end{aligned}`
 $$
 
@@ -187,7 +171,15 @@ $$
 allowing us to better understand our OLS multiple-regression estimator
 
 $$ \hat{\beta}_1 = \dfrac{\mathop{\hat{\text{Cov}}}(\color{#e64173}{\tilde{x}_1},\,y)}{\mathop{\hat{\text{Var}}} \left( \color{#e64173}{\tilde{x}_1} \right)} $$
+---
+layout: false
+class: clear, middle
 
+&lt;img src="03_review_files/figure-html/venn_iv-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+layout: true
+# Multiple regression
 
 ---
 ## Model fit
@@ -240,7 +232,7 @@ set.seed(1234)
 y &lt;- rnorm(1e4)
 x &lt;- matrix(data = rnorm(1e7), nrow = 1e4)
 x %&lt;&gt;% cbind(matrix(data = 1, nrow = 1e4, ncol = 1), x)
-r_df &lt;- mclapply(X = 1:(1e3-1), mc.cores = 12, FUN = function(i) {
+r_df &lt;- mclapply(X = 1:(1e3-1), mc.cores = 2, FUN = function(i) {
   tmp_reg &lt;- lm(y ~ x[,1:(i+1)]) %&gt;% summary()
   data.frame(
     k = i + 1,
@@ -252,7 +244,7 @@ r_df &lt;- mclapply(X = 1:(1e3-1), mc.cores = 12, FUN = function(i) {
 
 ---
 
-**The problem:** As we add variables to our model, `\(R^2\)` *mechanically* increases.
+**The problem:** As we add variables to our model, `\(\color{#314f4f}{R^2}\)` *mechanically* increases.
 
 
 
@@ -261,7 +253,7 @@ r_df &lt;- mclapply(X = 1:(1e3-1), mc.cores = 12, FUN = function(i) {
 
 ---
 
-**One solution:** Adjusted `\(R^2\)`
+**One solution:** .pink[Adjusted] `\(\color{#e64173}{R^2}\)`
 
 &lt;img src="03_review_files/figure-html/adjusted r2 plot-1.svg" style="display: block; margin: auto;" /&gt;
 
@@ -269,7 +261,7 @@ r_df &lt;- mclapply(X = 1:(1e3-1), mc.cores = 12, FUN = function(i) {
 
 **The problem:** As we add variables to our model, `\(R^2\)` *mechanically* increases.
 
-**One solution:** Control (penalize) for the number of variables, _e.g._, adjusted `\(R^2\)`:
+**One solution:** Penalize for the number of variables, _e.g._, adjusted `\(R^2\)`:
 
 $$ \overline{R}^2 = 1 - \dfrac{\sum_i \left( y_i - \hat{y}_i \right)^2/(n-k-1)}{\sum_i \left( y_i - \overline{y} \right)^2/(n-1)} $$
 
@@ -297,7 +289,7 @@ There are tradeoffs to remember as we add/remove variables:
 layout: true
 # Omitted-variable bias
 ---
-class: inverse, middle, center
+class: inverse, middle
 
 ---
 
@@ -330,8 +322,9 @@ where
 
 thus
 
-- `\(\beta_1\)`: the returns to an additional year of schooling
-- `\(\beta_2\)`: the premium for being male (if `\(\beta_2 &gt; 0\)`, then there is discrimination against women—receiving less pay based upon gender)
+- `\(\beta_1\)`: the returns to an additional year of schooling (*ceteris paribus*)
+- `\(\beta_2\)`: the premium for being male (*ceteris paribus*)
+&lt;br&gt;If `\(\beta_2 &gt; 0\)`, then there is discrimination against women—receiving less pay based upon gender.
 
 ---
 layout: true
@@ -407,7 +400,11 @@ count: false
 Unbiased regression estimate: `\(\widehat{\text{Pay}}_i = 20.3 + 0.4 \times \text{School}_i + 10.2 \times \text{Male}_i\)`
 
 &lt;img src="03_review_files/figure-html/plot ovb 5-1.svg" style="display: block; margin: auto;" /&gt;
+---
+layout: false
+class: clear, middle, center
 
+&lt;img src="03_review_files/figure-html/venn2-1.svg" style="display: block; margin: auto;" /&gt;
 ---
 layout: false
 
@@ -436,7 +433,7 @@ layout: true
 # Interpreting coefficients
 
 ---
-class: inverse, middle, center
+class: inverse, middle
 
 ---
 ## Continuous variables
@@ -464,9 +461,9 @@ Deriving the slope's interpretation:
 
 $$
 `\begin{aligned}
-  \mathop{\boldsymbol{E}}\left[ \text{Pay} | \text{School} = \ell + 1 \right] - \mathop{\boldsymbol{E}}\left[ \text{Pay} | \text{School} = \ell \right] &amp;= \\
-  \mathop{\boldsymbol{E}}\left[ \beta_0 + \beta_1 (\ell + 1) + u \right] - \mathop{\boldsymbol{E}}\left[ \beta_0 + \beta_1 \ell + u \right] &amp;= \\
-  \left[ \beta_0 + \beta_1 (\ell + 1) \right] - \left[ \beta_0 + \beta_1 \ell \right] &amp;= \\
+  \mathop{\boldsymbol{E}}\left[ \text{Pay} | \text{School} = \ell + 1 \right] - \mathop{\boldsymbol{E}}\left[ \text{Pay} | \text{School} = \ell \right] &amp;= \\[0.5em]
+  \mathop{\boldsymbol{E}}\left[ \beta_0 + \beta_1 (\ell + 1) + u \right] - \mathop{\boldsymbol{E}}\left[ \beta_0 + \beta_1 \ell + u \right] &amp;= \\[0.5em]
+  \left[ \beta_0 + \beta_1 (\ell + 1) \right] - \left[ \beta_0 + \beta_1 \ell \right] &amp;= \\[0.5em]
   \beta_0 - \beta_0 + \beta_1 \ell - \beta_1 \ell + \beta_1 &amp;=
   \beta_1
 \end{aligned}`
@@ -501,7 +498,7 @@ $$
 
 --
 
-_I.e._, the slope gives the expected increase in our outcome variable for a one-unit increase in the explanatory variable, **holding all other variables constant**. (*Ceteris paribus*)
+_I.e._, the slope gives the expected increase in our outcome variable for a one-unit increase in the explanatory variable, **holding all other variables constant** (*ceteris paribus*).
 
 ---
 ## Continuous variables
@@ -629,7 +626,9 @@ The model where schooling's effect can differ by gender (**&lt;font color="#e641
 ---
 ## Interactions
 
-Interpreting coefficients can be a little tricky with interactions, but the key&lt;sup&gt;†&lt;/sup&gt; is to carefully work through the math.
+Interpreting coefficients can be a little tricky with interactions, but the key&lt;sup&gt;.pink[†]&lt;/sup&gt; is to carefully work through the math.
+
+.footnote[.pink[†] As is often the case with econometrics.]
 
 $$ \text{Pay}_i = \beta_0 + \beta_1 \, \text{School}_i + \beta_2 \, \text{Female}_i + \beta_3 \, \text{School}_i\times\text{Female}_i + u_i $$
 
@@ -648,10 +647,6 @@ $$
 --
 
 Similarly, `\(\beta_1\)` gives the expected return to an additional year of schooling for men. Thus, `\(\beta_3\)` gives the **difference in the returns to schooling** for women and men.
-
-.footnote[
-[†]: As if often the key with econometrics.
-]
 
 ---
 ## Log-linear specification
@@ -705,9 +700,9 @@ $$ \log(y_i) = \beta_0 + \beta_1 \, x_i + u_i \iff y_i = e^{\beta_0 + \beta_1 x_
 ---
 ## Log-log specification
 
-Similarly, econometricians frequently employ log-log models, in which the outcome variable is logged *and* at least one explanatory variable is logged, _e.g._,
+Similarly, econometricians frequently employ log-log models, in which the outcome variable is logged *and* at least one explanatory variable is logged
 
-$$ \log(Pay_i) = \beta_0 + \beta_1 \, \log(\text{School}_i) + u_i $$
+$$ \log(\text{Pay}_i) = \beta_0 + \beta_1 \, \log(\text{School}_i) + u_i $$
 
 **Interpretation:**
 
@@ -758,7 +753,7 @@ layout: true
 # Additional topics
 
 ---
-class: inverse, middle, center
+class: inverse, middle
 
 ---
 ## Inference *vs.* prediction
@@ -780,10 +775,10 @@ Succinctly
 
 - **Inference:** causality, `\(\hat{\beta}_k\)` (consistent and efficient), standard errors/hypothesis tests for `\(\hat{\beta}_k\)`, generally OLS
 
-- **Prediction:**&lt;sup&gt;†&lt;/sup&gt; correlation, `\(\hat{y}_i\)` (low error), model selection, nonlinear models are much more common
+- **Prediction:**&lt;sup&gt;.pink[†]&lt;/sup&gt; correlation, `\(\hat{y}_i\)` (low error), model selection, nonlinear models are much more common
 
 .footnote[
-[†]: Includes forecasting.
+.pink[†] Includes forecasting.
 ]
 
 ---

@@ -11,3 +11,13 @@ knitr
 bindrcpp
 broom
 latex2exp
+ggridges
+Cairo
+tidyverse
+tibble
+tidyr
+readr
+purrr
+stringr
+forcats
+data.table

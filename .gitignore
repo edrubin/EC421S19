@@ -2,3 +2,5 @@
 *.rdb
 *.DS_Store
 .Rproj.user
+
+ProblemSets/PS1/ps01.Rmd

@@ -1,0 +1,1482 @@
+---
+title: "Metrics Review, Part 2"
+subtitle: "EC 421, Set 3"
+author: "Edward Rubin"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  xaringan::moon_reader:
+    css: ['default', 'metropolis', 'metropolis-fonts', 'my-css.css']
+    # self_contained: true
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+class: inverse, middle
+
+```{r Setup, include = F}
+options(htmltools.dir.version = FALSE)
+library(pacman)
+p_load(broom, latex2exp, ggplot2, ggthemes, ggforce, viridis, dplyr, magrittr, knitr, parallel)
+# Notes directory
+dir_slides <- "~/Dropbox/UO/Teaching/EC421W19/LectureNotes/02Review/"
+# Knitr options
+opts_chunk$set(
+  comment = "#>",
+  fig.align = "center",
+  fig.height = 7,
+  fig.width = 10.5,
+  warning = F,
+  message = F
+)
+# A blank theme for ggplot
+theme_empty <- theme_bw() + theme(
+  line = element_blank(),
+  rect = element_blank(),
+  strip.text = element_blank(),
+  axis.text = element_blank(),
+  plot.title = element_blank(),
+  axis.title = element_blank(),
+  plot.margin = structure(c(0, 0, -0.5, -1), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_simple <- theme_bw() + theme(
+  line = element_blank(),
+  panel.grid = element_blank(),
+  rect = element_blank(),
+  strip.text = element_blank(),
+  axis.text.x = element_text(size = 14),
+  axis.text.y = element_blank(),
+  axis.ticks = element_blank(),
+  plot.title = element_blank(),
+  axis.title = element_blank(),
+  # plot.margin = structure(c(0, 0, -1, -1), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_axes <- theme_empty + theme(
+  axis.title = element_text(size = 18),
+  plot.margin = structure(c(0, 0, 0.1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+)
+```
+
+```{R, colors, include = F}
+# Define pink color
+red_pink <- "#e64173"
+turquoise <- "#20B2AA"
+orange <- "#FFA500"
+red <- "#fb6107"
+blue <- "#2b59c3"
+green <- "#8bb174"
+grey_light <- "grey70"
+grey_mid <- "grey50"
+grey_dark <- "grey20"
+purple <- "#6A5ACD"
+```
+
+# Prologue
+
+---
+# .mono[R] showcase
+
+**[.mono[ggplot2]](https://ggplot2.tidyverse.org/reference/index.html)**
+
+- Incredibly powerful graphing and mapping package for .mono[R].
+- Written in a way that helps you build your figures layer by layer.
+- Exportable to many applications.
+- Party of the `tidyverse`.
+
+**[.mono[shiny]](https://shiny.rstudio.com)**
+
+- Export your figures and code to interactive web apps.
+- Enormous range of applications
+  - [Distribution calculator](https://gallery.shinyapps.io/dist_calc/)
+  - [Tabsets](https://shiny.rstudio.com/gallery/tabsets.html)
+  - [Traveling salesman](https://gallery.shinyapps.io/shiny-salesman/)
+
+---
+name: schedule
+
+# Schedule
+
+### Last Time
+
+We reviewed the fundamentals of statistics and econometrics.
+
+### Today
+
+We review more of the main/basic results in metrics.
+
+### This week
+
+We will post the **first assignment** Saturday (4/13). Due 4/21.
+
+---
+class: inverse, middle
+
+# Multiple regression
+
+---
+layout: true
+# Multiple regression
+
+---
+
+## More explanatory variables
+
+We're moving from **simple linear regression** (one .pink[outcome variable] and one .purple[explanatory variable])
+
+$$ \color{#e64173}{y_i} = \beta_0 + \beta_1 \color{#6A5ACD}{x_i} + u_i $$
+
+to the land of **multiple linear regression** (one .pink[outcome variable] and multiple .purple[explanatory variables])
+
+$$ \color{#e64173}{y\_i} = \beta\_0 + \beta\_1 \color{#6A5ACD}{x\_{1i}} + \beta\_2 \color{#6A5ACD}{x\_{2i}} + \cdots + \beta\_k \color{#6A5ACD}{x\_{ki}} + u\_i $$
+
+
+**Why?**
+ We can better explain the variation in $y$, improve predictions, avoid omitted-variable bias, ...
+
+---
+
+```{R, gen data, cache = T, include = F}
+n <- 1e2
+set.seed(1234)
+gen_df <- tibble(
+  x1 = runif(n = n, min = -3, max = 3),
+  x2 = sample(x = c(F, T), size = n, replace = T),
+  u  = rnorm(n = n, mean = 0, sd = 1),
+  y  = -0.5 + x1 + x2 * 4 + u
+)
+mean_a <- filter(gen_df, x2 == F)$y %>% mean()
+mean_b <- filter(gen_df, x2 == T)$y %>% mean()
+gen_df %<>% mutate(y_dm = y - mean_a * (x2 == F) - mean_b * (x2 == T))
+```
+
+$y_i = \beta_0 + \beta_1 x_{1i} + \beta_2 x_{2i} + u_i \quad$ $x_1$ is continuous $\quad x_2$ is categorical
+
+```{R, mult reg plot 1, dev = "svg", echo = F, fig.height = 6.25}
+ggplot(data = gen_df, aes(y = y, x = x1, color = x2, shape = x2)) +
+geom_hline(yintercept = 0) +
+geom_vline(xintercept = 0) +
+annotate("text", x = -0.075, y = 7.75, label = TeX("$y$"), size = 8) +
+annotate("text", x = 2.95, y = 0.3, label = TeX("$x_1$"), size = 8) +
+geom_point(size = 3) +
+ylim(c(-4.5, 8)) +
+theme_empty +
+scale_color_manual(
+  expression(x[2]),
+  values = c("darkslategrey", red_pink),
+  labels = c("A", "B")
+) +
+scale_shape_manual(
+  expression(x[2]),
+  values = c(1, 19),
+  labels = c("A", "B")
+) +
+theme(
+  legend.position = "bottom",
+  text = element_text(size = 20)
+)
+```
+
+---
+count: false
+
+The intercept and categorical variable $x_2$ control for the groups' means.
+
+```{R, mult reg plot 2, dev = "svg", echo = F, fig.height = 6.25}
+ggplot(data = gen_df, aes(y = y, x = x1, color = x2, shape = x2)) +
+geom_hline(yintercept = mean_a, color = "darkslategrey", alpha = 0.5) +
+geom_hline(yintercept = mean_b, color = red_pink, alpha = 0.5) +
+geom_hline(yintercept = 0) +
+geom_vline(xintercept = 0) +
+annotate("text", x = -0.075, y = 7.75, label = TeX("$y$"), size = 8) +
+annotate("text", x = 2.95, y = 0.3, label = TeX("$x_1$"), size = 8) +
+geom_point(size = 3) +
+ylim(c(-4.5, 8)) +
+theme_empty +
+scale_color_manual(
+  expression(x[2]),
+  values = c("darkslategrey", red_pink),
+  labels = c("A", "B")
+) +
+scale_shape_manual(
+  expression(x[2]),
+  values = c(1, 19),
+  labels = c("A", "B")
+) +
+theme(
+  legend.position = "bottom",
+  text = element_text(size = 20)
+)
+```
+
+---
+count: false
+
+With groups' means removed:
+
+```{R, mult reg plot 3, dev = "svg", echo = F, fig.height = 6.25}
+ggplot(data = gen_df %>% mutate(y = y - 4 * x2), aes(y = y_dm, x = x1)) +
+geom_hline(yintercept = 0) +
+geom_vline(xintercept = 0) +
+annotate("text", x = -0.075, y = 7.75, label = TeX("$y$"), size = 8) +
+annotate("text", x = 2.95, y = 0.3, label = TeX("$x_1$"), size = 8) +
+geom_point(size = 3, aes(color = x2, shape = x2)) +
+ylim(c(-4.5, 8)) +
+theme_empty +
+scale_color_manual(
+  expression(x[2]),
+  values = c("darkslategrey", red_pink),
+  labels = c("A", "B")
+) +
+scale_shape_manual(
+  expression(x[2]),
+  values = c(1, 19),
+  labels = c("A", "B")
+) +
+theme(
+  legend.position = "bottom",
+  text = element_text(size = 20)
+)
+```
+
+---
+count: false
+
+$\hat{\beta}_1$ estimates the relationship between $y$ and $x_1$ after controlling for $x_2$.
+
+```{R, mult reg plot 4, dev = "svg", echo = F, fig.height = 6.25}
+ggplot(data = gen_df %>% mutate(y = y - 4 * x2), aes(y = y_dm, x = x1)) +
+geom_smooth(method = lm, se = F, color = "orange") +
+geom_hline(yintercept = 0) +
+geom_vline(xintercept = 0) +
+annotate("text", x = -0.075, y = 7.75, label = TeX("$y$"), size = 8) +
+annotate("text", x = 2.95, y = 0.3, label = TeX("$x_1$"), size = 8) +
+geom_point(size = 3, aes(color = x2, shape = x2)) +
+ylim(c(-4.5, 8)) +
+theme_empty +
+scale_color_manual(
+  expression(x[2]),
+  values = c("darkslategrey", red_pink),
+  labels = c("A", "B")
+) +
+scale_shape_manual(
+  expression(x[2]),
+  values = c(1, 19),
+  labels = c("A", "B")
+) +
+theme(
+  legend.position = "bottom",
+  text = element_text(size = 20)
+)
+```
+
+---
+count: false
+
+Another way to think about it:
+
+```{R, mult reg plot 5, dev = "svg", echo = F, fig.height = 6.25}
+ggplot(data = gen_df, aes(y = y, x = x1, color = x2, shape = x2)) +
+geom_smooth(method = lm, se = F) +
+geom_hline(yintercept = 0) +
+geom_vline(xintercept = 0) +
+annotate("text", x = -0.075, y = 7.75, label = TeX("$y$"), size = 8) +
+annotate("text", x = 2.95, y = 0.3, label = TeX("$x_1$"), size = 8) +
+geom_point(size = 3) +
+ylim(c(-4.5, 8)) +
+theme_empty +
+scale_color_manual(
+  expression(x[2]),
+  values = c("darkslategrey", red_pink),
+  labels = c("A", "B")
+) +
+scale_shape_manual(
+  expression(x[2]),
+  values = c(1, 19),
+  labels = c("A", "B")
+) +
+theme(
+  legend.position = "bottom",
+  text = element_text(size = 20)
+)
+```
+
+---
+Looking at our estimator can also help.
+
+For the simple linear regression $y_i = \beta_0 + \beta_1 x_i + u_i$
+
+$$
+\begin{aligned}
+  \hat{\beta}_1 &= \\[0.3em]
+  &= \dfrac{\sum_i \left( x_i - \overline{x} \right) \left( y_i - \overline{y} \right)}{\sum_i \left( x_i -\overline{x} \right)} \\[0.3em]
+  &= \dfrac{\sum_i \left( x_i - \overline{x} \right) \left( y_i - \overline{y} \right)/(n-1)}{\sum_i \left( x_i -\overline{x} \right) / (n-1)} \\[0.3em]
+  &= \dfrac{\mathop{\hat{\text{Cov}}}(x,\,y)}{\mathop{\hat{\text{Var}}} \left( x \right)}
+\end{aligned}
+$$
+
+---
+Simple linear regression estimator:
+
+$$ \hat{\beta}_1 = \dfrac{\mathop{\hat{\text{Cov}}}(x,\,y)}{\mathop{\hat{\text{Var}}} \left( x \right)} $$
+
+moving to multiple linear regression, the estimator changes slightly:
+
+$$ \hat{\beta}_1 = \dfrac{\mathop{\hat{\text{Cov}}}(\color{#e64173}{\tilde{x}_1},\,y)}{\mathop{\hat{\text{Var}}} \left( \color{#e64173}{\tilde{x}_1} \right)} $$
+
+where $\color{#e64173}{\tilde{x}_1}$ is the *residualized* $x_1$ variable—the variation remaining in $x$ after controlling for the other explanatory variables.
+
+---
+More formally, consider the multiple-regression model
+
+$$ y_i = \beta_0 + \beta_1 x_1 + \beta_2 x_2 + \beta_3 x_3 + u_i $$
+
+Our residualized $x_{1}$ (which we named $\color{#e64173}{\tilde{x}_1}$) comes from regressing $x_1$ on an intercept and all of the other explanatory variables and collecting the residuals, _i.e._,
+
+$$
+\begin{aligned}
+  \hat{x}_{1i} &= \hat{\gamma}_0 + \hat{\gamma}_2 \, x_{2i} + \hat{\gamma}_3 \, x_{3i} \\
+  \color{#e64173}{\tilde{x}_{1i}} &= x_{1i} - \hat{x}_{1i}
+\end{aligned}
+$$
+
+
+allowing us to better understand our OLS multiple-regression estimator
+
+$$ \hat{\beta}_1 = \dfrac{\mathop{\hat{\text{Cov}}}(\color{#e64173}{\tilde{x}_1},\,y)}{\mathop{\hat{\text{Var}}} \left( \color{#e64173}{\tilde{x}_1} \right)} $$
+---
+layout: false
+class: clear, middle
+
+```{R, venn_iv, echo = F, dev = "svg"}
+# Colors (order: x1, x2, x3, y)
+venn_colors <- c(purple, red, "grey60", orange)
+# Locations of circles
+venn_df <- tibble(
+  x  = c( 0.0,   -0.5,    1.5,   -1.0),
+  y  = c( 0.0,   -2.5,   -1.8,    2.0),
+  r  = c( 1.9,    1.5,    1.5,    1.3),
+  l  = c( "Y", "X[1]", "X[2]", "X[3]"),
+  xl = c( 0.0,   -0.5,    1.6,   -1.0),
+  yl = c( 0.0,   -2.5,   -1.9,    2.2)
+)
+# Venn
+ggplot(data = venn_df, aes(x0 = x, y0 = y, r = r, fill = l, color = l)) +
+geom_circle(alpha = 0.3, size = 0.75) +
+theme_void() +
+theme(legend.position = "none") +
+scale_fill_manual(values = venn_colors) +
+scale_color_manual(values = venn_colors) +
+geom_text(aes(x = xl, y = yl, label = l), size = 9, family = "Fira Sans Book", parse = T) +
+annotate(
+  x = -5.5, y = 3.3,
+  geom = "text", label = "Multiple regression", size = 9, family = "Fira Sans Book", hjust = 0
+) +
+xlim(-5.5, 4.5) +
+ylim(-4.2, 3.4) +
+coord_equal()
+```
+
+---
+layout: true
+# Multiple regression
+
+---
+## Model fit
+
+Measures of *goodness of fit* try to analyze how well our model describes (*fits*) the data.
+
+**Common measure:** $R^2$ [R-squared] (*a.k.a.* coefficient of determination)
+
+$$ R^2 = \dfrac{\sum_i (\hat{y}_i - \overline{y})^2}{\sum_i \left( y_i - \overline{y} \right)^2} = 1 - \dfrac{\sum_i \left( y_i - \hat{y}_i \right)^2}{\sum_i \left( y_i - \overline{y} \right)^2} $$
+
+Notice our old friend SSE: $\sum_i \left( y_i - \hat{y}_i \right)^2 = \sum_i e_i^2$.
+
+
+$R^2$ literally tells us the share of the variance in $y$ our current models accounts for. Thus $0 \leq R^2 \leq 1$.
+
+---
+
+**The problem:** As we add variables to our model, $R^2$ *mechanically* increases.
+
+
+To see this problem, we can simulate a dataset of 10,000 observations on $y$ and 1,000 random $x_k$ variables. **No relations between $y$ and the $x_k$!**
+
+Pseudo-code outline of the simulation:
+
+.pseudocode-small[
+
+- Generate 10,000 observations on $y$
+- Generate 10,000 observations on variables $x_1$ through $x_{1000}$
+- Regressions
+  - LM<sub>1</sub>: Regress $y$ on $x_1$; record R<sup>2</sup>
+  - LM<sub>2</sub>: Regress $y$ on $x_1$ and $x_2$; record R<sup>2</sup>
+  - LM<sub>3</sub>: Regress $y$ on $x_1$, $x_2$, and $x_3$; record R<sup>2</sup>
+  - ...
+  - LM<sub>1000</sub>: Regress $y$ on $x_1$, $x_2$, ..., $x_{1000}$; record R<sup>2</sup>
+]
+
+---
+
+**The problem:** As we add variables to our model, $R^2$ *mechanically* increases.
+
+.mono[R] code for the simulation:
+
+
+```{R, r2 data code, eval = F, cache = T}
+set.seed(1234)
+y <- rnorm(1e4)
+x <- matrix(data = rnorm(1e7), nrow = 1e4)
+x %<>% cbind(matrix(data = 1, nrow = 1e4, ncol = 1), x)
+r_df <- mclapply(X = 1:(1e3-1), mc.cores = 2, FUN = function(i) {
+  tmp_reg <- lm(y ~ x[,1:(i+1)]) %>% summary()
+  data.frame(
+    k = i + 1,
+    r2 = tmp_reg %$% r.squared,
+    r2_adj = tmp_reg %$% adj.r.squared
+  )
+}) %>% bind_rows()
+```
+
+---
+
+**The problem:** As we add variables to our model, $\color{#314f4f}{R^2}$ *mechanically* increases.
+
+
+```{R, r2 data, include = F, cache = T}
+set.seed(1234)
+y <- rnorm(1e4)
+x <- matrix(data = rnorm(1e7), nrow = 1e4)
+x %<>% cbind(matrix(data = 1, nrow = 1e4, ncol = 1), x)
+r_df <- mclapply(X = 1:(1e3-1), mc.cores = 2, FUN = function(i) {
+  tmp_reg <- lm(y ~ x[,1:(i+1)]) %>% summary()
+  data.frame(
+    k = i + 1,
+    r2 = tmp_reg %$% r.squared,
+    r2_adj = tmp_reg %$% adj.r.squared
+  )
+}) %>% bind_rows()
+```
+
+```{R, r2 plot, echo = F, dev = "svg", fig.height = 6.25}
+ggplot(data = r_df, aes(x = k, y = r2)) +
+geom_hline(yintercept = 0) +
+geom_vline(xintercept = 0) +
+geom_line(size = 2, alpha = 0.75, color = "darkslategrey") +
+geom_line(aes(y = r2_adj), size = 0.2, alpha = 0, color = red_pink) +
+ylab(TeX("R^2")) +
+xlab("Number of explanatory variables (k)") +
+theme_pander(base_size = 18)
+```
+
+---
+
+**One solution:** .pink[Adjusted] $\color{#e64173}{R^2}$
+
+```{R, adjusted r2 plot, echo = F, dev = "svg", fig.height = 6.25}
+ggplot(data = r_df, aes(x = k, y = r2)) +
+geom_hline(yintercept = 0) +
+geom_vline(xintercept = 0) +
+geom_line(size = 2, alpha = 0.15, color = "darkslategrey") +
+geom_line(aes(y = r2_adj), size = 2, alpha = 0.85, color = red_pink) +
+ylab(TeX("R^2")) +
+xlab("Number of explanatory variables (k)") +
+theme_pander(base_size = 18)
+```
+
+---
+
+**The problem:** As we add variables to our model, $R^2$ *mechanically* increases.
+
+**One solution:** Penalize for the number of variables, _e.g._, adjusted $R^2$:
+
+$$ \overline{R}^2 = 1 - \dfrac{\sum_i \left( y_i - \hat{y}_i \right)^2/(n-k-1)}{\sum_i \left( y_i - \overline{y} \right)^2/(n-1)} $$
+
+*Note:* Adjusted $R^2$ need not be between 0 and 1.
+
+---
+
+## Tradeoffs
+
+There are tradeoffs to remember as we add/remove variables:
+
+**Fewer variables**
+
+- Generally explain less variation in $y$
+- Provide simple interpretations and visualizations (*parsimonious*)
+- May need to worry about omitted-variable bias
+
+**More variables**
+
+- More likely to find *spurious* relationships (statistically significant due to chance—does not reflect a true, population-level relationship)
+- More difficult to interpret the model
+- You may still miss important variabless—still omitted-variable bias
+
+---
+layout: true
+# Omitted-variable bias
+---
+class: inverse, middle
+
+---
+
+We'll go deeper into this issue in a few weeks, but as a refresher:
+
+**Omitted-variable bias** (OVB) arises when we omit a variable that
+
+1. affects our outcome variable $y$
+
+2. correlates with an explanatory variable $x_j$
+
+As it's name suggests, this situation leads to bias in our estimate of $\beta_j$.
+
+
+**Note:** OVB Is not exclusive to multiple linear regression, but it does require multiple variables affect $y$.
+
+---
+
+**Example**
+
+Let's imagine a simple model for the amount individual $i$ gets paid
+
+$$ \text{Pay}_i = \beta_0 + \beta_1 \text{School}_i + \beta_2 \text{Male}_i + u_i $$
+
+where
+
+- $\text{School}_i$ gives $i$'s years of schooling
+- $\text{Male}_i$ denotes an indicator variable for whether individual $i$ is male.
+
+thus
+
+- $\beta_1$: the returns to an additional year of schooling (*ceteris paribus*)
+- $\beta_2$: the premium for being male (*ceteris paribus*)
+<br>If $\beta_2 > 0$, then there is discrimination against women—receiving less pay based upon gender.
+
+---
+layout: true
+# Omitted-variable bias
+
+**Example, continued**
+
+---
+
+From our population model
+
+$$ \text{Pay}_i = \beta_0 + \beta_1 \text{School}_i + \beta_2 \text{Male}_i + u_i $$
+
+If a study focuses on the relationship between pay and schooling, _i.e._,
+
+$$ \text{Pay}_i = \beta_0 + \beta_1 \text{School}_i + \left(\beta_2 \text{Male}_i + u_i\right) $$
+$$ \text{Pay}_i = \beta_0 + \beta_1 \text{School}_i + \varepsilon_i $$
+
+where $\varepsilon_i = \beta_2 \text{Male}_i + u_i$.
+
+We used our exogeneity assumption to derive OLS' unbiasedness. But even if $\mathop{\boldsymbol{E}}\left[ u | X \right] = 0$, it is not true that $\mathop{\boldsymbol{E}}\left[ \varepsilon | X \right] = 0$ so long as $\beta_2 \neq 0$.
+
+Specifically, $\mathop{\boldsymbol{E}}\left[ \varepsilon | \text{Male} = 1 \right] = \beta_2 + \mathop{\boldsymbol{E}}\left[ u | \text{Male} = 1 \right] \neq 0$.
+ **Now OLS is biased.**
+
+---
+
+Let's try to see this result graphically.
+
+```{R, gen ovb data, include = F, cache = T}
+# Set seed
+set.seed(12345)
+# Sample size
+n <- 1e3
+# Parameters
+beta0 <- 20; beta1 <- 0.5; beta2 <- 10
+# Dataset
+omit_df <- tibble(
+  male = sample(x = c(F, T), size = n, replace = T),
+  school = runif(n, 3, 9) - 3 * male,
+  pay = beta0 + beta1 * school + beta2 * male + rnorm(n, sd = 7)
+)
+lm_bias <- lm(pay ~ school, data = omit_df)
+bb0 <- lm_bias$coefficients[1] %>% round(1)
+bb1 <- lm_bias$coefficients[2] %>% round(1)
+lm_unbias <- lm(pay ~ school + male, data = omit_df)
+bu0 <- lm_unbias$coefficients[1] %>% round(1)
+bu1 <- lm_unbias$coefficients[2] %>% round(1)
+bu2 <- lm_unbias$coefficients[3] %>% round(1)
+```
+
+The population model:
+
+$$ \text{Pay}_i = `r beta0` + `r beta1` \times \text{School}_i + `r beta2` \times \text{Male}_i + u_i $$
+
+Our regression model that suffers from omitted-variable bias:
+
+$$ \text{Pay}_i = \hat{\beta}_0 + \hat{\beta}_1 \times \text{School}_i + e_i $$
+
+Finally, imagine that women, on average, receive more schooling than men.
+
+---
+layout: true
+# Omitted-variable bias
+**Example, continued:** $\text{Pay}_i = `r beta0` + `r beta1` \times \text{School}_i + `r beta2` \times \text{Male}_i + u_i$
+
+---
+
+The relationship between pay and schooling.
+
+```{R, plot ovb 1, echo = F, dev = "svg", fig.height = 5.5}
+ggplot(data = omit_df, aes(x = school, y = pay)) +
+geom_point(size = 2.5, color = "black", alpha = 0.4, shape = 16) +
+geom_hline(yintercept = 0) +
+geom_vline(xintercept = 0) +
+xlab("Schooling") +
+ylab("Pay") +
+theme_empty +
+theme(
+  axis.title = element_text(size = 18),
+  plot.margin = structure(c(0, 0, 0.1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+)
+```
+---
+count: false
+Biased regression estimate: $\widehat{\text{Pay}}_i = `r bb0` + `r bb1` \times \text{School}_i$
+
+```{R, plot ovb 2, echo = F, dev = "svg", fig.height = 5.5}
+ggplot(data = omit_df, aes(x = school, y = pay)) +
+geom_point(size = 2.5, color = "black", alpha = 0.4, shape = 16) +
+geom_hline(yintercept = 0) +
+geom_vline(xintercept = 0) +
+geom_smooth(se = F, color = "orange", method = lm) +
+xlab("Schooling") +
+ylab("Pay") +
+theme_empty +
+theme(
+  axis.title = element_text(size = 18),
+  plot.margin = structure(c(0, 0, 0.1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+)
+```
+
+---
+count: false
+Recalling the omitted variable: Gender (**<font color="#e64173">female</font>** and **<font color="#314f4f">male</font>**)
+
+```{R, plot ovb 3, echo = F, dev = "svg", fig.height = 5.5}
+ggplot(data = omit_df, aes(x = school, y = pay)) +
+geom_point(size = 2.5, alpha = 0.8, aes(color = male, shape = male)) +
+geom_hline(yintercept = 0) +
+geom_vline(xintercept = 0) +
+geom_line(stat = "smooth", color = "orange", method = lm, alpha = 0.5, size = 1) +
+xlab("Schooling") +
+ylab("Pay") +
+theme_empty +
+theme(
+  axis.title = element_text(size = 18),
+  plot.margin = structure(c(0, 0, 0.1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+) +
+scale_color_manual("", values = c(red_pink, "darkslategrey"), labels = c("Female", "Male")) +
+scale_shape_manual("", values = c(16, 1), labels = c("Female", "Male"))
+```
+
+---
+count: false
+Recalling the omitted variable: Gender (**<font color="#e64173">female</font>** and **<font color="#314f4f">male</font>**)
+
+```{R, plot ovb 4, echo = F, dev = "svg", fig.height = 5.5}
+ggplot(data = omit_df, aes(x = school, y = pay)) +
+geom_point(size = 2.5, alpha = 0.8, aes(color = male, shape = male)) +
+geom_hline(yintercept = 0) +
+geom_vline(xintercept = 0) +
+geom_line(stat = "smooth", color = "orange", method = lm, alpha = 0.2, size = 1) +
+geom_abline(
+  intercept = lm_unbias$coefficients[1],
+  slope = lm_unbias$coefficients[2],
+  color = red_pink, size = 1
+) +
+geom_abline(
+  intercept = lm_unbias$coefficients[1] + lm_unbias$coefficients[3],
+  slope = lm_unbias$coefficients[2],
+  color = "darkslategrey", size = 1
+) +
+xlab("Schooling") +
+ylab("Pay") +
+theme_empty +
+theme(
+  axis.title = element_text(size = 18),
+  plot.margin = structure(c(0, 0, 0.1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+) +
+scale_color_manual("", values = c(red_pink, "darkslategrey"), labels = c("Female", "Male")) +
+scale_shape_manual("", values = c(16, 1), labels = c("Female", "Male"))
+```
+
+---
+count: false
+Unbiased regression estimate: $\widehat{\text{Pay}}_i = `r bu0` + `r bu1` \times \text{School}_i + `r bu2` \times \text{Male}_i$
+
+```{R, plot ovb 5, echo = F, dev = "svg", fig.height = 5.5}
+ggplot(data = omit_df, aes(x = school, y = pay)) +
+geom_point(size = 2.5, alpha = 0.8, aes(color = male, shape = male)) +
+geom_hline(yintercept = 0) +
+geom_vline(xintercept = 0) +
+geom_line(stat = "smooth", color = "orange", method = lm, alpha = 0.2, size = 1) +
+geom_abline(
+  intercept = lm_unbias$coefficients[1],
+  slope = lm_unbias$coefficients[2],
+  color = red_pink, size = 1
+) +
+geom_abline(
+  intercept = lm_unbias$coefficients[1] + lm_unbias$coefficients[3],
+  slope = lm_unbias$coefficients[2],
+  color = "darkslategrey", size = 1
+) +
+xlab("Schooling") +
+ylab("Pay") +
+theme_empty +
+theme(
+  axis.title = element_text(size = 18),
+  plot.margin = structure(c(0, 0, 0.1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+) +
+scale_color_manual("", values = c(red_pink, "darkslategrey"), labels = c("Female", "Male")) +
+scale_shape_manual("", values = c(16, 1), labels = c("Female", "Male"))
+```
+---
+layout: false
+class: clear, middle, center
+
+```{R, venn2, dev = "svg", echo = F}
+# Line types (order: x1, x2, x3, y)
+venn_lines <- c("solid", "dotted", "dotted", "solid")
+# Venn
+ggplot(data = venn_df, aes(x0 = x, y0 = y, r = r, fill = l, color = l)) +
+geom_circle(aes(linetype = l), alpha = 0.3, size = 0.75) +
+theme_void() +
+theme(legend.position = "none") +
+scale_fill_manual(values = venn_colors) +
+scale_color_manual(values = venn_colors) +
+scale_linetype_manual(values = venn_lines) +
+geom_text(aes(x = xl, y = yl, label = l), size = 9, family = "Fira Sans Book", parse = T) +
+annotate(
+  x = -5.5, y = 3.3,
+  geom = "text", label = "Omitted variables", size = 9, family = "Fira Sans Book", hjust = 0
+) +
+xlim(-5.5, 4.5) +
+ylim(-4.2, 3.4) +
+coord_equal()
+```
+---
+layout: false
+
+# Omitted-variable bias
+
+## Solutions
+
+1. Don't omit variables
+
+2. Instrumental variables and two-stage least squares<sup>†</sup>
+
+**Warning:** There are situations in which neither solution is possible.
+
+
+1. Proceed with caution (sometimes you can sign the bias).
+
+2. Maybe just stop.
+
+.footnote[
+[†]: Coming soon to our lectures.
+]
+
+---
+layout: true
+# Interpreting coefficients
+
+---
+class: inverse, middle
+
+---
+## Continuous variables
+
+Consider the relationship
+
+$$ \text{Pay}_i = \beta_0 + \beta_1 \, \text{School}_i + u_i $$
+
+where
+
+- $\text{Pay}_i$ is a continuous variable measuring an individual's pay
+- $\text{School}_i$ is a continuous variable that measures years of education
+
+
+**Interpretations**
+
+- $\beta_0$: the $y$-intercept, _i.e._, $\text{Pay}$ when $\text{School} = 0$
+- $\beta_1$: the expected increase in $\text{Pay}$ for a one-unit increase in $\text{School}$
+
+---
+## Continuous variables
+
+Deriving the slope's interpretation:
+
+$$
+\begin{aligned}
+  \mathop{\boldsymbol{E}}\left[ \text{Pay} | \text{School} = \ell + 1 \right] - \mathop{\boldsymbol{E}}\left[ \text{Pay} | \text{School} = \ell \right] &= \\[0.5em]
+  \mathop{\boldsymbol{E}}\left[ \beta_0 + \beta_1 (\ell + 1) + u \right] - \mathop{\boldsymbol{E}}\left[ \beta_0 + \beta_1 \ell + u \right] &= \\[0.5em]
+  \left[ \beta_0 + \beta_1 (\ell + 1) \right] - \left[ \beta_0 + \beta_1 \ell \right] &= \\[0.5em]
+  \beta_0 - \beta_0 + \beta_1 \ell - \beta_1 \ell + \beta_1 &=
+  \beta_1
+\end{aligned}
+$$
+
+
+_I.e._, the slope gives the expected increase in our outcome variable for a one-unit increase in the explanatory variable.
+
+---
+## Continuous variables
+
+If we have multiple explanatory variables, _e.g._,
+
+$$ \text{Pay}_i = \beta_0 + \beta_1 \, \text{School}_i + \beta_2 \, \text{Ability}_i + u_i $$
+
+then the interpretation changes slightly.
+
+$$
+\begin{aligned}
+  \mathop{\boldsymbol{E}}\left[ \text{Pay} | \text{School} = \ell + 1 \land \text{Ability} = \alpha \right] - & \\
+    \mathop{\boldsymbol{E}}\left[ \text{Pay} | \text{School} = \ell \land \text{Ability} = \alpha \right] &= \\
+  \mathop{\boldsymbol{E}}\left[ \beta_0 + \beta_1 (\ell + 1) + \beta_2 \alpha + u \right] -
+    \mathop{\boldsymbol{E}}\left[ \beta_0 + \beta_1 \ell + \beta_2 \alpha + u \right] &= \\
+  \left[ \beta_0 + \beta_1 (\ell + 1) + \beta_2 \alpha \right] -
+    \left[ \beta_0 + \beta_1 \ell + \beta_2 \alpha \right] &= \\
+  \beta_0 - \beta_0 + \beta_1 \ell - \beta_1 \ell + \beta_1 + \beta_2 \alpha - \beta_2 \alpha &=
+  \beta_1
+\end{aligned}
+$$
+
+
+_I.e._, the slope gives the expected increase in our outcome variable for a one-unit increase in the explanatory variable, **holding all other variables constant** (*ceteris paribus*).
+
+---
+## Continuous variables
+
+Alternative derivation
+
+Consider the model
+
+$$ y = \beta_0 + \beta_1 \, x + u $$
+
+Differentiate the model:
+
+$$ \dfrac{dy}{dx} = \beta_1 $$
+
+
+---
+## Categorical variables
+
+Consider the relationship
+
+$$ \text{Pay}_i = \beta_0 + \beta_1 \, \text{Female}_i + u_i $$
+
+where
+
+- $\text{Pay}_i$ is a continuous variable measuring an individual's pay
+- $\text{Female}_i$ is a binary/indicator variable taking $1$ when $i$ is female
+
+
+**Interpretations**
+
+- $\beta_0$: the expected $\text{Pay}$ for males (_i.e._, when $\text{Female} = 0$)
+- $\beta_1$: the expected difference in $\text{Pay}$ between females and males
+- $\beta_0 + \beta_1$: the expected $\text{Pay}$ for females
+
+---
+
+## Categorical variables
+
+Derivations
+
+$$
+\begin{aligned}
+ \mathop{\boldsymbol{E}}\left[ \text{Pay} | \text{Male} \right] &=
+ \mathop{\boldsymbol{E}}\left[ \beta_0 + \beta_1\times 0 + u_i \right] \\
+ &= \mathop{\boldsymbol{E}}\left[ \beta_0 + 0 + u_i \right] \\
+ &= \beta_0
+\end{aligned}
+$$
+
+
+$$
+\begin{aligned}
+ \mathop{\boldsymbol{E}}\left[ \text{Pay} | \text{Female} \right] &=
+ \mathop{\boldsymbol{E}}\left[ \beta_0 + \beta_1\times 1 + u_i \right] \\
+ &= \mathop{\boldsymbol{E}}\left[ \beta_0 + \beta_1 + u_i \right] \\
+ &= \beta_0 + \beta_1
+\end{aligned}
+$$
+
+
+**Note:** If there are no other variables to condition on, then $\hat{\beta}_1$ equals the difference in group means, _e.g._, $\overline{x}_\text{Female} - \overline{x}_\text{Male}$.
+
+
+**Note<sub>2</sub>:** The *holding all other variables constant* interpretation also applies for categorical variables in multiple regression settings.
+
+---
+## Categorical variables
+
+$y_i = \beta_0 + \beta_1 x_i + u_i$ for binary variable $x_i = \{\color{#314f4f}{0}, \, \color{#e64173}{1}\}$
+
+```{R, cat data, include = F}
+# Set seed
+set.seed(1235)
+# Sample size
+n <- 5e3
+# Generate data
+cat_df <- tibble(
+  x = sample(x = c(0, 1), size = n, replace = T),
+  y = 3 + 7 * x + rnorm(n, sd = 2)
+)
+# Regression
+cat_reg <- lm(y ~ x, data = cat_df)
+```
+
+```{R, dat plot 1, echo = F, dev = "svg", fig.height = 5.5}
+set.seed(12345)
+ggplot(data = cat_df, aes(x = x, y = y, color = as.factor(x))) +
+geom_jitter(width = 0.3, size = 1.5, alpha = 0.5) +
+scale_color_manual(values = c("darkslategrey", red_pink)) +
+theme_empty
+```
+
+---
+## Categorical variables
+
+$y_i = \beta_0 + \beta_1 x_i + u_i$ for binary variable $x_i = \{\color{#314f4f}{0}, \, \color{#e64173}{1}\}$
+
+```{R, dat plot 2, echo = F, dev = "svg", fig.height = 5.5}
+set.seed(12345)
+ggplot(data = cat_df, aes(x = x, y = y, color = as.factor(x))) +
+geom_jitter(width = 0.3, size = 1.5, alpha = 0.5) +
+scale_color_manual(values = c("darkslategrey", red_pink)) +
+geom_hline(yintercept = cat_reg$coefficients[1], size = 1, color = "darkslategrey") +
+geom_hline(yintercept = cat_reg$coefficients[1] + cat_reg$coefficients[2], size = 1, color = red_pink) +
+annotate(
+  geom = "text",
+  x = 0.5,
+  y = -1 + cat_reg$coefficients[1],
+  label = TeX("$\\hat{\\beta}_0 = \\bar{\\mathrm{Group}_0}$"),
+  size = 7
+) +
+annotate(
+  geom = "text",
+  x = 0.5,
+  y = 1 + cat_reg$coefficients[1] + cat_reg$coefficients[2],
+  label = TeX("$\\hat{\\beta}_0 + \\hat{\\beta}_1 = \\bar{\\mathrm{Group}_1}$"),
+  size = 7,
+  color = red_pink
+) +
+theme_empty
+```
+---
+## Interactions
+
+Interactions allow the effect of one variable to change based upon the level of another variable.
+
+**Examples**
+
+1. Does the effect of schooling on pay change by gender?
+
+1. Does the effect of gender on pay change by race?
+
+1. Does the effect of schooling on pay change by experience?
+
+---
+## Interactions
+
+Previously, we considered a model that allowed women and men to have different wages, but the model assumed the effect of school on pay was the same for everyone:
+
+$$ \text{Pay}_i = \beta_0 + \beta_1 \, \text{School}_i + \beta_2 \, \text{Female}_i + u_i $$
+
+but we can also allow the effect of school to vary by gender:
+
+$$ \text{Pay}_i = \beta_0 + \beta_1 \, \text{School}_i + \beta_2 \, \text{Female}_i + \beta_3 \, \text{School}_i\times\text{Female}_i + u_i $$
+
+---
+## Interactions
+
+The model where schooling has the same effect for everyone (**<font color="#e64173">F</font>** and **<font color="#314f4f">M</font>**):
+
+```{R, int data, include = F, cache = T}
+# Set seed
+set.seed(12345)
+# Sample size
+n <- 1e3
+# Parameters
+beta0 <- 20; beta1 <- 0.5; beta2 <- 10; beta3 <- 3
+# Dataset
+int_df <- tibble(
+  male = sample(x = c(F, T), size = n, replace = T),
+  school = runif(n, 3, 9) - 3 * male,
+  pay = beta0 + beta1 * school + beta2 * male + rnorm(n, sd = 7) + beta3 * male * school
+)
+reg_noint <- lm(pay ~ school + male, int_df)
+reg_int <- lm(pay ~ school + male + school:male, int_df)
+```
+
+```{R, int plot 1, echo = F, dev = "svg", fig.height = 5.5}
+ggplot(data = int_df, aes(x = school, y = pay)) +
+geom_point(aes(color = male, shape = male), size = 2.5) +
+geom_hline(yintercept = 0) +
+geom_vline(xintercept = 0) +
+geom_abline(
+  intercept = reg_noint$coefficients[1] + reg_noint$coefficients[3],
+  slope = reg_noint$coefficients[2],
+  color = "darkslategrey", size = 1, alpha = 0.8
+) +
+geom_abline(
+  intercept = reg_noint$coefficients[1],
+  slope = reg_noint$coefficients[2],
+  color = red_pink, size = 1, alpha = 0.8
+) +
+xlab("Schooling") +
+ylab("Pay") +
+theme_empty +
+theme(
+  axis.title = element_text(size = 18),
+  plot.margin = structure(c(0, 0, 0.1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+) +
+scale_color_manual("", values = c(red_pink, "darkslategrey"), labels = c("Female", "Male")) +
+scale_shape_manual("", values = c(16, 1), labels = c("Female", "Male"))
+```
+
+---
+## Interactions
+
+The model where schooling's effect can differ by gender (**<font color="#e64173">F</font>** and **<font color="#314f4f">M</font>**):
+
+```{R, int plot 2, echo = F, dev = "svg", fig.height = 5.5}
+ggplot(data = int_df, aes(x = school, y = pay)) +
+geom_point(aes(color = male, shape = male), size = 2.5) +
+geom_hline(yintercept = 0) +
+geom_vline(xintercept = 0) +
+geom_abline(
+  intercept = reg_noint$coefficients[1] + reg_noint$coefficients[3],
+  slope = reg_noint$coefficients[2],
+  color = "darkslategrey", size = 0.75, alpha = 0.2
+) +
+geom_abline(
+  intercept = reg_noint$coefficients[1],
+  slope = reg_noint$coefficients[2],
+  color = red_pink, size = 0.75, alpha = 0.2
+) +
+geom_abline(
+  intercept = reg_int$coefficients[1] + reg_int$coefficients[3],
+  slope = reg_int$coefficients[2] + reg_int$coefficients[4],
+  color = "darkslategrey", size = 1, alpha = 0.8
+) +
+geom_abline(
+  intercept = reg_int$coefficients[1],
+  slope = reg_int$coefficients[2],
+  color = red_pink, size = 1, alpha = 0.8
+) +
+xlab("Schooling") +
+ylab("Pay") +
+theme_empty +
+theme(
+  axis.title = element_text(size = 18),
+  plot.margin = structure(c(0, 0, 0.1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+) +
+scale_color_manual("", values = c(red_pink, "darkslategrey"), labels = c("Female", "Male")) +
+scale_shape_manual("", values = c(16, 1), labels = c("Female", "Male"))
+```
+
+---
+## Interactions
+
+Interpreting coefficients can be a little tricky with interactions, but the key<sup>.pink[†]</sup> is to carefully work through the math.
+
+.footnote[.pink[†] As is often the case with econometrics.]
+
+$$ \text{Pay}_i = \beta_0 + \beta_1 \, \text{School}_i + \beta_2 \, \text{Female}_i + \beta_3 \, \text{School}_i\times\text{Female}_i + u_i $$
+
+Expected returns for an additional year of schooling for women:
+
+$$
+\begin{aligned}
+ \mathop{\boldsymbol{E}}\left[ \text{Pay}_i | \text{Female} \land \text{School} = \ell + 1 \right] -
+    \mathop{\boldsymbol{E}}\left[ \text{Pay}_i | \text{Female} \land \text{School} = \ell \right] &= \\
+ \mathop{\boldsymbol{E}}\left[ \beta_0 + \beta_1 (\ell+1) + \beta_2 + \beta_3 (\ell + 1) + u_i \right] -
+    \mathop{\boldsymbol{E}}\left[ \beta_0 + \beta_1 \ell + \beta_2 + \beta_3 \ell + u_i  \right] &= \\
+ \beta_1 + \beta_3
+\end{aligned}
+$$
+
+
+Similarly, $\beta_1$ gives the expected return to an additional year of schooling for men. Thus, $\beta_3$ gives the **difference in the returns to schooling** for women and men.
+
+---
+## Log-linear specification
+
+In economics, you will frequently see logged outcome variables with linear (non-logged) explanatory variables, _e.g._,
+
+$$ \log(\text{Pay}_i) = \beta_0 + \beta_1 \, \text{School}_i + u_i $$
+
+This specification changes our interpretation of the slope coefficients.
+
+**Interpretation**
+
+- A one-unit increase in our explanatory variable increases the outcome variable by approximately $\beta_1\times 100$ percent.
+
+- *Example:* An additional year of schooling increases pay by approximately 3 percent (for $\beta_1 = 0.03$).
+
+---
+## Log-linear specification
+
+**Derivation**
+
+Consider the log-linear model
+
+$$ \log(y) = \beta_0 + \beta_1 \, x + u $$
+
+and differentiate
+
+$$ \dfrac{dy}{y} = \beta_1 dx $$
+
+So a marginal change in $x$ (_i.e._, $dx$) leads to a $\beta_1 dx$ **percentage change** in $y$.
+
+---
+## Log-linear specification
+
+Because the log-linear specification comes with a different interpretation, you need to make sure it fits your data-generating process/model.
+
+Does $x$ change $y$ in levels (_e.g._, a 3-unit increase) or percentages (_e.g._, a 10-percent increase)?
+
+
+_I.e._, you need to be sure an exponential relationship makes sense:
+
+$$ \log(y_i) = \beta_0 + \beta_1 \, x_i + u_i \iff y_i = e^{\beta_0 + \beta_1 x_i + u_i} $$
+
+---
+## Log-linear specification
+
+```{R, log linear plot, echo = F, cache = T, dev = "svg", fig.height = 6}
+# Set seed
+set.seed(1234)
+# Sample size
+n <- 1e3
+# Generate data
+ll_df <- tibble(
+  x = runif(n, 0, 3),
+  y = exp(-100 + 0.75 * x + rnorm(n, sd = 0.5))
+)
+# Plot
+ggplot(data = ll_df, aes(x = x, y = y)) +
+geom_hline(yintercept = 0) +
+geom_vline(xintercept = 0) +
+geom_point(size = 3, color = "darkslategrey", alpha = 0.5) +
+geom_smooth(color = red_pink, se = F) +
+xlab("x") +
+ylab("y") +
+theme_axes
+```
+
+
+---
+## Log-log specification
+
+Similarly, econometricians frequently employ log-log models, in which the outcome variable is logged *and* at least one explanatory variable is logged
+
+$$ \log(\text{Pay}_i) = \beta_0 + \beta_1 \, \log(\text{School}_i) + u_i $$
+
+**Interpretation:**
+
+- A one-percent increase in $x$ will lead to a $\beta_1$ percent change in $y$.
+- Often interpreted as an elasticity.
+
+---
+## Log-log specification
+
+**Derivation**
+
+Consider the log-log model
+
+$$ \log(y) = \beta_0 + \beta_1 \, \log(x) + u $$
+
+and differentiate
+
+$$ \dfrac{dy}{y} = \beta_1 \dfrac{dx}{x} $$
+
+which says that for a one-percent increase in $x$, we will see a $\beta_1$ percent increase in $y$. As an elasticity:
+
+$$ \dfrac{dy}{dx} \dfrac{x}{y} = \beta_1 $$
+
+---
+## Log-linear with a binary variable
+
+**Note:** If you have a log-linear model with a binary indicator variable, the interpretation for the coefficient on that variable changes.
+
+Consider
+
+$$ \log(y_i) = \beta_0 + \beta_1 x_1 + u_i $$
+
+for binary variable $x_1$.
+
+The interpretation of $\beta_1$ is now
+
+- When $x_1$ changes from 0 to 1, $y$ will change by $100 \times \left( e^{\beta_1} -1 \right)$ percent.
+- When $x_1$ changes from 1 to 0, $y$ will change by $100 \times \left( e^{-\beta_1} -1 \right)$ percent.
+
+
+---
+## Log-log specification
+
+```{R, log log plot, echo = F, cache = T, dev = "svg", fig.height = 6}
+# Set seed
+set.seed(1234)
+# Sample size
+n <- 1e3
+# Generate data
+log_df <- tibble(
+  x = runif(n, 0, 10),
+  y = exp(3 * log(x) + rnorm(n, sd = 0.5))
+)
+# Plot
+ggplot(data = log_df, aes(x = x, y = y)) +
+geom_hline(yintercept = 0) +
+geom_vline(xintercept = 0) +
+geom_point(size = 3, color = "darkslategrey", alpha = 0.5) +
+geom_smooth(color = red_pink, se = F) +
+xlab("x") +
+ylab("y") +
+theme_axes
+```
+
+---
+layout: true
+# Additional topics
+
+---
+class: inverse, middle
+
+---
+## Inference *vs.* prediction
+
+So far, we've focused mainly **statistical inference**—using estimators and their distributions properties to try to learn about underlying, unknown population parameters.
+
+$$ y\_i = \color{#e64173}{\hat{\beta}\_{0}} + \color{#e64173}{\hat{\beta\_1}} \, x\_{1i} + \color{#e64173}{\hat{\beta\_2}} \, x\_{2i} + \cdots + \color{#e64173}{\hat{\beta}\_{k}} \, x\_{ki} + e\_i $$
+
+
+**Prediction** includes a fairly different set of topics/tools within econometrics (and data science/machine learning)—creating models that accurately estimate individual observations.
+
+$$ \color{#e64173}{\hat{y}\_i} = \mathop{\hat{f}}\left( x_1,\, x_2,\, \ldots x_k \right) $$
+
+---
+## Inference *vs.* prediction
+
+Succinctly
+
+- **Inference:** causality, $\hat{\beta}_k$ (consistent and efficient), standard errors/hypothesis tests for $\hat{\beta}_k$, generally OLS
+
+- **Prediction:**<sup>.pink[†]</sup> correlation, $\hat{y}_i$ (low error), model selection, nonlinear models are much more common
+
+.footnote[
+.pink[†] Includes forecasting.
+]
+
+---
+## Treatment effects and causality
+
+Much of modern (micro)econometrics focuses on causally estimating (*identifying*) the effect of programs/policies, _e.g._,
+
+- [Government shutdowns](https://www.sciencedirect.com/science/article/pii/S004727271830118X)
+- [The minimum wage](https://www.jstor.org/stable/2118030)
+- [Recreational-cannabis legalization](https://pages.uoregon.edu/bchansen/working.html)
+- [Salary-history bans](http://www.drewmcnichols.com/research)
+- [Preschool](https://amstat.tandfonline.com/doi/abs/10.1198/016214508000000841#.XD4PVy2ZNO4)
+- [The Clean Water Act](https://academic.oup.com/qje/article-abstract/134/1/349/5092609)
+
+
+In this literature, the program is often a binary variable, and we place high importance on finding an unbiased estimate for the program's effect, $\hat{\tau}$.
+
+$$ \text{Outcome}_i = \beta_0 + \tau \, \text{Program}_i + u_i $$
+
+---
+## Transformations
+
+Our linearity assumption requires
+
+1. **parameters enter linearly** (_i.e._, the $\beta_k$ multiplied by variables)
+2. the $u_i$ **disturbances enter additively**
+
+We allow nonlinear relationships between $y$ and the explanatory variables.
+
+
+**Examples**
+
+- **Polynomials** and **interactions:** $y_i = \beta_0 + \beta_1 x_1 + \beta_2 x_1^2 + \beta_3 x_2 + \beta_4 x_2^2 + \beta_5 \left( x_1 x_2 \right) + u_i$
+
+- **Exponentials** and **logs:** $\log(y_i) = \beta_0 + \beta_1 x_1 + \beta_2 e^{x_2} + u_i$
+
+- **Indicators** and **thresholds:** $y_i = \beta_0 + \beta_1 x_1 + \beta_2 \, \mathbb{I}(x_1 \geq 100) + u_i$
+
+---
+
+**Transformation challenge:** (literally) infinite possibilities. What do we pick?
+
+```{R, trans figure start, dev = "svg", fig.height = 6.5, echo = F}
+# Set seed
+set.seed(1235)
+# Sample size
+n <- 1e3
+# Generate data
+trans_df <- tibble(
+  x = runif(n, 0, 3),
+  # y = 1 + x + x^2 + x^3 + x^4 + 0.5 * x^5 + rnorm(n, mean = 0, sd = 6)
+  y = 2 * exp(x) + rnorm(n, mean = 0, sd = 6)
+)
+# Plot
+ggplot(data = trans_df, aes(x = x, y = y)) +
+geom_point(size = 2.5, color = "darkslategrey", alpha = 0.5) +
+theme_empty
+```
+
+---
+
+$y_i = \beta_0 + u_i$
+
+```{R, trans figure 0, dev = "svg", fig.height = 6.5, echo = F}
+# Plot
+ggplot(data = trans_df, aes(x = x, y = y)) +
+geom_line(stat = "smooth", method = lm, formula = y ~ 1, color = "orange", size = 1.5) +
+geom_point(size = 2.5, color = "darkslategrey", alpha = 0.5) +
+theme_empty
+```
+---
+count: false
+
+$y_i = \beta_0 + \beta_1 x + u_i$
+
+```{R, trans figure 1, dev = "svg", fig.height = 6.5, echo = F}
+# Plot
+ggplot(data = trans_df, aes(x = x, y = y)) +
+geom_line(stat = "smooth", method = lm, formula = y ~ 1, color = "orange", size = 1.5, alpha = 0.3) +
+geom_line(stat = "smooth", method = lm, formula = y ~ x, color = "orange", size = 1.5) +
+geom_point(size = 2.5, color = "darkslategrey", alpha = 0.5) +
+theme_empty
+```
+---
+count: false
+
+$y_i = \beta_0 + \beta_1 x + \beta_2 x^2 + u_i$
+
+```{R, trans figure 2, dev = "svg", fig.height = 6.5, echo = F}
+# Plot
+ggplot(data = trans_df, aes(x = x, y = y)) +
+geom_line(stat = "smooth", method = lm, formula = y ~ 1, color = "orange", size = 1.5, alpha = 0.3) +
+geom_line(stat = "smooth", method = lm, formula = y ~ x, color = "orange", size = 1.5, alpha = 0.3) +
+geom_line(stat = "smooth", method = lm, formula = y ~ poly(x, 2), color = "orange", size = 1.5) +
+geom_point(size = 2.5, color = "darkslategrey", alpha = 0.5) +
+theme_empty
+```
+
+---
+count: false
+
+$y_i = \beta_0 + \beta_1 x + \beta_2 x^2 + \beta_3 x^3 + u_i$
+
+```{R, trans figure 3, dev = "svg", fig.height = 6.5, echo = F}
+# Plot
+ggplot(data = trans_df, aes(x = x, y = y)) +
+geom_line(stat = "smooth", method = lm, formula = y ~ 1, color = "orange", size = 1.5, alpha = 0.3) +
+geom_line(stat = "smooth", method = lm, formula = y ~ x, color = "orange", size = 1.5, alpha = 0.3) +
+geom_line(stat = "smooth", method = lm, formula = y ~ poly(x, 2), color = "orange", size = 1.5, alpha = 0.3) +
+geom_line(stat = "smooth", method = lm, formula = y ~ poly(x, 3), color = "orange", size = 1.5) +
+geom_point(size = 2.5, color = "darkslategrey", alpha = 0.5) +
+theme_empty
+```
+---
+count: false
+
+$y_i = \beta_0 + \beta_1 x + \beta_2 x^2 + \beta_3 x^3 + \beta_4 x^4 + u_i$
+
+```{R, trans figure 4, dev = "svg", fig.height = 6.5, echo = F}
+# Plot
+ggplot(data = trans_df, aes(x = x, y = y)) +
+geom_line(stat = "smooth", method = lm, formula = y ~ 1, color = "orange", size = 1.5, alpha = 0.3) +
+geom_line(stat = "smooth", method = lm, formula = y ~ x, color = "orange", size = 1.5, alpha = 0.3) +
+geom_line(stat = "smooth", method = lm, formula = y ~ poly(x, 2), color = "orange", size = 1.5, alpha = 0.3) +
+geom_line(stat = "smooth", method = lm, formula = y ~ poly(x, 3), color = "orange", size = 1.5, alpha = 0.3) +
+geom_line(stat = "smooth", method = lm, formula = y ~ poly(x, 4), color = "orange", size = 1.5) +
+geom_point(size = 2.5, color = "darkslategrey", alpha = 0.5) +
+theme_empty
+```
+---
+count: false
+
+$y_i = \beta_0 + \beta_1 x + \beta_2 x^2 + \beta_3 x^3 + \beta_4 x^4 + \beta_5 x^5 + u_i$
+
+```{R, trans figure 5, dev = "svg", fig.height = 6.5, echo = F}
+# Plot
+ggplot(data = trans_df, aes(x = x, y = y)) +
+geom_line(stat = "smooth", method = lm, formula = y ~ 1, color = "orange", size = 1.5, alpha = 0.3) +
+geom_line(stat = "smooth", method = lm, formula = y ~ x, color = "orange", size = 1.5, alpha = 0.3) +
+geom_line(stat = "smooth", method = lm, formula = y ~ poly(x, 2), color = "orange", size = 1.5, alpha = 0.3) +
+geom_line(stat = "smooth", method = lm, formula = y ~ poly(x, 3), color = "orange", size = 1.5, alpha = 0.3) +
+geom_line(stat = "smooth", method = lm, formula = y ~ poly(x, 4), color = "orange", size = 1.5, alpha = 0.3) +
+geom_line(stat = "smooth", method = lm, formula = y ~ poly(x, 5), color = "orange", size = 1.5) +
+geom_point(size = 2.5, color = "darkslategrey", alpha = 0.5) +
+theme_empty
+```
+
+---
+count: false
+
+**Truth:** $y_i = 2 e^{x} + u_i$
+
+```{R, trans figure 6, dev = "svg", fig.height = 6.5, echo = F}
+# Plot
+ggplot(data = trans_df, aes(x = x, y = y)) +
+geom_line(stat = "smooth", method = lm, formula = y ~ 1, color = "orange", size = 1.5, alpha = 0.3) +
+geom_line(stat = "smooth", method = lm, formula = y ~ x, color = "orange", size = 1.5, alpha = 0.3) +
+geom_line(stat = "smooth", method = lm, formula = y ~ poly(x, 2), color = "orange", size = 1.5, alpha = 0.3) +
+geom_line(stat = "smooth", method = lm, formula = y ~ poly(x, 3), color = "orange", size = 1.5, alpha = 0.3) +
+geom_line(stat = "smooth", method = lm, formula = y ~ poly(x, 4), color = "orange", size = 1.5, alpha = 0.3) +
+geom_line(stat = "smooth", method = lm, formula = y ~ poly(x, 5), color = "orange", size = 1.5, alpha = 0.3) +
+geom_line(stat = "smooth", method = lm, formula = y ~ exp(x), color = red_pink, size = 1.5) +
+geom_point(size = 2.5, color = "darkslategrey", alpha = 0.5) +
+theme_empty
+```
+
+---
+## Outliers
+
+Because OLS minimizes the sum of the **squared** errors, outliers can play a large role in our estimates.
+
+**Common responses**
+
+- Remove the outliers from the dataset
+
+- Replace outliers with the 99<sup>th</sup> percentile of their variable (*Windsorize*)
+
+- Take the log of the variable to "take care of" outliers
+
+- Do nothing. Outliers are not always bad. Some people are "far" from the average. It may not make sense to try to change this variation.
+
+---
+## Missing data
+
+Similarly, missing data can affect your results.
+
+.mono[R] doesn't know how to deal with a missing observation.
+```{R, example na}
+1 + 2 + 3 + NA + 5
+```
+
+If you run a regression<sup>†</sup> with missing values, .mono[R] drops the observations missing those values.
+
+If the observations are missing in a nonrandom way, a random sample may end up nonrandom.
+
+.footnote[
+[†]: Or perform almost any operation/function
+]
+
+---
+exclude: true
+
+```{R, generate pdfs, include = F, eval = T}
+source("../../ScriptsR/unpause.R")
+# system("decktape remark 03_review.html 03_review.pdf --chrome-arg=--allow-file-access-from-files")
+```

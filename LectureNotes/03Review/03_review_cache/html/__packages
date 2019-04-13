@@ -10,3 +10,4 @@ dplyr
 magrittr
 knitr
 bindrcpp
+ggforce

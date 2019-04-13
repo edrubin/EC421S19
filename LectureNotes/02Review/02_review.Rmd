@@ -981,7 +981,7 @@ But... these (very nice) properties depend upon a set of assumptions:
 
 1. The population relationship is linear in parameters with an additive disturbance.
 
-2. Our $X$ variable is **exogenous**, _i.e._, $\mathop{\boldsymbol{E}}\left[ u | X \right] = 0$.
+2. Our $X$ variable is **exogenous**, _i.e._, $\mathop{\boldsymbol{E}}\left[ u \mid X \right] = 0$.
 
 3. The $X$ variable has variation. And if there are multiple explanatory variables, they are not perfectly collinear.
 
@@ -1002,6 +1002,127 @@ During our course, we will discuss the many ways real life may **violate these a
 - Non-linear relationships in our parameters/disturbances (or misspecification).
 - Disturbances that are not identically distributed and/or not independent.
 - Violations of exogeneity (especially omitted-variable bias).
+
+---
+# OLS: Assumptions and properties
+
+## Conditional expectation
+
+For many applications, our most important assumption is **exogeneity**, _i.e._,
+$$
+\begin{align}
+  \mathop{E}\left[ u \mid X \right] = 0
+\end{align}
+$$
+but what does it actually mean?
+
+--
+
+One way to think about this definition:
+
+> For *any* value of $X$, the mean of the residuals must be zero.
+
+- _E.g._, $\mathop{E}\left[ u \mid X=1 \right]=0$ *and* $\mathop{E}\left[ u \mid X=100 \right]=0$
+
+- _E.g._, $\mathop{E}\left[ u \mid X_2=\text{Female} \right]=0$ *and* $\mathop{E}\left[ u \mid X_2=\text{Male} \right]=0$
+
+- Notice: $\mathop{E}\left[ u \mid X \right]=0$ is more restrictive than $\mathop{E}\left[ u \right]=0$
+---
+layout: false
+class: clear, middle
+
+Graphically...
+---
+exclude: true
+
+```{R, conditional_expectation_setup, include = F, cache = T}
+
+# Setup ----------------------------------------------------------------------------------
+  # Options
+  options(stringsAsFactors = F)
+  # Packages
+  library(pacman)
+  p_load(ggridges)
+
+# Data work ------------------------------------------------------------------------------
+  # Set seed
+  set.seed(12345)
+  # Sample size
+  n <- 1e5
+  # Exogenous
+  e_good <- tibble(
+    x = runif(n = n, min = -4, max = 4),
+    e = rnorm(n)
+  ) %>% mutate(x = round(x))
+  # Endogenous
+  e_bad <- tibble(
+    x = runif(n = n, min = -4, max = 4),
+    e = rnorm(n) + 0.5 * x
+  ) %>% mutate(x = round(x))
+
+# Figures: Joint densities ---------------------------------------------------------------
+  # The joint plot: good
+  joint_good <- ggplot(data = e_good, aes(x = e)) +
+    geom_density() +
+    theme_pander()
+  # The joint plot: bad
+  joint_bad <- ggplot(data = e_bad, aes(x = e)) +
+    geom_density() +
+    theme_pander()
+
+# Figures: Conditional densities ---------------------------------------------------------
+  cond_good <- ggplot(data = e_good, aes(x = e, y = as.factor(x))) +
+    geom_density_ridges_gradient(
+      aes(fill = ..x..),
+      color = "white",
+      scale = 2.5,
+      size = 0.2
+    ) +
+    # geom_vline(xintercept = 0, alpha = 0.3) +
+    scale_fill_viridis(option = "magma") +
+    xlab("u") +
+    ylab("X") +
+    theme_pander(base_family = "Fira Sans Book", base_size = 18) +
+    theme(
+      legend.position = "none",
+      axis.title.y = element_text(angle = 0, vjust = 0.5, family = "MathJax_Math", size = 22),
+      axis.title.x = element_text(family = "MathJax_Math", size = 22)
+    )
+  cond_bad <- ggplot(data = e_bad, aes(x = e, y = as.factor(x))) +
+    geom_density_ridges_gradient(
+      aes(fill = ..x..),
+      color = "white",
+      scale = 2.5,
+      size = 0.2
+    ) +
+    # geom_vline(xintercept = 0, alpha = 0.3) +
+    scale_fill_viridis(option = "magma") +
+    xlab("u") +
+    ylab("X") +
+    theme_pander(base_family = "Fira Sans Book", base_size = 18) +
+    theme(
+      legend.position = "none",
+      axis.title.y = element_text(angle = 0, vjust = 0.5, family = "MathJax_Math", size = 22),
+      axis.title.x = element_text(family = "MathJax_Math", size = 22)
+    )
+```
+---
+class: clear
+
+Valid exogeneity, _i.e._, $\mathop{E}\left[ u \mid X \right] = 0$
+
+```{R, ex_good_exog, echo = F, dev = "svg"}
+cond_good
+```
+---
+class: clear
+
+Invalid exogeneity, _i.e._, $\mathop{E}\left[ u \mid X \right] \neq 0$
+
+```{R, ex_bad_exog, echo = F, dev = "svg"}
+cond_bad
+```
+
 
 ---
 layout: false
@@ -1261,25 +1382,24 @@ Very small p-values (generally < 0.05) mean that it would be unlikely to see our
 
 ---
 
-**Example**
-
-Standard .mono[R] and .mono[Stata] output tends to test hypotheses against the value zero.
+.mono[R] and .mono[Stata] default to testing hypotheses against the value zero.
 
 ```{R hypothesis test, echo = T, highlight.output = 5}
 lm(y ~ x, data = pop_df) %>% tidy()
 ```
 --
 
-$H_o:\: \beta_1 = 0$ and $H_a:\: \beta_1 \neq 0$
+H.sub[o]: $\beta_1 = 0$ *vs.* H.sub[a]: $\beta_1 \neq 0$
 
 --
-<br>$t_\text{stat} = 7.15$ and $t_\text{0.975, 28} = `r qt(0.975, 28) %>% round(2)`$
+
+ $t_\text{stat} = 7.15$ and $t_\text{0.975, 28} = `r qt(0.975, 28) %>% round(2)`$
+--
+ which implies *p*-value $< 0.05$
 
 --
-<br>$\text{p-value} < 0.05$
 
---
-<br>Reject $H_o$
+Therefore, we .hi[reject H.sub[o]].
 
 ---
 
@@ -1370,7 +1490,13 @@ layout: true
 ## *F* tests
 
 ---
-You will occasionally see $F$ tests in econometrics. We use $F$ tests to hypotheses that involve multiple parameters (_e.g._, $\beta_1 = \beta_2$ or $\beta_3 + \beta_4 = 1$), rather than a single simple hypothesis like $\beta_1 = 0$ (for which we would use a $t$ test).
+You will sometimes see $F$ tests in econometrics.
+
+We use $F$ tests to test hypotheses that involve multiple parameters
+<br> (_e.g._, $\beta_1 = \beta_2$ or $\beta_3 + \beta_4 = 1$),
+
+rather than a single simple hypothesis
+<br> (_e.g._, $\beta_1 = 0$, for which we would just use a $t$ test).
 
 ---
 **Example**
@@ -1399,11 +1525,16 @@ $$ \text{Consumption}\_i = \beta\_0 + \beta\_1 \left( \text{Income}\_{i} + \text
 
 **Example, continued**
 
-To this the null hypothesis $H_o :\: \beta_1 = \beta_2$ against $H_a :\: \beta_1 \neq \beta_2$, we use the $F$ statistic
+To this the null hypothesis $H_o :\: \beta_1 = \beta_2$ against $H_a :\: \beta_1 \neq \beta_2$,
+<br>we use the $F$ statistic
+$$
+\begin{align}
+  F_{q,\,n-k-1} = \dfrac{\left(\text{SSE}_r - \text{SSE}_u\right)/q}{\text{SSE}_u/(n-k-1)}
+\end{align}
+$$
+which (as its name suggests) follows the $F$ distribution with $q$ numerator degrees of freedom and $n-k-1$ denominator degrees of freedom.
 
-$$ F\_{q,\,n-k} = \dfrac{\left(\text{SSE}\_r - \text{SSE}\_u\right)/q}{\text{SSE}\_u/(n-k-1)} $$
-
-which (as its name suggests) follows the $F$ distribution with $q$ numerator degrees of freedom and $n-k$ denominator degrees of freedom.
+Here, $q$ is the number of restrictions we impose via $H_o$.
 
 ---
 
@@ -1416,8 +1547,13 @@ and $\text{SSE}_u$ is the sum of squared errors (SSE) from our **unrestricted mo
 $$ \text{Consumption}\_i = \beta\_0 + \beta\_1 \text{Income}\_{i} + \beta\_2 \text{Rebate}\_i + u\_i $$
 
 ---
+
+
+
+---
 exclude: true
 
-```{R, generate pdfs, include = F, eval = F}
-system("decktape remark 02_review.html 02_review.pdf --chrome-arg=--allow-file-access-from-files")
+```{R, generate pdfs, include = F, eval = T}
+source("../../ScriptsR/unpause.R")
+unpause("02_review.Rmd", ".", T, T)
 ```

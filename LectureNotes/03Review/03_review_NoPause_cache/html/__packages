@@ -1,0 +1,13 @@
+base
+pacman
+broom
+latex2exp
+ggplot2
+ggthemes
+ggforce
+viridisLite
+viridis
+dplyr
+magrittr
+knitr
+bindrcpp

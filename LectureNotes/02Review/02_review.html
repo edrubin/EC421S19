@@ -4,7 +4,7 @@
     <title>Metrics Review</title>
     <meta charset="utf-8">
     <meta name="author" content="Edward Rubin" />
-    <meta name="date" content="2019-04-03" />
+    <meta name="date" content="2019-04-10" />
     <link href="02_review_files/remark-css/default.css" rel="stylesheet" />
     <link href="02_review_files/remark-css/metropolis.css" rel="stylesheet" />
     <link href="02_review_files/remark-css/metropolis-fonts.css" rel="stylesheet" />
@@ -17,7 +17,7 @@ class: center, middle, inverse, title-slide
 # Metrics Review
 ## EC 421, Set 2
 ### Edward Rubin
-### 03 April 2019
+### 10 April 2019
 
 ---
 
@@ -645,7 +645,7 @@ But... these (very nice) properties depend upon a set of assumptions:
 
 1. The population relationship is linear in parameters with an additive disturbance.
 
-2. Our `\(X\)` variable is **exogenous**, _i.e._, `\(\mathop{\boldsymbol{E}}\left[ u | X \right] = 0\)`.
+2. Our `\(X\)` variable is **exogenous**, _i.e._, `\(\mathop{\boldsymbol{E}}\left[ u \mid X \right] = 0\)`.
 
 3. The `\(X\)` variable has variation. And if there are multiple explanatory variables, they are not perfectly collinear.
 
@@ -666,6 +666,53 @@ During our course, we will discuss the many ways real life may **violate these a
 - Non-linear relationships in our parameters/disturbances (or misspecification).
 - Disturbances that are not identically distributed and/or not independent.
 - Violations of exogeneity (especially omitted-variable bias).
+
+---
+# OLS: Assumptions and properties
+
+## Conditional expectation
+
+For many applications, our most important assumption is **exogeneity**, _i.e._,
+$$
+`\begin{align}
+  \mathop{E}\left[ u \mid X \right] = 0
+\end{align}`
+$$
+but what does it actually mean?
+
+--
+
+One way to think about this definition:
+
+&gt; For *any* value of `\(X\)`, the mean of the residuals must be zero.
+
+- _E.g._, `\(\mathop{E}\left[ u \mid X=1 \right]=0\)` *and* `\(\mathop{E}\left[ u \mid X=100 \right]=0\)`
+
+- _E.g._, `\(\mathop{E}\left[ u \mid X_2=\text{Female} \right]=0\)` *and* `\(\mathop{E}\left[ u \mid X_2=\text{Male} \right]=0\)`
+
+- Notice: `\(\mathop{E}\left[ u \mid X \right]=0\)` is more restrictive than `\(\mathop{E}\left[ u \right]=0\)`
+---
+layout: false
+class: clear, middle
+
+Graphically...
+---
+exclude: true
+
+
+---
+class: clear
+
+Valid exogeneity, _i.e._, `\(\mathop{E}\left[ u \mid X \right] = 0\)`
+
+&lt;img src="02_review_files/figure-html/ex_good_exog-1.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+
+Invalid exogeneity, _i.e._, `\(\mathop{E}\left[ u \mid X \right] \neq 0\)`
+
+&lt;img src="02_review_files/figure-html/ex_bad_exog-1.svg" style="display: block; margin: auto;" /&gt;
+
 
 ---
 layout: false
@@ -908,9 +955,7 @@ Very small p-values (generally &lt; 0.05) mean that it would be unlikely to see 
 
 ---
 
-**Example**
-
-Standard .mono[R] and .mono[Stata] output tends to test hypotheses against the value zero.
+.mono[R] and .mono[Stata] default to testing hypotheses against the value zero.
 
 
 ```r
@@ -926,16 +971,17 @@ lm(y ~ x, data = pop_df) %&gt;% tidy()
 ```
 --
 
-`\(H_o:\: \beta_1 = 0\)` and `\(H_a:\: \beta_1 \neq 0\)`
+H.sub[o]: `\(\beta_1 = 0\)` *vs.* H.sub[a]: `\(\beta_1 \neq 0\)`
 
 --
-&lt;br&gt;$t_\text{stat} = 7.15$ and `\(t_\text{0.975, 28} = 2.05\)`
+
+ `\(t_\text{stat} = 7.15\)` and `\(t_\text{0.975, 28} = 2.05\)`
+--
+ which implies *p*-value `\(&lt; 0.05\)`
 
 --
-&lt;br&gt;$\text{p-value} &lt; 0.05$
 
---
-&lt;br&gt;Reject `\(H_o\)`
+Therefore, we .hi[reject H.sub[o]].
 
 ---
 
@@ -975,7 +1021,13 @@ layout: true
 ## *F* tests
 
 ---
-You will occasionally see `\(F\)` tests in econometrics. We use `\(F\)` tests to hypotheses that involve multiple parameters (_e.g._, `\(\beta_1 = \beta_2\)` or `\(\beta_3 + \beta_4 = 1\)`), rather than a single simple hypothesis like `\(\beta_1 = 0\)` (for which we would use a `\(t\)` test).
+You will sometimes see `\(F\)` tests in econometrics.
+
+We use `\(F\)` tests to test hypotheses that involve multiple parameters
+&lt;br&gt; (_e.g._, `\(\beta_1 = \beta_2\)` or `\(\beta_3 + \beta_4 = 1\)`),
+
+rather than a single simple hypothesis
+&lt;br&gt; (_e.g._, `\(\beta_1 = 0\)`, for which we would just use a `\(t\)` test).
 
 ---
 **Example**
@@ -1004,11 +1056,16 @@ $$ \text{Consumption}\_i = \beta\_0 + \beta\_1 \left( \text{Income}\_{i} + \text
 
 **Example, continued**
 
-To this the null hypothesis `\(H_o :\: \beta_1 = \beta_2\)` against `\(H_a :\: \beta_1 \neq \beta_2\)`, we use the `\(F\)` statistic
+To this the null hypothesis `\(H_o :\: \beta_1 = \beta_2\)` against `\(H_a :\: \beta_1 \neq \beta_2\)`,
+&lt;br&gt;we use the `\(F\)` statistic
+$$
+`\begin{align}
+  F_{q,\,n-k-1} = \dfrac{\left(\text{SSE}_r - \text{SSE}_u\right)/q}{\text{SSE}_u/(n-k-1)}
+\end{align}`
+$$
+which (as its name suggests) follows the `\(F\)` distribution with `\(q\)` numerator degrees of freedom and `\(n-k-1\)` denominator degrees of freedom.
 
-$$ F\_{q,\,n-k} = \dfrac{\left(\text{SSE}\_r - \text{SSE}\_u\right)/q}{\text{SSE}\_u/(n-k-1)} $$
-
-which (as its name suggests) follows the `\(F\)` distribution with `\(q\)` numerator degrees of freedom and `\(n-k\)` denominator degrees of freedom.
+Here, `\(q\)` is the number of restrictions we impose via `\(H_o\)`.
 
 ---
 
@@ -1019,6 +1076,10 @@ $$ \text{Consumption}\_i = \beta\_0 + \beta\_1 \left( \text{Income}\_{i} + \text
 
 and `\(\text{SSE}_u\)` is the sum of squared errors (SSE) from our **unrestricted model**
 $$ \text{Consumption}\_i = \beta\_0 + \beta\_1 \text{Income}\_{i} + \beta\_2 \text{Rebate}\_i + u\_i $$
+
+---
+
+
 
 ---
 exclude: true

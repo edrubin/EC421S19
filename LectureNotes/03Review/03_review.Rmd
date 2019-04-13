@@ -12,14 +12,12 @@ output:
       highlightLines: true
       countIncrementalSlides: false
 ---
-class: inverse, center, middle
+class: inverse, middle
 
 ```{r Setup, include = F}
 options(htmltools.dir.version = FALSE)
 library(pacman)
-p_load(broom, latex2exp, ggplot2, ggthemes, viridis, dplyr, magrittr, knitr, parallel)
-# Define pink color
-red_pink <- "#e64173"
+p_load(broom, latex2exp, ggplot2, ggthemes, ggforce, viridis, dplyr, magrittr, knitr, parallel)
 # Notes directory
 dir_slides <- "~/Dropbox/UO/Teaching/EC421W19/LectureNotes/02Review/"
 # Knitr options
@@ -56,9 +54,23 @@ theme_simple <- theme_bw() + theme(
   legend.position = "none"
 )
 theme_axes <- theme_empty + theme(
-  axis.title = element_text(size = 14),
+  axis.title = element_text(size = 18),
   plot.margin = structure(c(0, 0, 0.1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
 )
+```
+
+```{R, colors, include = F}
+# Define pink color
+red_pink <- "#e64173"
+turquoise <- "#20B2AA"
+orange <- "#FFA500"
+red <- "#fb6107"
+blue <- "#2b59c3"
+green <- "#8bb174"
+grey_light <- "grey70"
+grey_mid <- "grey50"
+grey_dark <- "grey20"
+purple <- "#6A5ACD"
 ```
 
 # Prologue
@@ -82,42 +94,24 @@ theme_axes <- theme_empty + theme(
   - [Traveling salesman](https://gallery.shinyapps.io/shiny-salesman/)
 
 ---
+name: schedule
 
 # Schedule
 
-## Last Time
+### Last Time
 
 We reviewed the fundamentals of statistics and econometrics.
 
-**Follow up 1:** Someone asked about differences in R for Windows *vs.* Mac. One difference:  the characters you use for navigating the directory (file paths) within your computer.
-- **Windows:**
-  - *Option 1:* `"C:\\MyName\\Folder1\\Folder2"`
-  - *Option 2:* `"C:/MyName/Folder1/Folder2"`
-- **OSX** and **Linux:**: `"/User/MyName/Folder1/Folder2"`
-
---
-
-**Follow up 2:** Is this font size better?
-
-$$ \text{Diet} = \mathop{f}(\text{tacos},\, \text{pho},\, \text{kale},\, \text{water}) $$
-
-
----
-
-# Schedule
-
-## Today
+### Today
 
 We review more of the main/basic results in metrics.
 
-## This week
+### This week
 
-Will post the **first assignment** as the end of the week.
-
-You will have a week to complete it.
+We will post the **first assignment** Saturday (4/13). Due 4/21.
 
 ---
-class: inverse, middle, center
+class: inverse, middle
 
 # Multiple regression
 
@@ -129,19 +123,19 @@ layout: true
 
 ## More explanatory variables
 
-We're moving from **simple linear regression** (one outcome variable and one explanatory variable)
+We're moving from **simple linear regression** (one .pink[outcome variable] and one .purple[explanatory variable])
 
-$$ y_i = \beta_0 + \beta_1 x_i + u_i $$
+$$ \color{#e64173}{y_i} = \beta_0 + \beta_1 \color{#6A5ACD}{x_i} + u_i $$
 
-to the land of **multiple linear regression** (one outcome variable and multiple explanatory variables)
+to the land of **multiple linear regression** (one .pink[outcome variable] and multiple .purple[explanatory variables])
 
-$$ y\_i = \beta\_0 + \beta\_1 x\_{1i} + \beta\_2 x\_{2i} + \cdots + \beta\_k x\_{ki} + u\_i $$
+$$ \color{#e64173}{y\_i} = \beta\_0 + \beta\_1 \color{#6A5ACD}{x\_{1i}} + \beta\_2 \color{#6A5ACD}{x\_{2i}} + \cdots + \beta\_k \color{#6A5ACD}{x\_{ki}} + u\_i $$
 
 --
 
 **Why?**
 --
- Better explain the variation in $y$, improve predictions, avoid omitted-variable bias, ...
+ We can better explain the variation in $y$, improve predictions, avoid omitted-variable bias, ...
 
 ---
 
@@ -165,8 +159,8 @@ $y_i = \beta_0 + \beta_1 x_{1i} + \beta_2 x_{2i} + u_i \quad$ $x_1$ is continuou
 ggplot(data = gen_df, aes(y = y, x = x1, color = x2, shape = x2)) +
 geom_hline(yintercept = 0) +
 geom_vline(xintercept = 0) +
-annotate("text", x = -0.075, y = 7.75, label = TeX("$y$"), size = 4) +
-annotate("text", x = 2.95, y = 0.3, label = TeX("$x_1$"), size = 4) +
+annotate("text", x = -0.075, y = 7.75, label = TeX("$y$"), size = 8) +
+annotate("text", x = 2.95, y = 0.3, label = TeX("$x_1$"), size = 8) +
 geom_point(size = 3) +
 ylim(c(-4.5, 8)) +
 theme_empty +
@@ -180,7 +174,10 @@ scale_shape_manual(
   values = c(1, 19),
   labels = c("A", "B")
 ) +
-theme(legend.position = "bottom")
+theme(
+  legend.position = "bottom",
+  text = element_text(size = 20)
+)
 ```
 
 ---
@@ -194,8 +191,8 @@ geom_hline(yintercept = mean_a, color = "darkslategrey", alpha = 0.5) +
 geom_hline(yintercept = mean_b, color = red_pink, alpha = 0.5) +
 geom_hline(yintercept = 0) +
 geom_vline(xintercept = 0) +
-annotate("text", x = -0.075, y = 7.75, label = TeX("$y$"), size = 4) +
-annotate("text", x = 2.95, y = 0.3, label = TeX("$x_1$"), size = 4) +
+annotate("text", x = -0.075, y = 7.75, label = TeX("$y$"), size = 8) +
+annotate("text", x = 2.95, y = 0.3, label = TeX("$x_1$"), size = 8) +
 geom_point(size = 3) +
 ylim(c(-4.5, 8)) +
 theme_empty +
@@ -209,7 +206,10 @@ scale_shape_manual(
   values = c(1, 19),
   labels = c("A", "B")
 ) +
-theme(legend.position = "bottom")
+theme(
+  legend.position = "bottom",
+  text = element_text(size = 20)
+)
 ```
 
 ---
@@ -221,8 +221,8 @@ With groups' means removed:
 ggplot(data = gen_df %>% mutate(y = y - 4 * x2), aes(y = y_dm, x = x1)) +
 geom_hline(yintercept = 0) +
 geom_vline(xintercept = 0) +
-annotate("text", x = -0.075, y = 7.75, label = TeX("$y$"), size = 4) +
-annotate("text", x = 2.95, y = 0.3, label = TeX("$x_1$"), size = 4) +
+annotate("text", x = -0.075, y = 7.75, label = TeX("$y$"), size = 8) +
+annotate("text", x = 2.95, y = 0.3, label = TeX("$x_1$"), size = 8) +
 geom_point(size = 3, aes(color = x2, shape = x2)) +
 ylim(c(-4.5, 8)) +
 theme_empty +
@@ -236,7 +236,10 @@ scale_shape_manual(
   values = c(1, 19),
   labels = c("A", "B")
 ) +
-theme(legend.position = "bottom")
+theme(
+  legend.position = "bottom",
+  text = element_text(size = 20)
+)
 ```
 
 ---
@@ -249,8 +252,8 @@ ggplot(data = gen_df %>% mutate(y = y - 4 * x2), aes(y = y_dm, x = x1)) +
 geom_smooth(method = lm, se = F, color = "orange") +
 geom_hline(yintercept = 0) +
 geom_vline(xintercept = 0) +
-annotate("text", x = -0.075, y = 7.75, label = TeX("$y$"), size = 4) +
-annotate("text", x = 2.95, y = 0.3, label = TeX("$x_1$"), size = 4) +
+annotate("text", x = -0.075, y = 7.75, label = TeX("$y$"), size = 8) +
+annotate("text", x = 2.95, y = 0.3, label = TeX("$x_1$"), size = 8) +
 geom_point(size = 3, aes(color = x2, shape = x2)) +
 ylim(c(-4.5, 8)) +
 theme_empty +
@@ -264,7 +267,10 @@ scale_shape_manual(
   values = c(1, 19),
   labels = c("A", "B")
 ) +
-theme(legend.position = "bottom")
+theme(
+  legend.position = "bottom",
+  text = element_text(size = 20)
+)
 ```
 
 ---
@@ -277,8 +283,8 @@ ggplot(data = gen_df, aes(y = y, x = x1, color = x2, shape = x2)) +
 geom_smooth(method = lm, se = F) +
 geom_hline(yintercept = 0) +
 geom_vline(xintercept = 0) +
-annotate("text", x = -0.075, y = 7.75, label = TeX("$y$"), size = 4) +
-annotate("text", x = 2.95, y = 0.3, label = TeX("$x_1$"), size = 4) +
+annotate("text", x = -0.075, y = 7.75, label = TeX("$y$"), size = 8) +
+annotate("text", x = 2.95, y = 0.3, label = TeX("$x_1$"), size = 8) +
 geom_point(size = 3) +
 ylim(c(-4.5, 8)) +
 theme_empty +
@@ -292,7 +298,10 @@ scale_shape_manual(
   values = c(1, 19),
   labels = c("A", "B")
 ) +
-theme(legend.position = "bottom")
+theme(
+  legend.position = "bottom",
+  text = element_text(size = 20)
+)
 ```
 
 ---
@@ -329,8 +338,8 @@ Our residualized $x_{1}$ (which we named $\color{#e64173}{\tilde{x}_1}$) comes f
 
 $$
 \begin{aligned}
-  \hat{x}\_{1i} &= \hat{\gamma}\_0 + \hat{\gamma}\_2 \, x\_{2i} + \hat{\gamma}\_3 \, x\_{3i} \\
-  \color{#e64173}{\tilde{x}\_{1i}} &= x\_{1i} - \hat{x}\_{1i}
+  \hat{x}_{1i} &= \hat{\gamma}_0 + \hat{\gamma}_2 \, x_{2i} + \hat{\gamma}_3 \, x_{3i} \\
+  \color{#e64173}{\tilde{x}_{1i}} &= x_{1i} - \hat{x}_{1i}
 \end{aligned}
 $$
 
@@ -339,7 +348,42 @@ $$
 allowing us to better understand our OLS multiple-regression estimator
 
 $$ \hat{\beta}_1 = \dfrac{\mathop{\hat{\text{Cov}}}(\color{#e64173}{\tilde{x}_1},\,y)}{\mathop{\hat{\text{Var}}} \left( \color{#e64173}{\tilde{x}_1} \right)} $$
+---
+layout: false
+class: clear, middle
 
+```{R, venn_iv, echo = F, dev = "svg"}
+# Colors (order: x1, x2, x3, y)
+venn_colors <- c(purple, red, "grey60", orange)
+# Locations of circles
+venn_df <- tibble(
+  x  = c( 0.0,   -0.5,    1.5,   -1.0),
+  y  = c( 0.0,   -2.5,   -1.8,    2.0),
+  r  = c( 1.9,    1.5,    1.5,    1.3),
+  l  = c( "Y", "X[1]", "X[2]", "X[3]"),
+  xl = c( 0.0,   -0.5,    1.6,   -1.0),
+  yl = c( 0.0,   -2.5,   -1.9,    2.2)
+)
+# Venn
+ggplot(data = venn_df, aes(x0 = x, y0 = y, r = r, fill = l, color = l)) +
+geom_circle(alpha = 0.3, size = 0.75) +
+theme_void() +
+theme(legend.position = "none") +
+scale_fill_manual(values = venn_colors) +
+scale_color_manual(values = venn_colors) +
+geom_text(aes(x = xl, y = yl, label = l), size = 9, family = "Fira Sans Book", parse = T) +
+annotate(
+  x = -5.5, y = 3.3,
+  geom = "text", label = "Multiple regression", size = 9, family = "Fira Sans Book", hjust = 0
+) +
+xlim(-5.5, 4.5) +
+ylim(-4.2, 3.4) +
+coord_equal()
+```
+
+---
+layout: true
+# Multiple regression
 
 ---
 ## Model fit
@@ -386,12 +430,12 @@ Pseudo-code outline of the simulation:
 .mono[R] code for the simulation:
 
 
-```{R, r2 data code, eval = F}
+```{R, r2 data code, eval = F, cache = T}
 set.seed(1234)
 y <- rnorm(1e4)
 x <- matrix(data = rnorm(1e7), nrow = 1e4)
 x %<>% cbind(matrix(data = 1, nrow = 1e4, ncol = 1), x)
-r_df <- mclapply(X = 1:(1e3-1), mc.cores = 12, FUN = function(i) {
+r_df <- mclapply(X = 1:(1e3-1), mc.cores = 2, FUN = function(i) {
   tmp_reg <- lm(y ~ x[,1:(i+1)]) %>% summary()
   data.frame(
     k = i + 1,
@@ -403,7 +447,7 @@ r_df <- mclapply(X = 1:(1e3-1), mc.cores = 12, FUN = function(i) {
 
 ---
 
-**The problem:** As we add variables to our model, $R^2$ *mechanically* increases.
+**The problem:** As we add variables to our model, $\color{#314f4f}{R^2}$ *mechanically* increases.
 
 
 ```{R, r2 data, include = F, cache = T}
@@ -411,7 +455,7 @@ set.seed(1234)
 y <- rnorm(1e4)
 x <- matrix(data = rnorm(1e7), nrow = 1e4)
 x %<>% cbind(matrix(data = 1, nrow = 1e4, ncol = 1), x)
-r_df <- mclapply(X = 1:(1e3-1), mc.cores = 12, FUN = function(i) {
+r_df <- mclapply(X = 1:(1e3-1), mc.cores = 2, FUN = function(i) {
   tmp_reg <- lm(y ~ x[,1:(i+1)]) %>% summary()
   data.frame(
     k = i + 1,
@@ -429,12 +473,12 @@ geom_line(size = 2, alpha = 0.75, color = "darkslategrey") +
 geom_line(aes(y = r2_adj), size = 0.2, alpha = 0, color = red_pink) +
 ylab(TeX("R^2")) +
 xlab("Number of explanatory variables (k)") +
-theme_pander(base_size = 16)
+theme_pander(base_size = 18)
 ```
 
 ---
 
-**One solution:** Adjusted $R^2$
+**One solution:** .pink[Adjusted] $\color{#e64173}{R^2}$
 
 ```{R, adjusted r2 plot, echo = F, dev = "svg", fig.height = 6.25}
 ggplot(data = r_df, aes(x = k, y = r2)) +
@@ -444,14 +488,14 @@ geom_line(size = 2, alpha = 0.15, color = "darkslategrey") +
 geom_line(aes(y = r2_adj), size = 2, alpha = 0.85, color = red_pink) +
 ylab(TeX("R^2")) +
 xlab("Number of explanatory variables (k)") +
-theme_pander(base_size = 16)
+theme_pander(base_size = 18)
 ```
 
 ---
 
 **The problem:** As we add variables to our model, $R^2$ *mechanically* increases.
 
-**One solution:** Control (penalize) for the number of variables, _e.g._, adjusted $R^2$:
+**One solution:** Penalize for the number of variables, _e.g._, adjusted $R^2$:
 
 $$ \overline{R}^2 = 1 - \dfrac{\sum_i \left( y_i - \hat{y}_i \right)^2/(n-k-1)}{\sum_i \left( y_i - \overline{y} \right)^2/(n-1)} $$
 
@@ -479,7 +523,7 @@ There are tradeoffs to remember as we add/remove variables:
 layout: true
 # Omitted-variable bias
 ---
-class: inverse, middle, center
+class: inverse, middle
 
 ---
 
@@ -512,8 +556,9 @@ where
 
 thus
 
-- $\beta_1$: the returns to an additional year of schooling
-- $\beta_2$: the premium for being male (if $\beta_2 > 0$, then there is discrimination against women—receiving less pay based upon gender)
+- $\beta_1$: the returns to an additional year of schooling (*ceteris paribus*)
+- $\beta_2$: the premium for being male (*ceteris paribus*)
+<br>If $\beta_2 > 0$, then there is discrimination against women—receiving less pay based upon gender.
 
 ---
 layout: true
@@ -594,7 +639,7 @@ xlab("Schooling") +
 ylab("Pay") +
 theme_empty +
 theme(
-  axis.title = element_text(size = 14),
+  axis.title = element_text(size = 18),
   plot.margin = structure(c(0, 0, 0.1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
 )
 ```
@@ -612,7 +657,7 @@ xlab("Schooling") +
 ylab("Pay") +
 theme_empty +
 theme(
-  axis.title = element_text(size = 14),
+  axis.title = element_text(size = 18),
   plot.margin = structure(c(0, 0, 0.1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
 )
 ```
@@ -631,7 +676,7 @@ xlab("Schooling") +
 ylab("Pay") +
 theme_empty +
 theme(
-  axis.title = element_text(size = 14),
+  axis.title = element_text(size = 18),
   plot.margin = structure(c(0, 0, 0.1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
 ) +
 scale_color_manual("", values = c(red_pink, "darkslategrey"), labels = c("Female", "Male")) +
@@ -662,7 +707,7 @@ xlab("Schooling") +
 ylab("Pay") +
 theme_empty +
 theme(
-  axis.title = element_text(size = 14),
+  axis.title = element_text(size = 18),
   plot.margin = structure(c(0, 0, 0.1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
 ) +
 scale_color_manual("", values = c(red_pink, "darkslategrey"), labels = c("Female", "Male")) +
@@ -693,13 +738,36 @@ xlab("Schooling") +
 ylab("Pay") +
 theme_empty +
 theme(
-  axis.title = element_text(size = 14),
+  axis.title = element_text(size = 18),
   plot.margin = structure(c(0, 0, 0.1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
 ) +
 scale_color_manual("", values = c(red_pink, "darkslategrey"), labels = c("Female", "Male")) +
 scale_shape_manual("", values = c(16, 1), labels = c("Female", "Male"))
 ```
+---
+layout: false
+class: clear, middle, center
 
+```{R, venn2, dev = "svg", echo = F}
+# Line types (order: x1, x2, x3, y)
+venn_lines <- c("solid", "dotted", "dotted", "solid")
+# Venn
+ggplot(data = venn_df, aes(x0 = x, y0 = y, r = r, fill = l, color = l)) +
+geom_circle(aes(linetype = l), alpha = 0.3, size = 0.75) +
+theme_void() +
+theme(legend.position = "none") +
+scale_fill_manual(values = venn_colors) +
+scale_color_manual(values = venn_colors) +
+scale_linetype_manual(values = venn_lines) +
+geom_text(aes(x = xl, y = yl, label = l), size = 9, family = "Fira Sans Book", parse = T) +
+annotate(
+  x = -5.5, y = 3.3,
+  geom = "text", label = "Omitted variables", size = 9, family = "Fira Sans Book", hjust = 0
+) +
+xlim(-5.5, 4.5) +
+ylim(-4.2, 3.4) +
+coord_equal()
+```
 ---
 layout: false
 
@@ -728,7 +796,7 @@ layout: true
 # Interpreting coefficients
 
 ---
-class: inverse, middle, center
+class: inverse, middle
 
 ---
 ## Continuous variables
@@ -756,9 +824,9 @@ Deriving the slope's interpretation:
 
 $$
 \begin{aligned}
-  \mathop{\boldsymbol{E}}\left[ \text{Pay} | \text{School} = \ell + 1 \right] - \mathop{\boldsymbol{E}}\left[ \text{Pay} | \text{School} = \ell \right] &= \\
-  \mathop{\boldsymbol{E}}\left[ \beta_0 + \beta_1 (\ell + 1) + u \right] - \mathop{\boldsymbol{E}}\left[ \beta_0 + \beta_1 \ell + u \right] &= \\
-  \left[ \beta_0 + \beta_1 (\ell + 1) \right] - \left[ \beta_0 + \beta_1 \ell \right] &= \\
+  \mathop{\boldsymbol{E}}\left[ \text{Pay} | \text{School} = \ell + 1 \right] - \mathop{\boldsymbol{E}}\left[ \text{Pay} | \text{School} = \ell \right] &= \\[0.5em]
+  \mathop{\boldsymbol{E}}\left[ \beta_0 + \beta_1 (\ell + 1) + u \right] - \mathop{\boldsymbol{E}}\left[ \beta_0 + \beta_1 \ell + u \right] &= \\[0.5em]
+  \left[ \beta_0 + \beta_1 (\ell + 1) \right] - \left[ \beta_0 + \beta_1 \ell \right] &= \\[0.5em]
   \beta_0 - \beta_0 + \beta_1 \ell - \beta_1 \ell + \beta_1 &=
   \beta_1
 \end{aligned}
@@ -793,7 +861,7 @@ $$
 
 --
 
-_I.e._, the slope gives the expected increase in our outcome variable for a one-unit increase in the explanatory variable, **holding all other variables constant**. (*Ceteris paribus*)
+_I.e._, the slope gives the expected increase in our outcome variable for a one-unit increase in the explanatory variable, **holding all other variables constant** (*ceteris paribus*).
 
 ---
 ## Continuous variables
@@ -907,14 +975,14 @@ annotate(
   x = 0.5,
   y = -1 + cat_reg$coefficients[1],
   label = TeX("$\\hat{\\beta}_0 = \\bar{\\mathrm{Group}_0}$"),
-  size = 6
+  size = 7
 ) +
 annotate(
   geom = "text",
   x = 0.5,
   y = 1 + cat_reg$coefficients[1] + cat_reg$coefficients[2],
   label = TeX("$\\hat{\\beta}_0 + \\hat{\\beta}_1 = \\bar{\\mathrm{Group}_1}$"),
-  size = 6,
+  size = 7,
   color = red_pink
 ) +
 theme_empty
@@ -984,7 +1052,7 @@ xlab("Schooling") +
 ylab("Pay") +
 theme_empty +
 theme(
-  axis.title = element_text(size = 14),
+  axis.title = element_text(size = 18),
   plot.margin = structure(c(0, 0, 0.1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
 ) +
 scale_color_manual("", values = c(red_pink, "darkslategrey"), labels = c("Female", "Male")) +
@@ -1025,7 +1093,7 @@ xlab("Schooling") +
 ylab("Pay") +
 theme_empty +
 theme(
-  axis.title = element_text(size = 14),
+  axis.title = element_text(size = 18),
   plot.margin = structure(c(0, 0, 0.1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
 ) +
 scale_color_manual("", values = c(red_pink, "darkslategrey"), labels = c("Female", "Male")) +
@@ -1035,7 +1103,9 @@ scale_shape_manual("", values = c(16, 1), labels = c("Female", "Male"))
 ---
 ## Interactions
 
-Interpreting coefficients can be a little tricky with interactions, but the key<sup>†</sup> is to carefully work through the math.
+Interpreting coefficients can be a little tricky with interactions, but the key<sup>.pink[†]</sup> is to carefully work through the math.
+
+.footnote[.pink[†] As is often the case with econometrics.]
 
 $$ \text{Pay}_i = \beta_0 + \beta_1 \, \text{School}_i + \beta_2 \, \text{Female}_i + \beta_3 \, \text{School}_i\times\text{Female}_i + u_i $$
 
@@ -1054,10 +1124,6 @@ $$
 --
 
 Similarly, $\beta_1$ gives the expected return to an additional year of schooling for men. Thus, $\beta_3$ gives the **difference in the returns to schooling** for women and men.
-
-.footnote[
-[†]: As if often the key with econometrics.
-]
 
 ---
 ## Log-linear specification
@@ -1130,9 +1196,9 @@ theme_axes
 ---
 ## Log-log specification
 
-Similarly, econometricians frequently employ log-log models, in which the outcome variable is logged *and* at least one explanatory variable is logged, _e.g._,
+Similarly, econometricians frequently employ log-log models, in which the outcome variable is logged *and* at least one explanatory variable is logged
 
-$$ \log(Pay_i) = \beta_0 + \beta_1 \, \log(\text{School}_i) + u_i $$
+$$ \log(\text{Pay}_i) = \beta_0 + \beta_1 \, \log(\text{School}_i) + u_i $$
 
 **Interpretation:**
 
@@ -1202,7 +1268,7 @@ layout: true
 # Additional topics
 
 ---
-class: inverse, middle, center
+class: inverse, middle
 
 ---
 ## Inference *vs.* prediction
@@ -1224,10 +1290,10 @@ Succinctly
 
 - **Inference:** causality, $\hat{\beta}_k$ (consistent and efficient), standard errors/hypothesis tests for $\hat{\beta}_k$, generally OLS
 
-- **Prediction:**<sup>†</sup> correlation, $\hat{y}_i$ (low error), model selection, nonlinear models are much more common
+- **Prediction:**<sup>.pink[†]</sup> correlation, $\hat{y}_i$ (low error), model selection, nonlinear models are much more common
 
 .footnote[
-[†]: Includes forecasting.
+.pink[†] Includes forecasting.
 ]
 
 ---
@@ -1432,6 +1498,8 @@ If the observations are missing in a nonrandom way, a random sample may end up n
 ---
 exclude: true
 
-```{R, generate pdfs, include = F}
-system("decktape remark 03_review.html 03_review.pdf --chrome-arg=--allow-file-access-from-files")
+```{R, generate pdfs, include = F, eval = T}
+source("../../ScriptsR/unpause.R")
+unpause("03_review.Rmd", ".", T, T)
+# system("decktape remark 03_review.html 03_review.pdf --chrome-arg=--allow-file-access-from-files")
 ```
