@@ -1,0 +1,1118 @@
+---
+title: "Asymptotics and consistency"
+subtitle: "EC 421, Set 6"
+author: "Edward Rubin"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  xaringan::moon_reader:
+    css: ['default', 'metropolis', 'metropolis-fonts', 'my-css.css']
+    # self_contained: true
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+class: inverse, middle
+
+```{R, setup, include = F}
+options(htmltools.dir.version = FALSE)
+library(pacman)
+p_load(
+  broom,
+  latex2exp, ggplot2, ggthemes, viridis, extrafont, gridExtra,
+  kableExtra,
+  dplyr, magrittr, knitr, parallel
+)
+# Define pink color
+red_pink <- "#e64173"
+turquoise <- "#20B2AA"
+grey_light <- "grey70"
+grey_mid <- "grey50"
+grey_dark <- "grey20"
+# Dark slate grey: #314f4f
+# Notes directory
+dir_slides <- "~/Dropbox/UO/Teaching/EC421W19/LectureNotes/05Heteroskedasticity/"
+# Knitr options
+opts_chunk$set(
+  comment = "#>",
+  fig.align = "center",
+  fig.height = 7,
+  fig.width = 10.5,
+  warning = F,
+  message = F
+)
+opts_chunk$set(dev = "svg")
+options(device = function(file, width, height) {
+  svg(tempfile(), width = width, height = height)
+})
+# A blank theme for ggplot
+theme_empty <- theme_bw() + theme(
+  line = element_blank(),
+  rect = element_blank(),
+  strip.text = element_blank(),
+  axis.text = element_blank(),
+  plot.title = element_blank(),
+  axis.title = element_blank(),
+  plot.margin = structure(c(0, 0, -0.5, -1), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_simple <- theme_bw() + theme(
+  line = element_blank(),
+  panel.grid = element_blank(),
+  rect = element_blank(),
+  strip.text = element_blank(),
+  axis.text.x = element_text(size = 18, family = "STIXGeneral"),
+  axis.text.y = element_blank(),
+  axis.ticks = element_blank(),
+  plot.title = element_blank(),
+  axis.title = element_blank(),
+  # plot.margin = structure(c(0, 0, -1, -1), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_axes_math <- theme_void() + theme(
+  text = element_text(family = "MathJax_Math"),
+  axis.title = element_text(size = 22),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, 0.15, 0, 0, unit = "lines")),
+  axis.line = element_line(
+    color = "grey70",
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.15, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_axes_serif <- theme_void() + theme(
+  text = element_text(family = "MathJax_Main"),
+  axis.title = element_text(size = 22),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, 0.15, 0, 0, unit = "lines")),
+  axis.line = element_line(
+    color = "grey70",
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.15, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_axes <- theme_void() + theme(
+  text = element_text(family = "Fira Sans Book"),
+  axis.title = element_text(size = 18),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, 0.15, 0, 0, unit = "lines")),
+  axis.line = element_line(
+    color = grey_light,
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.15, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+```
+
+# Prologue
+
+---
+name: schedule
+
+# Schedule
+
+## Last Time
+
+Living with heteroskedasticity
+
+## Today
+
+Asymptotics and consistency
+
+## This week
+
+Our second assignment (4/27–5/3)
+
+## Near-ish future
+
+Midterm on 5/6
+---
+
+# .mono[R] showcase
+
+Need speed? .mono[R] allows essentially infinite parallelization.
+
+Three popular packages:
+
+- [`future`](https://github.com/HenrikBengtsson/future) and [`furrr`](https://github.com/DavisVaughan/furrr)
+
+- `parallel`
+
+- `foreach`
+
+And here's a nice [tutorial](https://nceas.github.io/oss-lessons/parallel-computing-in-r/parallel-computing-in-r.html).
+
+---
+layout: true
+# Consistency
+---
+class: inverse, middle
+---
+layout: true
+# Consistency
+## Welcome to asymptopia
+---
+
+*Previously:* We examined estimators (_e.g._, $\hat{\beta}_j$) and their properties using
+
+--
+
+1. The **mean**  of the estimator's distribution: $\mathop{\boldsymbol{E}}\left[ \hat{\beta}_j \right] = ?$
+
+--
+
+2. The **variance**  of the estimator's distribution: $\mathop{\text{Var}} \left( \hat{\beta}_j \right) = ?$
+
+--
+
+which tell us about the .hi[tendency of the estimator] if we took .hi[∞ samples], each with .hi[sample size] $\color{#e64173}{n}$.
+
+--
+
+This approach misses something.
+
+---
+
+.hi[New question:]<br>How does our estimator behave as our sample gets larger (as $n\rightarrow\infty$)?
+
+--
+
+This *new question* forms a new way to think about the properties of estimators: .hi[asymptotic properties] (or large-sample properties).
+
+--
+
+A "good" estimator will become indistinguishable from the parameter it estimates when $n$ is very large (close to $\infty$).
+---
+layout: true
+# Consistency
+## Probability limits
+---
+
+Just as the *expected value* helped us characterize **the finite-sample distribution of an estimator** with sample size $n$,
+
+--
+
+the .pink[*probability limit*] helps us analyze .hi[the asymptotic distribution of an estimator] (the distribution of the estimator as $n$ gets "big"<sup>.pink[†]</sup>).
+
+.footnote[
+.pink[†] Here, "big" $n$ means $n\rightarrow\infty$. That's *really* big data.
+]
+
+---
+
+Let $B_n$ be our estimator with sample size $n$.
+
+Then the .hi[probability limit] of $B$ is $\alpha$ if
+
+$$ \lim_{n\rightarrow\infty} \mathop{P}\left( \middle| B_n - \alpha \middle| > \epsilon \right) = 0 \tag{1} $$
+
+for any $\varepsilon > 0$.
+
+--
+
+The definition in $(1)$ *essentially* says that as the .pink[sample size] approaches infinity, the probability that $B_n$ differs from $\alpha$ by more than a very small number $(\epsilon)$ is zero.
+
+--
+
+*Practically:* $B$'s distribution collapses to a spike at $\alpha$ as $n$ approaches $\infty$.
+---
+
+Equivalent statements:
+
+- The probability limit of $B_n$ is $\alpha$.
+
+- $\text{plim}\: B = \alpha$
+
+- $B$ converges in probability to $\alpha$.
+---
+
+Probability limits have some nice/important properties:
+
+- $\mathop{\text{plim}}\left( X \times Y \right) = \mathop{\text{plim}}\left( X \right) \times \mathop{\text{plim}}\left( Y \right)$
+
+- $\mathop{\text{plim}}\left( X + Y \right) = \mathop{\text{plim}}\left( X \right) + \mathop{\text{plim}}\left( Y \right)$
+
+- $\mathop{\text{plim}}\left( c \right) = c$, where $c$ is a constant
+
+- $\mathop{\text{plim}}\left( \dfrac{X}{Y} \right) = \dfrac{\mathop{\text{plim}}\left( X \right)}{ \mathop{\text{plim}}\left( Y \right)}$
+
+- $\mathop{\text{plim}}\!\big( f(X) \big) = \mathop{f}\!\big(\mathop{\text{plim}}\left( X \right)\big)$
+
+---
+layout: true
+# Consistency
+## Consistent estimators
+---
+
+We say that .hi[an estimator is consistent] if
+
+1. The estimator .hi[has a prob. limit] (its distribution collapses to a spike).
+
+2. This spike is .hi[located at the parameter] the estimator predicts.
+
+--
+
+*In other words...*
+
+An estimator is consistent if its asymptotic distribution collapses to a spike located at the estimated parameter.
+
+--
+
+*In math:* The estimator $B$ is consistent for $\alpha$ if $\mathop{\text{plim}} B = \alpha$.
+
+--
+
+The estimator is *inconsistent* if $\mathop{\text{plim}} B \neq \alpha$.
+---
+
+*Example:* We want to estimate the population mean $\mu_x$ (where $X$∼Normal).
+
+Let's compare the asymptotic distributions of two competing estimators:
+
+1. The first observation: $X_{1}$
+2. The sample mean: $\overline{X} = \dfrac{1}{n} \sum_{i=1}^n x_i$
+3. Some other estimator: $\widetilde{X} = \dfrac{1}{n+1} \sum_{i=1}^n x_i$
+
+Note that (1) and (2) are unbiased, but (3) is biased.
+
+---
+
+To see which are unbiased/biased:
+
+--
+
+$\mathop{\boldsymbol{E}}\left[ X_1 \right] = \mu_x$
+
+--
+
+$\mathop{\boldsymbol{E}}\left[ \overline{X} \right]$--
+ $= \mathop{\boldsymbol{E}}\left[ \dfrac{1}{n} \sum_{i=1}^n x_i \right]$--
+ $= \dfrac{1}{n} \sum_{i=1}^n \mathop{\boldsymbol{E}}\left[ x_i \right]$--
+ $= \dfrac{1}{n} \sum_{i=1}^n \mu_x$--
+ $= \mu_x$
+
+--
+
+$\mathop{\boldsymbol{E}}\left[ \widetilde{X} \right]$--
+ $= \mathop{\boldsymbol{E}}\left[ \dfrac{1}{n+1} \sum_{i=1}^n x_i \right]$--
+ $= \dfrac{1}{n+1} \sum_{i=1}^n \mathop{\boldsymbol{E}}\left[ x_i \right]$--
+ $= \dfrac{n}{n+1}\mu_x$
+---
+layout: true
+# Consistency
+
+Distributions of $\color{#FFA500}{X_1}$, $\color{#e64173}{\overline{X}}$, and $\color{#314f4f}{\widetilde{X}}$
+
+---
+<br>
+$n = `r (n <- 2)`$
+
+```{R, ex2, echo = F, fig.height = 5.75}
+mu <- 10; v <- 1
+ex1 <- mu
+ex2 <- mu
+ex3 <- n/(n+1) * mu
+se1 <- sqrt(v)
+se2 <- sqrt(v/n)
+se3 <- sqrt(v/(n+1))
+lb <- min(c(ex1, ex2, ex3)) -  max(c(se1, se2, se3)) * 3.5
+ub <- max(c(ex1, ex2, ex3)) +  max(c(se1, se2, se3)) * 3.5
+ggplot(data = tibble(x = c(lb, ub)), aes(x)) +
+  stat_function(
+    fun = dnorm, args = list(mean = ex1, sd = se1), n = 5e3,
+    geom = "area", color = NA, fill = "orange", alpha = 0.7
+  ) +
+  stat_function(
+    fun = dnorm, args = list(mean = ex2, sd = se2), n = 5e3,
+    geom = "area", color = NA, fill = red_pink, alpha = 0.7
+  ) +
+  stat_function(
+    fun = dnorm, args = list(mean = ex3, sd = se3), n = 5e3,
+    geom = "area", color = NA, fill = "darkslategrey", alpha = 0.7
+  ) +
+  geom_vline(xintercept = mu, linetype = 5, size = 0.6, alpha = 0.5) +
+  geom_hline(yintercept = 0) +
+  theme_empty
+```
+---
+<br>
+$n = `r (n <- 5)`$
+
+```{R, ex5, echo = F, fig.height = 5.75}
+mu <- 10; v <- 1
+ex1 <- mu
+ex2 <- mu
+ex3 <- n/(n+1) * mu
+se1 <- sqrt(v)
+se2 <- sqrt(v/n)
+se3 <- sqrt(v/(n+1))
+ggplot(data = tibble(x = c(lb, ub)), aes(x)) +
+  stat_function(
+    fun = dnorm, args = list(mean = ex1, sd = se1), n = 5e3,
+    geom = "area", color = NA, fill = "orange", alpha = 0.7
+  ) +
+  stat_function(
+    fun = dnorm, args = list(mean = ex2, sd = se2), n = 5e3,
+    geom = "area", color = NA, fill = red_pink, alpha = 0.7
+  ) +
+  stat_function(
+    fun = dnorm, args = list(mean = ex3, sd = se3), n = 5e3,
+    geom = "area", color = NA, fill = "darkslategrey", alpha = 0.7
+  ) +
+  geom_vline(xintercept = mu, linetype = 5, size = 0.6, alpha = 0.5) +
+  geom_hline(yintercept = 0) +
+  theme_empty
+```
+---
+<br>
+$n = `r (n <- 10)`$
+
+```{R, ex10, echo = F, fig.height = 5.75}
+mu <- 10; v <- 1
+ex1 <- mu
+ex2 <- mu
+ex3 <- n/(n+1) * mu
+se1 <- sqrt(v)
+se2 <- sqrt(v/n)
+se3 <- sqrt(v/(n+1))
+ggplot(data = tibble(x = seq(lb, ub, 0.001)), aes(x)) +
+  stat_function(
+    fun = dnorm, args = list(mean = ex1, sd = se1), n = 5e3,
+    geom = "area", color = NA, fill = "orange", alpha = 0.7
+  ) +
+  stat_function(
+    fun = dnorm, args = list(mean = ex2, sd = se2), n = 5e3,
+    geom = "area", color = NA, fill = red_pink, alpha = 0.7
+  ) +
+  stat_function(
+    fun = dnorm, args = list(mean = ex3, sd = se3), n = 5e3,
+    geom = "area", color = NA, fill = "darkslategrey", alpha = 0.7
+  ) +
+  geom_vline(xintercept = mu, linetype = 5, size = 0.6, alpha = 0.5) +
+  geom_hline(yintercept = 0) +
+  theme_empty
+```
+---
+<br>
+$n = `r (n <- 30)`$
+
+```{R, ex30, echo = F, fig.height = 5.75}
+mu <- 10; v <- 1
+ex1 <- mu
+ex2 <- mu
+ex3 <- n/(n+1) * mu
+se1 <- sqrt(v)
+se2 <- sqrt(v/n)
+se3 <- sqrt(v/(n+1))
+ggplot(data = tibble(x = c(lb, ub)), aes(x)) +
+  stat_function(
+    fun = dnorm, args = list(mean = ex1, sd = se1), n = 5e3,
+    geom = "area", color = NA, fill = "orange", alpha = 0.7
+  ) +
+  stat_function(
+    fun = dnorm, args = list(mean = ex2, sd = se2), n = 5e3,
+    geom = "area", color = NA, fill = red_pink, alpha = 0.7
+  ) +
+  stat_function(
+    fun = dnorm, args = list(mean = ex3, sd = se3), n = 5e3,
+    geom = "area", color = NA, fill = "darkslategrey", alpha = 0.7
+  ) +
+  geom_vline(xintercept = mu, linetype = 5, size = 0.6, alpha = 0.5) +
+  geom_hline(yintercept = 0) +
+  theme_empty
+```
+---
+<br>
+$n = `r (n <- 50)`$
+
+```{R, ex50, echo = F, fig.height = 5.75}
+mu <- 10; v <- 1
+ex1 <- mu
+ex2 <- mu
+ex3 <- n/(n+1) * mu
+se1 <- sqrt(v)
+se2 <- sqrt(v/n)
+se3 <- sqrt(v/(n+1))
+ggplot(data = tibble(x = c(lb, ub)), aes(x)) +
+  stat_function(
+    fun = dnorm, args = list(mean = ex1, sd = se1), n = 5e3,
+    geom = "area", color = NA, fill = "orange", alpha = 0.7
+  ) +
+  stat_function(
+    fun = dnorm, args = list(mean = ex2, sd = se2), n = 5e3,
+    geom = "area", color = NA, fill = red_pink, alpha = 0.7
+  ) +
+  stat_function(
+    fun = dnorm, args = list(mean = ex3, sd = se3), n = 5e3,
+    geom = "area", color = NA, fill = "darkslategrey", alpha = 0.7
+  ) +
+  geom_vline(xintercept = mu, linetype = 5, size = 0.6, alpha = 0.5) +
+  geom_hline(yintercept = 0) +
+  theme_empty
+```
+---
+<br>
+$n = `r (n <- 100)`$
+
+```{R, ex100, echo = F, fig.height = 5.75}
+mu <- 10; v <- 1
+ex1 <- mu
+ex2 <- mu
+ex3 <- n/(n+1) * mu
+se1 <- sqrt(v)
+se2 <- sqrt(v/n)
+se3 <- sqrt(v/(n+1))
+ggplot(data = tibble(x = c(lb, ub)), aes(x)) +
+  stat_function(
+    fun = dnorm, args = list(mean = ex1, sd = se1), n = 5e3,
+    geom = "area", color = NA, fill = "orange", alpha = 0.7
+  ) +
+  stat_function(
+    fun = dnorm, args = list(mean = ex2, sd = se2), n = 5e3,
+    geom = "area", color = NA, fill = red_pink, alpha = 0.7
+  ) +
+  stat_function(
+    fun = dnorm, args = list(mean = ex3, sd = se3), n = 5e3,
+    geom = "area", color = NA, fill = "darkslategrey", alpha = 0.7
+  ) +
+  geom_vline(xintercept = mu, linetype = 5, size = 0.6, alpha = 0.5) +
+  geom_hline(yintercept = 0) +
+  theme_empty
+```
+---
+<br>
+$n = `r (n <- 500)`$
+
+```{R, ex500, echo = F, fig.height = 5.75}
+mu <- 10; v <- 1
+ex1 <- mu
+ex2 <- mu
+ex3 <- n/(n+1) * mu
+se1 <- sqrt(v)
+se2 <- sqrt(v/n)
+se3 <- sqrt(v/(n+1))
+ggplot(data = tibble(x = c(lb, ub)), aes(x)) +
+  stat_function(
+    fun = dnorm, args = list(mean = ex1, sd = se1), n = 5e3,
+    geom = "area", color = NA, fill = "orange", alpha = 0.7
+  ) +
+  stat_function(
+    fun = dnorm, args = list(mean = ex2, sd = se2), n = 5e3,
+    geom = "area", color = NA, fill = red_pink, alpha = 0.7
+  ) +
+  stat_function(
+    fun = dnorm, args = list(mean = ex3, sd = se3), n = 5e3,
+    geom = "area", color = NA, fill = "darkslategrey", alpha = 0.7
+  ) +
+  geom_vline(xintercept = mu, linetype = 5, size = 0.6, alpha = 0.5) +
+  geom_hline(yintercept = 0) +
+  theme_empty
+```
+---
+<br>
+$n = `r (n <- 1000)`$
+
+```{R, ex1000, echo = F, fig.height = 5.75}
+mu <- 10; v <- 1
+ex1 <- mu
+ex2 <- mu
+ex3 <- n/(n+1) * mu
+se1 <- sqrt(v)
+se2 <- sqrt(v/n)
+se3 <- sqrt(v/(n+1))
+ggplot(data = tibble(x = c(lb, ub)), aes(x)) +
+  stat_function(
+    fun = dnorm, args = list(mean = ex1, sd = se1), n = 5e3,
+    geom = "area", color = NA, fill = "orange", alpha = 0.7
+  ) +
+  stat_function(
+    fun = dnorm, args = list(mean = ex2, sd = se2), n = 5e3,
+    geom = "area", color = NA, fill = red_pink, alpha = 0.7
+  ) +
+  stat_function(
+    fun = dnorm, args = list(mean = ex3, sd = se3), n = 5e3,
+    geom = "area", color = NA, fill = "darkslategrey", alpha = 0.7
+  ) +
+  geom_vline(xintercept = mu, linetype = 5, size = 0.6, alpha = 0.5) +
+  geom_hline(yintercept = 0) +
+  theme_empty
+```
+---
+layout: true
+# Consistency
+---
+
+The distributions of $\color{#314f4f}{\widetilde{X}}$
+<br>
+For $n$ in $\{\color{#FCCE25}{2},\, \color{#F89441}{5},\, \color{#E16462}{10},\, \color{#BF3984}{50},\, \color{#900DA4}{100},\, \color{#5601A4}{500}, \color{#0D0887}{1000}\}$
+```{R, ex biased consistent, echo = F, fig.height = 5.75}
+mu <- 10; v <- 1
+ggplot(data = tibble(x = c(6.67-2, 10)), aes(x)) +
+  stat_function(
+    fun = dnorm, args = list(mean = mu * 2/(2+1), sd = sqrt(v/(2+1))), n = 5e3,
+    geom = "area", fill = plasma(7, end = 0.9)[7], color = NA, alpha = 0.7, size = 0.3
+  ) +
+  stat_function(
+    fun = dnorm, args = list(mean = mu * 5/(5+1), sd = sqrt(v/(5+1))), n = 5e3,
+    geom = "area", fill = plasma(7, end = 0.9)[6], color = NA, alpha = 0.7, size = 0.3
+  ) +
+  stat_function(
+    fun = dnorm, args = list(mean = mu * 10/(10+1), sd = sqrt(v/(10+1))), n = 5e3,
+    geom = "area", fill = plasma(7, end = 0.9)[5], color = NA, alpha = 0.7, size = 0.3
+  ) +
+  stat_function(
+    fun = dnorm, args = list(mean = mu * 50/(50+1), sd = sqrt(v/(50+1))), n = 5e3,
+    geom = "area", fill = plasma(7, end = 0.9)[4], color = NA, alpha = 0.7, size = 0.3
+  ) +
+  stat_function(
+    fun = dnorm, args = list(mean = mu * 100/(100+1), sd = sqrt(v/(100+1))), n = 5e3,
+    geom = "area", fill = plasma(7, end = 0.9)[3], color = NA, alpha = 0.7, size = 0.3
+  ) +
+  stat_function(
+    fun = dnorm, args = list(mean = mu * 500/(500+1), sd = sqrt(v/(500+1))), n = 5e3,
+    geom = "area", fill = plasma(7, end = 0.9)[2], color = NA, alpha = 0.7, size = 0.3
+  ) +
+  stat_function(
+    fun = dnorm, args = list(mean = mu * 1000/(1000+1), sd = sqrt(v/(1000+1))), n = 5e3,
+    geom = "area", fill = plasma(7, end = 0.9)[1], color = NA, alpha = 0.7, size = 0.3
+  ) +
+  geom_vline(xintercept = mu, linetype = 5, size = 0.6, alpha = 0.5) +
+  geom_hline(yintercept = 0) +
+  theme_empty
+```
+---
+
+## The takeaway?
+
+--
+
+- An estimator can be unbiased without being consistent
+--
+ (e.g., $\color{#FFA500}{X_1}$).
+
+--
+
+- An estimator can be unbiased and consistent
+--
+ (e.g., $\color{#e64173}{\overline{X}}$).
+
+--
+
+- An estimator can be biased but consistent
+--
+  (e.g., $\color{#314f4f}{\widetilde{X}}$).
+
+--
+
+- An estimator can be biased and inconsistent
+--
+  (e.g., $\overline{X} - 50$).
+
+--
+
+**Best-case scenario:** The estimator is unbiased and consistent.
+---
+
+## Why consistency (asymptotics)?
+
+1. We cannot always find an unbiased estimator. In these situations, we generally (at least) want consistency.
+
+2. Expected values can be hard/undefined. Probability limits are less constrained, _e.g._,
+$$ \mathop{\boldsymbol{E}}\left[ g(X)h(Y) \right] \text{ vs. } \mathop{\text{plim}}\left( g(X)h(Y) \right) $$
+
+3. Asymptotics help us move away from assuming the distribution of $u_i$.
+
+--
+
+<br>
+
+.hi[Caution:] As we saw, consistent estimators can be biased in small samples.
+---
+layout: true
+# OLS in asymptopia
+---
+class: inverse, middle
+---
+
+OLS has two very nice asymptotic properties:
+
+1. Consistency
+
+2. Asymptotic Normality
+
+--
+
+Let's prove \#1 for OLS with simple, linear regression, _i.e._,
+
+$$ y_i = \beta_0 + \beta_1 x_i + u_i $$
+---
+layout: true
+# OLS in asymptopia
+## Proof of consistency
+---
+
+First, recall our previous derivation of of $\hat{\beta}_1$,
+
+$$ \hat{\beta}_1 = \beta_1 + \dfrac{\sum_i \left( x_i - \overline{x} \right) u_i}{\sum_i \left( x_i - \overline{x} \right)^2} $$
+
+--
+
+Now divide the numerator and denominator by $1/n$
+
+--
+
+$$ \hat{\beta}_1 = \beta_1 + \dfrac{\frac{1}{n} \sum_i \left( x_i - \overline{x} \right) u_i}{\frac{1}{n}\sum_i \left( x_i - \overline{x} \right)^2} $$
+
+---
+
+We actually want to know the probability limit of $\hat{\beta}_1$, so
+
+--
+
+$$ \mathop{\text{plim}} \hat{\beta}_1 = \mathop{\text{plim}}\left(\beta_1 + \dfrac{\frac{1}{n} \sum_i \left( x_i - \overline{x} \right) u_i}{\frac{1}{n}\sum_i \left( x_i - \overline{x} \right)^2} \right) $$
+
+--
+
+which, by the properties of probability limits, gives us
+
+--
+
+$$ = \beta_1 + \dfrac{\mathop{\text{plim}}\left(\frac{1}{n} \sum_i \left( x_i - \overline{x} \right) u_i \right)}{\mathop{\text{plim}}\left(\frac{1}{n}\sum_i \left( x_i - \overline{x} \right)^2 \right)} $$
+
+--
+
+The numerator and denominator are, in fact, population quantities
+
+--
+
+$$ = \beta_1 + \dfrac{\mathop{\text{Cov}} \left( x,\, u \right)}{\mathop{\text{Var}} \left( x \right)} $$
+---
+
+So we have
+
+$$ \mathop{\text{plim}} \hat{\beta}_1 = \beta_1 + \dfrac{\mathop{\text{Cov}} \left( x,\, u \right)}{\mathop{\text{Var}} \left( x \right)} $$
+
+--
+
+By our assumption of exogeneity (plus the law of total expectation)
+
+--
+
+$$ \mathop{\text{Cov}} \left( x,\,u \right) = 0 $$
+
+--
+
+Combining these two equations yields
+
+--
+
+$$ \mathop{\text{plim}} \hat{\beta}_1 = \beta_1 + \dfrac{0}{\mathop{\text{Var}} \left( x \right)} = \beta_1 \quad\text{🤓} $$
+
+so long as $\mathop{\text{Var}} \left( x \right) \neq 0$ (which we've assumed).
+---
+layout: true
+# OLS in asymptopia
+## Asymptotic normality
+---
+
+Up to this point, we made a very specific assumption about the distribution of $u_i$—the $u_i$ came from a normal distribution.
+
+We can relax this assumption—allowing the $u_i$ to come from any distribution (still assume exogeneity, independence, and homoskedasticity).
+
+We will focus on the .hi[asymptotic distribution] of our estimators (how they are distributed as $n$ gets large), rather than their finite-sample distribution.
+
+--
+
+As $n$ approaches $\infty$, the distribution of the OLS estimator converges to a normal distribution.
+
+---
+layout: false
+# OLS in asymptopia
+## Recap
+
+With a more limited set of assumptions, OLS is .hi[consistent] and is .hi[asymptotically normally distributed].
+
+### Current assumptions
+
+1. Our data were **randomly sampled** from the population.
+1. $y_i$ is a **linear function** of its parameters and disturbance.
+1. There is **no perfect collinearity** in our data.
+1. The $u_i$ have conditional mean of zero (**exogeneity**), $\mathop{\boldsymbol{E}}\left[ u_i \middle| X_i \right] = 0$.
+1. The $u_i$ are **homoskedastic** with **zero correlation** between $u_i$ and $u_j$.
+---
+layout: false
+class: inverse, middle
+# Omitted-variable bias, redux
+---
+layout: true
+# Omitted-variable bias, redux
+## Inconsistency?
+Imagine we have a population whose true model is
+
+$$
+\begin{align}
+ y_i = \beta_0 + \beta_1 x_{1i} + \beta_2 x_{2i} + u_i \tag{2}
+\end{align}
+$$
+---
+
+--
+
+*Recall.sub[1]:* .hi[Omitted-variable bias] occurs when we omit a variable in our linear regression model (_e.g._, leavining out $x_2$) such that
+
+--
+
+1. $x_{2}$ affects $y$, _i.e._, $\beta_2 \neq 0$.
+
+--
+
+2. Correlates with an included explanatory variable, _i.e._, $\mathop{\text{Cov}} \left( x_1,\, x_2 \right) \neq 0$.
+---
+
+*Recall.sub[2]:* We defined the .hi[bias] of an estimator $W$ for parameter $\theta$
+
+--
+
+$$ \mathop{\text{Bias}}\_\theta \left( W \right) = \mathop{\boldsymbol{E}}\left[ W \right] - \theta $$
+---
+
+We know that omitted-variable bias causes .pink[biased estimates].
+
+*Question:* Do *omitted variables* also cause .pink[inconsistent estimates]?
+
+--
+
+*Answer:* Find $\mathop{\text{plim}} \hat{\beta}_1$ in a regression that omits $x_2$.
+---
+
+but we instead specify the model as
+
+$$
+\begin{align}
+ y_i = \beta_0 + \beta_1 x_{1i} + w_i \tag{3}
+\end{align}
+$$
+
+where $w_i = \beta_2 x_{2i} + u_i$.
+--
+ We estimate $(3)$ via OLS
+
+$$
+\begin{align}
+ y_i = \hat{\beta}_0 + \hat{\beta}_1 x_{1i} + \hat{w}_i \tag{4}
+\end{align}
+$$
+
+--
+
+*Our question:* Is $\hat{\beta}_1$ consistent for $\beta_1$ when we omit $x_2$?
+--
+
+$$ \mathop{\text{plim}}\left( \hat{\beta}_1 \right) \overset{?}{=} \beta_1 $$
+---
+layout: true
+# Omitted-variable bias, redux
+## Inconsistency?
+---
+
+.pull-left[
+.hi[Truth:] $y_i = \beta_0 + \beta_1 x_{1i} + \beta_2 x_{2i} + u_i$
+]
+.pull-right[
+.hi-purple[Specified:] $y_i = \beta_0 + \beta_1 x_{1i} + w_i$
+]
+
+We already showed $\mathop{\text{plim}} \hat{\beta}_1 = \beta_1 + \dfrac{\mathop{\text{Cov}} \left( x_1,\, w \right)}{\mathop{\text{Var}} \left( x_1 \right)}$
+
+where $w$ is the disturbance.
+--
+ Here, we know $w = \beta_2 x_2 + u$. Thus,
+--
+$$ \mathop{\text{plim}} \hat{\beta}_1 = \beta_1 + \dfrac{\mathop{\text{Cov}} \left( x_1,\, \beta_2 x_2 + u \right)}{\mathop{\text{Var}} \left( x_1 \right)} $$
+--
+Now, we make use of $\mathop{\text{Cov}} \left( X,\, Y + Z \right) = \mathop{\text{Cov}} \left( X,\, Y \right) + \mathop{\text{Cov}} \left( X,\, Z \right)$
+--
+$$ \mathop{\text{plim}} \hat{\beta}_1 = \beta_1 + \dfrac{\mathop{\text{Cov}} \left( x_1,\, \beta_2 x_2 \right) + \mathop{\text{Cov}} \left( x_1,\, u \right)}{\mathop{\text{Var}} \left( x_1 \right)} $$
+---
+
+$$ \mathop{\text{plim}} \hat{\beta}_1 = \beta_1 + \dfrac{\mathop{\text{Cov}} \left( x_1,\, \beta_2 x_2 \right) + \mathop{\text{Cov}} \left( x_1,\, u \right)}{\mathop{\text{Var}} \left( x_1 \right)} $$
+
+Now we use the fact that $\mathop{\text{Cov}} \left( X,\, cY \right) = c\mathop{\text{Cov}} \left( X,\,Y \right)$ for a constant $c$.
+--
+$$ \mathop{\text{plim}} \hat{\beta}_1 = \beta_1 + \dfrac{\beta_2 \mathop{\text{Cov}} \left( x_1,\, x_2 \right) + \mathop{\text{Cov}} \left( x_1,\, u \right)}{\mathop{\text{Var}} \left( x_1 \right)} $$
+--
+As before, our exogeneity (conditional mean zero) assumption implies $\mathop{\text{Cov}} \left( x_1,\, u \right) = 0$, which gives us
+--
+$$ \mathop{\text{plim}} \hat{\beta}_1 = \beta_1 + \dfrac{\beta_2 \mathop{\text{Cov}} \left( x_1,\, x_2 \right)}{\mathop{\text{Var}} \left( x_1 \right)} $$
+---
+
+Thus, we find that
+
+$$ \mathop{\text{plim}} \hat{\beta}_1 = \beta_1 + \beta_2 \dfrac{ \mathop{\text{Cov}} \left( x_1,\, x_2 \right)}{\mathop{\text{Var}} \left( x_1 \right)} $$
+
+In other words, an .pink[omitted variable will cause OLS to be inconsistent if **both** of the following statements are true]:
+
+1. The omitted variable .hi[affects our outcome], _i.e._, $\beta_2 \neq 0$.
+
+2. The omitted variable correlates with included explanatory variables, _i.e._, $\mathop{\text{Cov}} \left( x_1,\,x_2 \right) \neq 0$.
+
+If both of these statements are true, then the OLS estimate $\hat{\beta}_1$ will not converge to $\beta_1$, even as $n$ approaches $\infty$.
+---
+layout: true
+# Omitted-variable bias, redux
+## Signing the bias
+---
+
+Sometimes we're stuck with omitted variable bias.<sup>.pink[†]</sup>
+
+$$ \mathop{\text{plim}} \hat{\beta}_1 = \beta_1 + \beta_2 \dfrac{ \mathop{\text{Cov}} \left( x_1,\, x_2 \right)}{\mathop{\text{Var}} \left( x_1 \right)} $$
+
+.footnote[.pink[†] You will often hear the term "omitted-variable bias" when we're actually talking about inconsistency (rather than bias).]
+
+When this happens, we can often at least know the direction of the inconsistency.
+---
+
+Begin with
+
+$$ \mathop{\text{plim}} \hat{\beta}_1 = \beta_1 + \beta_2 \dfrac{ \mathop{\text{Cov}} \left( x_1,\, x_2 \right)}{\mathop{\text{Var}} \left( x_1 \right)} $$
+
+We know $\color{#20B2AA}{\mathop{\text{Var}} \left( x_1 \right) > 0}$. Suppose $\color{#e64173}{\beta_2 > 0}$ and $\color{#FFA500}{\mathop{\text{Cov}} \left( x_1,\,x_2 \right) > 0}$. Then
+--
+$$
+\begin{align}
+ \mathop{\text{plim}} \hat{\beta}_1 = \beta_1 + \color{#e64173}{(+)} \dfrac{\color{#FFA500}{(+)}}{\color{#20B2AA}{(+)}} \implies \mathop{\text{plim}} \hat{\beta}_1 > \beta_1
+\end{align}
+$$
+∴ In this case, OLS is **biased upward** (estimates are too large).
+--
+$$
+\begin{matrix}
+ \enspace & \color{#FFA500}{\text{Cov}(x_1,\,x_2)> 0} & \color{#FFA500}{\text{Cov}(x_1,\,x_2)< 0} \\
+ \color{#e64173}{\beta_2 > 0} & \text{Upward} &  \\
+ \color{#e64173}{\beta_2 < 0} &  &
+\end{matrix}
+$$
+---
+
+Begin with
+
+$$ \mathop{\text{plim}} \hat{\beta}_1 = \beta_1 + \beta_2 \dfrac{ \mathop{\text{Cov}} \left( x_1,\, x_2 \right)}{\mathop{\text{Var}} \left( x_1 \right)} $$
+
+We know $\color{#20B2AA}{\mathop{\text{Var}} \left( x_1 \right) > 0}$. Suppose $\color{#e64173}{\beta_2 < 0}$ and $\color{#FFA500}{\mathop{\text{Cov}} \left( x_1,\,x_2 \right) > 0}$. Then
+--
+$$
+\begin{align}
+ \mathop{\text{plim}} \hat{\beta}_1 = \beta_1 + \color{#e64173}{(-)} \dfrac{\color{#FFA500}{(+)}}{\color{#20B2AA}{(+)}} \implies \mathop{\text{plim}} \hat{\beta}_1 < \beta_1
+\end{align}
+$$
+∴ In this case, OLS is **biased downward** (estimates are too small).
+
+$$
+\begin{matrix}
+ \enspace & \color{#FFA500}{\text{Cov}(x_1,\,x_2)> 0} & \color{#FFA500}{\text{Cov}(x_1,\,x_2)< 0} \\
+ \color{#e64173}{\beta_2 > 0} & \text{Upward} &  \\
+ \color{#e64173}{\beta_2 < 0} & \text{Downward} &
+\end{matrix}
+$$
+---
+
+Begin with
+
+$$ \mathop{\text{plim}} \hat{\beta}_1 = \beta_1 + \beta_2 \dfrac{ \mathop{\text{Cov}} \left( x_1,\, x_2 \right)}{\mathop{\text{Var}} \left( x_1 \right)} $$
+
+We know $\color{#20B2AA}{\mathop{\text{Var}} \left( x_1 \right) > 0}$. Suppose $\color{#e64173}{\beta_2 > 0}$ and $\color{#FFA500}{\mathop{\text{Cov}} \left( x_1,\,x_2 \right) < 0}$. Then
+
+$$
+\begin{align}
+ \mathop{\text{plim}} \hat{\beta}_1 = \beta_1 + \color{#e64173}{(+)} \dfrac{\color{#FFA500}{(-)}}{\color{#20B2AA}{(+)}} \implies \mathop{\text{plim}} \hat{\beta}_1 < \beta_1
+\end{align}
+$$
+∴ In this case, OLS is **biased downward** (estimates are too small).
+
+$$
+\begin{matrix}
+ \enspace & \color{#FFA500}{\text{Cov}(x_1,\,x_2)> 0} & \color{#FFA500}{\text{Cov}(x_1,\,x_2)< 0} \\
+ \color{#e64173}{\beta_2 > 0} & \text{Upward} & \text{Downward} \\
+ \color{#e64173}{\beta_2 < 0} & \text{Downward} &
+\end{matrix}
+$$
+---
+
+Begin with
+
+$$ \mathop{\text{plim}} \hat{\beta}_1 = \beta_1 + \beta_2 \dfrac{ \mathop{\text{Cov}} \left( x_1,\, x_2 \right)}{\mathop{\text{Var}} \left( x_1 \right)} $$
+
+We know $\color{#20B2AA}{\mathop{\text{Var}} \left( x_1 \right) > 0}$. Suppose $\color{#e64173}{\beta_2 < 0}$ and $\color{#FFA500}{\mathop{\text{Cov}} \left( x_1,\,x_2 \right) < 0}$. Then
+
+$$
+\begin{align}
+ \mathop{\text{plim}} \hat{\beta}_1 = \beta_1 + \color{#e64173}{(-)} \dfrac{\color{#FFA500}{(-)}}{\color{#20B2AA}{(+)}} \implies \mathop{\text{plim}} \hat{\beta}_1 > \beta_1
+\end{align}
+$$
+∴ In this case, OLS is **biased upward** (estimates are too large).
+
+$$
+\begin{matrix}
+ \enspace & \color{#FFA500}{\text{Cov}(x_1,\,x_2)> 0} & \color{#FFA500}{\text{Cov}(x_1,\,x_2)< 0} \\
+ \color{#e64173}{\beta_2 > 0} & \text{Upward} & \text{Downward} \\
+ \color{#e64173}{\beta_2 < 0} & \text{Downward} & \text{Upward}
+\end{matrix}
+$$
+---
+
+Thus, in cases where we have a sense of
+
+1. the sign of $\mathop{\text{Cov}} \left( x_1,\,x_2 \right)$
+
+2. the sign of $\beta_2$
+
+we know in which direction inconsistency pushes our estimates.
+
+.center[
+**Direction of bias**
+]
+
+$$
+\begin{matrix}
+ \enspace & \color{#FFA500}{\text{Cov}(x_1,\,x_2)> 0} & \color{#FFA500}{\text{Cov}(x_1,\,x_2)< 0} \\
+ \color{#e64173}{\beta_2 > 0} & \text{Upward} & \text{Downward} \\
+ \color{#e64173}{\beta_2 < 0} & \text{Downward} & \text{Upward}
+\end{matrix}
+$$
+---
+layout: true
+# Measurement error
+---
+name: measurement_error
+
+.hi[Measurement error] in our explanatory variables presents another case in which OLS is inconsistent.
+
+Consider the population model: $y_i = \beta_0 + \beta_1 z_i + u_i$
+
+- We want to observe $z_i$ but cannot.
+
+- Instead, we *measure* the variable $x_i$, which is $z_i$ plus some error (noise):
+$$ x_i = z_i + \omega_i $$
+
+- Assume $\mathop{\boldsymbol{E}}\left[ \omega_i \right] = 0$, $\mathop{\text{Var}} \left( \omega_i \right) = \sigma^2_\omega$, and $\omega$ is independent of $z$ and $u$.
+
+--
+
+<br>
+OLS regression of $y$ and $x$ will produce inconsistent estimates for $\beta_1$.
+---
+layout: true
+# Measurement error
+## Proof
+---
+
+$y_i = \beta_0 + \beta_1 z_i + u_i$
+--
+<br> $\quad= \beta_0 + \beta_1 \left( x_i - \omega_i \right) + u_i$
+--
+<br> $\quad= \beta_0 + \beta_1 x_i + \left( u_i - \beta_1 \omega_i \right)$
+--
+<br> $\quad= \beta_0 + \beta_1 x_i + \varepsilon_i$
+
+where $\varepsilon_i = u_i - \beta_1 \omega_i$
+
+--
+
+What happens when we estimate $y_i = \hat{\beta}_0 + \hat{\beta}_1 x_i + e_i$?
+
+$\mathop{\text{plim}} \hat{\beta}_1 = \beta_1 + \dfrac{\mathop{\text{Cov}} \left( x,\,\varepsilon \right)}{\mathop{\text{Var}} \left( x \right)}$
+
+We will derive the numerator and denominator separately...
+---
+
+The covariance of our noisy variable $x$ and the disturbance $\varepsilon$.
+
+$\mathop{\text{Cov}} \left( x,\, \varepsilon \right)$
+--
+ $= \mathop{\text{Cov}} \left( \left[ z + \omega \right],\, \left[ u - \beta_1 \omega \right] \right)$
+--
+<br> $\quad\quad\quad\quad\enspace= \mathop{\text{Cov}} \left( z,\,u \right) -\beta_1 \mathop{\text{Cov}} \left( z,\,\omega \right) + \mathop{\text{Cov}} \left( \omega,\, u \right) - \beta_1 \mathop{\text{Var}} \left( \omega \right)$
+--
+<br> $\quad\quad\quad\quad\enspace= 0 + 0 + 0 - \beta_1 \sigma_\omega^2$
+--
+<br> $\quad\quad\quad\quad\enspace= - \beta_1 \sigma_\omega^2$
+---
+
+Now for the denominator, $\mathop{\text{Var}} \left( x \right)$.
+
+$\mathop{\text{Var}} \left( x \right)$
+--
+$= \mathop{\text{Var}} \left( z + \omega \right)$
+--
+<br> $\quad\quad\quad= \mathop{\text{Var}} \left( z \right) + \mathop{\text{Var}} \left( \omega \right) + 2\mathop{\text{Cov}} \left( z,\,\omega \right)$
+--
+<br> $\quad\quad\quad= \sigma_z^2 + \sigma_\omega^2$
+---
+
+Putting the numerator and denominator back together,
+
+$$
+\begin{align}
+ \mathop{\text{plim}} \hat{\beta}_1
+ &= \beta_1 + \dfrac{\mathop{\text{Cov}} \left( x,\,\varepsilon \right)}{\mathop{\text{Var}} \left( x \right)} \\
+ &= \beta_1 + \dfrac{-\beta_1 \sigma_\omega^2}{\sigma_z^2 + \sigma_\omega^2} \\
+ &= \beta_1 - \beta_1 \dfrac{\sigma_\omega^2}{\sigma_z^2 + \sigma_\omega^2} \\
+ &= \beta_1 \dfrac{\sigma_z^2 + \sigma_\omega^2}{\sigma_z^2 + \sigma_\omega^2} - \beta_1 \dfrac{\sigma_\omega^2}{\sigma_z^2 + \sigma_\omega^2} \\
+ &= \beta_1 \dfrac{\sigma_z^2}{\sigma_z^2 + \sigma_\omega^2}
+\end{align}
+$$
+---
+layout: true
+# Measurement error
+## Summary
+---
+
+∴ $\mathop{\text{plim}} \hat{\beta}_1 = \beta_1 \dfrac{\sigma_z^2}{\sigma_z^2 + \sigma_\omega^2}$.
+
+What does this equation tell us?
+
+--
+
+.hi[Measurement error in our explanatory variables] biases the coefficient estimates toward zero.
+
+- This type of bias/inconsistency is often called .hi[attenuation bias].
+
+- If .hi[the measurement error correlates with the explanatory variables], we have bigger problems with inconsistency/bias.
+
+---
+
+What about **measurement in the outcome variable**?
+
+It doesn't really matter—it just increases our standard errors.
+---
+layout: false
+# Measurement error
+## It's everywhere
+
+**General cases**
+
+1. We cannot perfectly observe a variable.
+1. We use one variable as a *proxy* for another.
+
+**Specific examples**
+
+- GDP
+- Population
+- Crime/police statistics
+- Air quality
+- Health data
+- Proxy *ability* with test scores
+
+---
+exclude: true
+
+```{R, generate pdfs, include = F, eval = T}
+source("../../ScriptsR/unpause.R")
+unpause("06_consistency.Rmd", ".", T, T)
+```
