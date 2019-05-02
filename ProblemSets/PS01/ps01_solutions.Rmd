@@ -1,0 +1,388 @@
+---
+title: "Problem Set 1 *Solutions*"
+subtitle: "Econometrics Review"
+author: "**EC 421:** Introduction to Econometrics"
+date: "<br>Due *before* midnight (11:59pm) on Sunday, 21 April 2019"
+output:
+  xaringan::moon_reader:
+    css: ['default', 'metropolis', 'metropolis-fonts', 'my-css.css']
+    # self_contained: true
+    nature:
+      ratio: '8.5:11'
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+class: clear
+
+```{R, setup, include = F}
+# Packages
+library(pacman)
+p_load(
+  ggplot2, gridExtra, ggthemes, latex2exp, kableExtra,
+  tidyverse, broom, knitr, magrittr
+)
+# Colors
+red_pink <- "#e64173"
+turquoise <- "#20B2AA"
+grey_light <- "grey70"
+grey_mid <- "grey50"
+grey_dark <- "grey20"
+# Themes
+theme_axes_y <- theme_void() + theme(
+  text = element_text(family = "sans"),
+  axis.title = element_text(size = 11),
+  plot.title = element_text(size = 11, hjust = 0.5),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, -0.2, 0, 0, unit = "lines")),
+  axis.text.y = element_text(
+    size = 10, angle = 0, hjust = 0.9, vjust = 0.5,
+    margin = margin(0, 0.4, 0, 0, unit = "lines")
+  ),
+  axis.line = element_line(
+    color = grey_light,
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.07, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_axes_x <- theme_void() + theme(
+  text = element_text(family = "sans"),
+  axis.title = element_text(size = 11),
+  plot.title = element_text(size = 11, hjust = 0.5),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, -0.2, 0, 0, unit = "lines")),
+  axis.text.x = element_text(
+    size = 10, angle = 0, hjust = 0.9, vjust = 0.5,
+    margin = margin(0, 0.4, 0, 0, unit = "lines")
+  ),
+  axis.line = element_line(
+    color = grey_light,
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.07, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_set(theme_gray(base_size = 11))
+# Knitr options
+opts_chunk$set(
+  comment = "#>",
+  fig.align = "center",
+  warning = F,
+  message = F
+)
+# Other options
+options(
+  tibble.print_min = 3
+)
+```
+
+## Problem 1: Bias and variance
+
+**1a.** Throughout this course, we will use the OLS estimator $\hat{\beta}$ to estimate $\beta$. Explain what it means for $\hat{\beta}$ to be biased for $\beta$.
+
+.pink[
+**Answer** If $\hat\beta$ is biased for $\beta$, then, on average, $\hat\beta$ does not return $\beta$ as its estimate.
+
+Formally, $\hat\beta$ is biased for $\beta$ if $\mathop{E}\left[ \hat\beta \right]\neq\beta$.
+]
+
+**Figure 1**
+```{R, fig1, echo = F, dev = "svg", fig.height = 3.5}
+# Three distributions
+ggplot(data = tibble(x = c(-5, 45)), aes(x)) +
+stat_function(
+  fun = dchisq, args = list(df = 2.5), n = 1e4,
+  geom = "area", fill = "grey10", color = "black", alpha = 0.4, size = 0.3
+) +
+stat_function(
+  fun = dnorm, args = list(mean = 20, sd = 3), n = 5e3,
+  geom = "area", fill = "grey50", color = "black", alpha = 0.3, size = 0.3
+) +
+stat_function(
+  fun = dnorm, args = list(mean = 20, sd = 7), n = 5e3,
+  geom = "area", fill = "grey70", color = "black", alpha = 0.3, size = 0.3
+) +
+geom_vline(xintercept = 20, linetype = "dotted", alpha = 0.5) +
+annotate(geom = "text", x = 20, y = -0.015, label = TeX("$\\beta$"), hjust = 0.5, size = 5) +
+annotate(geom = "text", x = 2.75, y = 0.2, label = "A") +
+annotate(geom = "text", x = 16.8, y = 0.1, label = "B") +
+annotate(geom = "text", x = 32, y = 0.02, label = "C") +
+theme_void()
+```
+**Note** This figure shows the distributions of three estimators (A, B, and C) that each estimate the unknown parameter $\beta$. E[A]= $\beta-3$, E[B]= $\beta$, E[C]= $\beta$
+
+**1b.** Which of the estimators in Figure 1 (above) are unbiased? *Hint:* There may be more than one.
+<br>.pink[**Answer** B and C]
+
+**1c.** Which of the estimators in Figure 1 (above) has the minimum variance?
+<br>.pink[**Answer** A]
+
+**1d.** Which of the estimators in Figure 1 (above) is the best (minimum variance) unbiased estimator?
+<br>.pink[**Answer** B]
+
+**1e.** Suppose we want to estimate the effect of advertising on sales. Explain what *bias* would mean in this context.
+<br>.pink[**Answer** Bias would mean our estimate for the effect of advertising on sales routinely misses the actual effect on sales (over-estimating or under-estimating the effect).]
+
+**1f.** What does the term "standard error" mean?
+<br>.pink[**Answer** *Standard error* gives the standard deviation of an estimator's distribution (helping us understand how noisy or precise an estimator is).]
+
+---
+class: clear
+
+## Problem 2: Getting started
+
+**2a.** Open up RStudio, start a .mono[R] new script (File ➡ New file ➡ R Script). You will hand in this script as part of your assignment.
+<br>.pink[**Answer** Nothing to show.]
+
+**2b.** Load the the `pacman` package. If you haven't installed it, you will need first install it (`install.packages("pacman")`) *and then* load it (`library(pacman)`).
+
+Now use `pacman`'s function `p_load` to load the `tidyverse` package, _i.e._,
+
+```{R, example pload, eval = F}
+# Load the 'pacman' package
+library(pacman)
+# Load the packages 'tidyverse' and 'haven'
+p_load(tidyverse)
+```
+
+*Note:* If `tidyverse` is not already installed, then `p_load(tidyverse)` will automatically install it for you—this is why we're using `pacman`.
+<br>.pink[**Answer** Nothing to show.]
+
+**2c.** [Download](https://raw.githack.com/edrubin/EC421S19/master/Data/ps01_data.csv) the dataset ([Canvas link](https://canvas.uoregon.edu/)). Save it in a helpful location. Remember this location.
+<br>.pink[**Answer** Still nothing to show.]
+
+**2d.** Read the data into .mono[R]. What are the dimensions of the dataset (numbers of rows and columns)?
+
+*Hints:* The `read_csv()` function reads CSVs into .mono[R], _e.g._, `read_csv("file.csv")`. The `dim()` function will tell you the dimensions of a dataset, _e.g._, `dim(some_data)`.
+
+.pink[**Answer** The dataset has 4,870 observations (rows) on 12 variables (columns).
+```{R, key 2d, include = T}
+# Read in the data
+ps1_df <- read_csv("ps01_data.csv")
+# Dimensions of the dataset:
+# 1. Printed to screen (since it's a tibble)
+ps1_df
+# 2. Use dim()
+dim(ps1_df)
+```
+]
+
+---
+class: clear
+
+**2e.** What are the names of the first five variables? *Hint:* `names(your_df)`
+
+.pink[**Answer** `i_callback`, `n_jobs`, `n_expr`, `i_military`, `i_computer`
+```{R, key 2e, include = T}
+names(ps1_df) %>% head(5)
+```
+]
+
+**2f.** What are the first two *first names* in the dataset (`first_name` variable)?
+
+*Hint:* `head(your_df$var_name, 10)` gives the first 10 observations of the variable `var_name` in dataset `your_df`.
+
+.pink[**Answer** Allison and Kristen
+```{R, key 2f, include = T}
+head(ps1_df$first_name, 2)
+```
+]
+
+---
+class: clear
+
+## Problem 3: Analysis
+
+Reviewing the basic analysis tools of econometrics.
+
+**Note:** When you use OLS to regress a binary indicator variable (like `i_callback`) on a set of explanatory variables, your coefficients are telling you how the explanatory variables affect the probability that the indicatory variable equals one. So if we regress `i_callback` on `n_jobs`, the coefficient on `n_jobs` tells us how the probability of a callback changes with each additional job listed on the résumé.
+
+**3a.** What percentage of the résumés generated a callback (`i_callback`)?
+
+*Hint:* The mean of a binary indicator variable (_i.e._, `mean(binary_variable)`) gives the percentage of times the variable equals one. *E.g.*, `mean(call_df$female)` would give us the percentage of female individuals in our dataset `call_df`.
+
+.pink[**Answer** Approximately `r mean(ps1_df$i_callback) %>% round(4) %>% multiply_by(100)` percent of résumés received callbacks.
+```{R, key 3a, include = T}
+mean(ps1_df$i_callback)
+```
+]
+
+**3b.** Calculate percentage of callbacks (_i.e._, the mean of `i_callback`) for each racial group (`race`). Does it appear as though employers considered an applicant's race when making callbacks? Explain.
+
+*Hint:* `filter(your_df, race == "b")` will select all observations (from the dataset `your_df`) where the variable `race` takes the value `"b"`. Similarly `filter(your_df, race == "b")$i_callback` will give you the values of `i_callback` for obsevations whose value of `race` is `"b"`.
+
+.pink[**Answer** Résumés with typically black names received a callback rate of approximately 6.4%, while white-sounding names received a callback rate of approximately 9.7%. This disparity is consistent with employers considering race when responding to résumés.
+```{R, key 3b, include = T}
+# Percentage for Black
+filter(ps1_df, race == "b")$i_callback %>% mean()
+# Percentage for White
+filter(ps1_df, race == "w")$i_callback %>% mean()
+```
+]
+
+---
+class: clear
+
+**3c.** What is the difference in the groups' mean callback rate?
+
+.pink[**Answer** The callback rate for résumés with black-sounding was approximately 3.2 percentage points lower than the rate for white-sounding names.
+```{R, key 3c, include = T}
+# Percentage for Black
+mean_b <- filter(ps1_df, race == "b")$i_callback %>% mean()
+# Percentage for White
+mean_w <- filter(ps1_df, race == "w")$i_callback %>% mean()
+# Difference:
+mean_b - mean_w
+```
+]
+
+**3d.** Based upon the difference in percentages that we observe in **3b.**, can we conclude that employers consider race in hiring decisions? **Explain your answer.**
+
+.pink[
+**Answer** No. We have shown a difference in the groups' percentages, but we do not know if this difference is statistically meaningful.
+]
+
+**3e.** Without running a regression, conduct a statistical test for the difference in the two groups' average callback rates (_i.e._, test that the proportion of callbacks is equal for the two groups).
+
+*Hint:* Back to your statistics class—difference in proportions (a *Z* test) or means (a *t* test).
+
+.pink[**Answer**
+```{R, key 3e, include = T}
+# Percentage for everyone
+mean_all <- ps1_df$i_callback %>% mean()
+# Number: Black
+n_b <- filter(ps1_df, race == "b") %>% nrow()
+# Number: White
+n_w <- filter(ps1_df, race == "w") %>% nrow()
+# The Z statistic
+(z_stat <- (mean_b - mean_w) / sqrt(mean_all * (1 - mean_all) * (1/n_b + 1/n_w)))
+# The p value
+2 * pnorm(abs(z_stat), lower.tail = F)
+```
+
+The _t_ statistic testing the null hypothesis of no difference between the two groups callback percentages is approximately `r round(z_stat, 2)`, which has a *p*-value of approximately 0.00004. Because this *p*-value is smaller than our chosen level of 0.05, we reject the null hypothesis. We conclude there is statistically significant evidence of differential callbacks for black- and white-sounding names.
+]
+
+---
+class: clear
+
+**3f.** Now regress `i_callback` (whether the résumé generated a callback) on `i_black` (whether the résumé's name implied a black applicant). Report the coefficient on `i_black`. Does it match the difference that you found in **3c**?
+
+*Hint:* Use `lm(y ~ x, data = our_df)` to regress `y` on `x` from datatset `our_df`.
+
+.pink[
+**Answer**
+
+```{R, key 3f, include = T}
+lm(i_callback ~ i_black, data = ps1_df) %>% summary()
+```
+
+This regression finds (exactly) the same difference.
+]
+
+**3g.** Conduct a $t$ test for the coefficient on `i_black` in the regression above in **3f**. Write our your hypotheses (both H.sub[0] and H.sub[A]), the test statistic, the *p*-value, the result of your test (_i.e._, reject or fail to reject H.sub[0]), and your conclusion.
+
+.pink[
+
+```{R, key 3g, include = F}
+# Regression
+reg_3g <- lm(i_callback ~ i_black, data = ps1_df)
+# Results
+reg_3g %>% tidy()
+```
+
+**Answer** H.sub[0]: $\beta_1 = 0$ and H.sub[A]: $\beta_1 \neq 0$, where $\beta_1$ is the coefficient for the effect of race on the probability a résumé received a callback.
+
+The point estimate for this coefficient is `r round(reg_3g$coefficients[2], 3)`. Its associated $t$ statistic is `r round(coefficients(summary(reg_3g))[2,3], 2)`, which has a *p*-value less than 0.001.
+
+We reject the null hypothesis at the 5-percent level. We conclude that there is statistically significant evidence that names' races affected callback rates for names with black or white connotations.
+
+]
+
+---
+class: clear
+
+**3h.** Now regress `i_callback` (whether the résumé generated a callback) on `i_black`, `n_expr` (years of experience), and the interaction between `i_black` and `n_expr`. Interpret the estimates for the coefficients (both the meaning of the coefficients and whether they are statistically significant).
+
+*Hint:* In .mono[R], `lm(y ~ x1 + x2 + x1:x2, data = your_df)` regresses `y` on `x1`, `x2`, and the interaction between `x1` and `x2` (all from the dataset `your_df`).
+
+
+.pink[
+**Answer**
+
+```{R, key 3h, include = T}
+lm(i_callback ~ i_black + n_expr + i_black:n_expr, data = ps1_df) %>% summary()
+```
+
+The coefficient on `i_black` is quite similar to the coefficient previously found—suggesting the a black-sounding name reduced the probability of a callback by approximately 3 percentage points. This effect is still significant at the 5-percent level.
+
+The coefficient on the number of years of experience (`n_expr`) implies that for each additional year of experience on the résumé, the probability of a callback increase by 0.3 percentage points. This effect is statistically significant at the 5-percent level.
+
+The coefficient on the interaction between the black indicator variable and the experience variable tests whether the effect of experience on the callback rate differed between black and white résumés. The point estimate is small and is not statistically significant—meaning we cannot rule out the possibility that the interaction does not exist.
+
+]
+
+---
+class: clear
+
+## Problem 4: Thinking about causality
+
+Now for the big picture.
+
+This project by Bertrand and Mullainathan took a decent amount of time and effort—finding job listings, generating fake résumés, responding to the listings, *etc.* It would have been much quicker/cheaper/easier to just go out and get data from job applicants—whether they received callbacks and their races. So why didn't they take the easier, cheaper, and quicker route?
+
+**4a.** Define omitted-variable bias.
+
+.pink[**Answer** Omitted-variable bias is a specific type of *bias* in our OLS estimates that occurs when we omit a variable that (1) correlates with one of the correlated variables and (2) affects our outcome variable.]
+
+**4b.** The central questions here is "Do employers call back individuals at different rates based upon their race (or gender)?".
+
+If we collected data on callbacks and race, and we then regressed *Callback* on *Race*, we would likely get biased estimates due to omitted-variable bias.
+
+Explain why this is the case and provide an example of an omitted variable in this situation.
+
+.pink[
+**Answer** Using real-world collected data on callbacks and race, we would expect to have omitted-variable bias if black applicants and white applicants differ on any variable that also affects callbacks. For example, if black applicants and white applicants differ in their social networks, and their networks help them obtain callbacks, then we will misattribute the effect of social networks to race.
+]
+
+**4c.** The point of experiments is to avoid omitted-variable bias. Explain how randomizing race on these (fake) résumés avoided the concerns for omitted-variable bias.
+
+.pink[
+**Answer** By randomizing the perceived race, the experiment breaks the correlation between race and any other variables—omitted or otherwise. By breaking this correlation, the experiment avoids omitted-variable bias.
+]
+
+---
+class: clear
+
+### Description of variables and names
+<br>
+```{R, background variables, echo = F}
+var_tbl <- data.frame(
+  Variable = names(ps1_df) %>% paste0(".mono-small[", ., "]"),
+  Description = c(
+    "Binary variable (0,1) for whether the resume received a callback.",
+    "Number of previous jobs listed on the application.",
+    "Number of years of experience listed on the application.",
+    "Binary variable for whether the application included military status.",
+    "Binary variable for whether the application included computer skills.",
+    "The first name listed on the application.",
+    "The implied sex of the first name on the application (.mono-small['f'] or .mono-small['m']).",
+    "Binary indicator for whether the implied sex was female.",
+    "Binary indicator for whether the implied sex was male.",
+    "The implied race of the first name on the application (.mono-small['b'] or .mono-small['w']).",
+    "Binary indicator for whether the implied race was African American.",
+    "Binary indicator for whether the implied race was White."
+  )
+)
+kable(var_tbl) %>%
+  kable_styling(full_width = F)
+```
+
+In general, I've tried to stick with a naming convention. Variables that begin with .mono-small[i\\_] denote binary indicatory variables (taking on the value of .mono-small[0] or .mono-small[1]). Variables that begin with .mono-small[n_] are numeric variables.
+
+```{R, generate pdfs, include = F, eval = T}
+system("decktape remark ps01_solutions.html ps01_solutions.pdf --chrome-arg=--allow-file-access-from-files")
+```

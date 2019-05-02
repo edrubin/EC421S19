@@ -13,15 +13,21 @@ The slides below (linked by their topic) are .html files that will only work pro
 3. [Review of key metrics topics](https://raw.githack.com/edrubin/EC421S19/master/LectureNotes/03Review/03_review.html)<br>OLS properties and inference<br> [PDF](https://raw.githack.com/edrubin/EC421S19/master/LectureNotes/03Review/03_review.pdf) | [PDF (no pauses)](https://raw.githack.com/edrubin/EC421S19/master/LectureNotes/03Review/03_review_NoPause.pdf) | [.Rmd](https://github.com/edrubin/EC421S19/blob/master/LectureNotes/03Review/03_review.Rmd)
 4. [Heteroskedasticity](https://raw.githack.com/edrubin/EC421S19/master/LectureNotes/04Heteroskedasticity/04_heteroskedasticity.html)<br> Step 1 in relaxing our assumptions: non-constant variance in our disturbances. How can we test this assumption? What are the implications of violations? <br> [PDF](https://raw.githack.com/edrubin/EC421S19/master/LectureNotes/04Heteroskedasticity/04_heteroskedasticity.pdf) | [PDF (no pauses)](https://raw.githack.com/edrubin/EC421S19/master/LectureNotes/04Heteroskedasticity/04_heteroskedasticity_NoPause.pdf) | [.Rmd](https://github.com/edrubin/EC421S19/blob/master/LectureNotes/04Heteroskedasticity/04_heteroskedasticity.Rmd)
 5. [Heteroskedasticity II](https://raw.githack.com/edrubin/EC421S19/master/LectureNotes/05Heteroskedasticity/05_heteroskedasticity.html)<br> What do we do when we *detect* heteroskedasticity? Model specification, weighted least squares (WLS), and heteroskedasticity-robust standard errors (plus a simulation). <br> [PDF](https://raw.githack.com/edrubin/EC421S19/master/LectureNotes/05Heteroskedasticity/05_heteroskedasticity.pdf) | [PDF (no pauses)](https://raw.githack.com/edrubin/EC421S19/master/LectureNotes/05Heteroskedasticity/05_heteroskedasticity_NoPause.pdf) | [.Rmd](https://github.com/edrubin/EC421S19/blob/master/LectureNotes/05Heteroskedasticity/05_heteroskedasticity.Rmd)
-5. [Consistency](https://raw.githack.com/edrubin/EC421S19/master/LectureNotes/06Consistency/06_consistency.html)<br> Moving from small- (finite-) sample properties to asymptopia. <br> [PDF](https://raw.githack.com/edrubin/EC421S19/master/LectureNotes/06Consistency/06_consistency.pdf) | [PDF (no pauses)](https://raw.githack.com/edrubin/EC421S19/master/LectureNotes/06Consistency/06_consistency_NoPause.pdf) | [.Rmd](https://github.com/edrubin/EC421S19/blob/master/LectureNotes/06Consistency/06_consistency.Rmd)
+6. [Consistency](https://raw.githack.com/edrubin/EC421S19/master/LectureNotes/06Consistency/06_consistency.html)<br> Moving from small-sample properties to asymptopia (*i.e.*, as N gets big). <br> [PDF](https://raw.githack.com/edrubin/EC421S19/master/LectureNotes/06Consistency/06_consistency.pdf) | [PDF (no pauses)](https://raw.githack.com/edrubin/EC421S19/master/LectureNotes/06Consistency/06_consistency_NoPause.pdf) | [.Rmd](https://github.com/edrubin/EC421S19/blob/master/LectureNotes/06Consistency/06_consistency.Rmd)
+7. [Time series](https://raw.githack.com/edrubin/EC421S19/master/LectureNotes/07TimeSeries/07_time_series.html)<br> Moving from small-sample properties to asymptopia (*i.e.*, as N gets big). <br> [PDF](https://raw.githack.com/edrubin/EC421S19/master/LectureNotes/07TimeSeries/07_time_series.pdf) | [PDF (no pauses)](https://raw.githack.com/edrubin/EC421S19/master/LectureNotes/07TimeSeries/07_time_series_NoPause.pdf) | [.Rmd](https://github.com/edrubin/EC421S19/blob/master/LectureNotes/07TimeSeries/07_time_series.Rmd)
 
 ## Problem sets
 
 1. [Problem set 1: Review of OLS](https://raw.githack.com/edrubin/EC421S19/master/ProblemSets/PS01/ps01.html) <br> [PDF](https://raw.githack.com/edrubin/EC421S19/master/ProblemSets/PS01/ps01.pdf) | [Data](https://raw.githack.com/edrubin/EC421S19/master/ProblemSets/PS01/ps01_data.csv)
+1. [Problem set 2: Unbiasedness, consistency, and heteroskedasticity](https://raw.githack.com/edrubin/EC421S19/master/ProblemSets/PS02/ps02.html) <br> [PDF](https://raw.githack.com/edrubin/EC421S19/master/ProblemSets/PS02/ps02.pdf) | [Data](https://raw.githack.com/edrubin/EC421S19/master/ProblemSets/PS02/ps02_data.csv)
 
 ## Midterm
 
-...
+Midterm materials:
+
+[Review topics](https://raw.githack.com/edrubin/EC421S19/master/Midterm/Review/midterm_topics) | [Review problems](https://raw.githack.com/edrubin/EC421S19/master/Midterm/Review/midterm_review) | [Previous midterm](https://raw.githack.com/edrubin/EC421S19/master/Midterm/Review/practice_exam) | [Previous midterm's solutions](https://raw.githack.com/edrubin/EC421S19/master/Midterm/Review/practice_key)
+
+*Note:* We will not provide solutions for the review problems.
 
 ## Final
 

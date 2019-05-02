@@ -1,0 +1,117 @@
+---
+title: "EC 421"
+subtitle: "Midterm Topics"
+#author: "Edward Rubin"
+date: "07 February 2019"
+output:
+  xaringan::moon_reader:
+    css: ['default', 'metropolis', 'metropolis-fonts', 'my-css.css']
+    # self_contained: true
+    nature:
+      ratio: '8.5:11'
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+class: clear
+
+## Slide Set 1: Intro
+
+- The goal of econometrics
+- Regression notation
+- Basic concept of causality
+
+## Slide Set 2: Review I
+
+- Population vs. sample
+  - Parameters vs. sample estimates
+  - Estimators and uncertainty
+- Uncertainty
+  - Standard error
+  - Hypothesis testing
+    - _t_ tests
+    - _F_ tests
+    - Forming hypotheses
+    - critical value
+    - *p*-value
+  - Confidence intervals
+- Linear regression and OLS
+  - "Best-fit" line
+  - Residuals
+  - SSE
+  - Estimators: bias and variance
+  - Statistical inference
+  - Variance (and standard error) of the OLS estimator
+  - Regressions with R's `lm` function
+
+---
+class: clear
+
+## Slide Set 3: Review II
+
+- Simple and multiple linear regression
+- Model fit
+  - R squared
+  - Overfitting
+  - Adjusted R squared
+- Omitted-variable bias
+- Interpreting coefficients
+  - Simple linear regression
+  - Multiple linear regression (ceterus paribus)
+  - Continuous explanatory variables
+  - Categorical explanatory variables
+  - Interactions
+  - Specifications
+    - Linear-linear
+    - Log-linear
+    - Log-log
+- Inference vs. prediction
+
+---
+class: clear
+
+## Slide Set 4: Heteroskedasticity
+
+- The meaning of each of our assumptions/requirements
+- Heteroskedasticity
+  - What it is
+  - What it looks like
+  - Consequences for OLS
+- Tests for heteroskedasticity
+  - Goldfeld-Quandt test
+  - Breusch-Pagan test
+  - White test
+  - Chi-squared distribution
+  - Null and alternative hypotheses of each test
+  - Interpretations/conclusions for each
+  - Strengths and weaknesses of each test
+
+## Slide Set 5: Living with Heteroskedasticity
+
+- Misspecification
+- Weighted least squares
+- Heteroskedasticity-robust standard errors
+
+## Slide Set 6: Asymptotics and Consistency
+
+- Asymptotics
+  - Compared to 'finite-sample' attributes (probability limits vs. expected values)
+  - Probability limits
+- Consistency
+- Signing the bias from omitted variables.
+- Measurement error and attenuation bias.
+- Examples of measurement error
+
+---
+class: clear
+
+## Proofs/derivations you do not need to 'know'
+
+- Measurement error
+- The heteroskedasticity-robust standard errors
+
+*Note:* In general, you do not need to memorize proofs. Just understand the steps. I might ask how you get from one step to the next. I won't ask you to write down a full proof.
+
+```{R, generate pdfs, include = F, eval = T}
+system("decktape remark midterm_topics.html midterm_topics.pdf --chrome-arg=--allow-file-access-from-files")
+```

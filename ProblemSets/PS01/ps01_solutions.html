@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Problem Set 1 Solutions</title>
+    <meta charset="utf-8">
+    <meta name="author" content="EC 421: Introduction to Econometrics" />
+    <link href="ps01_solutions_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="ps01_solutions_files/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+    <link href="ps01_solutions_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
+    <script src="ps01_solutions_files/kePrint-0.0.1/kePrint.js"></script>
+    <link rel="stylesheet" href="my-css.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Problem Set 1 <em>Solutions</em>
+## Econometrics Review
+### <strong>EC 421:</strong> Introduction to Econometrics
+### <br>Due <em>before</em> midnight (11:59pm) on Sunday, 21 April 2019
+
+---
+
+class: clear
+
+
+
+## Problem 1: Bias and variance
+
+**1a.** Throughout this course, we will use the OLS estimator `\(\hat{\beta}\)` to estimate `\(\beta\)`. Explain what it means for `\(\hat{\beta}\)` to be biased for `\(\beta\)`.
+
+.pink[
+**Answer** If `\(\hat\beta\)` is biased for `\(\beta\)`, then, on average, `\(\hat\beta\)` does not return `\(\beta\)` as its estimate.
+
+Formally, `\(\hat\beta\)` is biased for `\(\beta\)` if `\(\mathop{E}\left[ \hat\beta \right]\neq\beta\)`.
+]
+
+**Figure 1**
+&lt;img src="ps01_solutions_files/figure-html/fig1-1.svg" style="display: block; margin: auto;" /&gt;
+**Note** This figure shows the distributions of three estimators (A, B, and C) that each estimate the unknown parameter `\(\beta\)`. E[A]= `\(\beta-3\)`, E[B]= `\(\beta\)`, E[C]= `\(\beta\)`
+
+**1b.** Which of the estimators in Figure 1 (above) are unbiased? *Hint:* There may be more than one.
+&lt;br&gt;.pink[**Answer** B and C]
+
+**1c.** Which of the estimators in Figure 1 (above) has the minimum variance?
+&lt;br&gt;.pink[**Answer** A]
+
+**1d.** Which of the estimators in Figure 1 (above) is the best (minimum variance) unbiased estimator?
+&lt;br&gt;.pink[**Answer** B]
+
+**1e.** Suppose we want to estimate the effect of advertising on sales. Explain what *bias* would mean in this context.
+&lt;br&gt;.pink[**Answer** Bias would mean our estimate for the effect of advertising on sales routinely misses the actual effect on sales (over-estimating or under-estimating the effect).]
+
+**1f.** What does the term "standard error" mean?
+&lt;br&gt;.pink[**Answer** *Standard error* gives the standard deviation of an estimator's distribution (helping us understand how noisy or precise an estimator is).]
+
+---
+class: clear
+
+## Problem 2: Getting started
+
+**2a.** Open up RStudio, start a .mono[R] new script (File ➡ New file ➡ R Script). You will hand in this script as part of your assignment.
+&lt;br&gt;.pink[**Answer** Nothing to show.]
+
+**2b.** Load the the `pacman` package. If you haven't installed it, you will need first install it (`install.packages("pacman")`) *and then* load it (`library(pacman)`).
+
+Now use `pacman`'s function `p_load` to load the `tidyverse` package, _i.e._,
+
+
+```r
+# Load the 'pacman' package
+library(pacman)
+# Load the packages 'tidyverse' and 'haven'
+p_load(tidyverse)
+```
+
+*Note:* If `tidyverse` is not already installed, then `p_load(tidyverse)` will automatically install it for you—this is why we're using `pacman`.
+&lt;br&gt;.pink[**Answer** Nothing to show.]
+
+**2c.** [Download](https://raw.githack.com/edrubin/EC421S19/master/Data/ps01_data.csv) the dataset ([Canvas link](https://canvas.uoregon.edu/)). Save it in a helpful location. Remember this location.
+&lt;br&gt;.pink[**Answer** Still nothing to show.]
+
+**2d.** Read the data into .mono[R]. What are the dimensions of the dataset (numbers of rows and columns)?
+
+*Hints:* The `read_csv()` function reads CSVs into .mono[R], _e.g._, `read_csv("file.csv")`. The `dim()` function will tell you the dimensions of a dataset, _e.g._, `dim(some_data)`.
+
+.pink[**Answer** The dataset has 4,870 observations (rows) on 12 variables (columns).
+
+```r
+# Read in the data
+ps1_df &lt;- read_csv("ps01_data.csv")
+# Dimensions of the dataset:
+# 1. Printed to screen (since it's a tibble)
+ps1_df
+```
+
+```
+#&gt; # A tibble: 4,870 x 12
+#&gt;   i_callback n_jobs n_expr i_military i_computer first_name sex   i_female
+#&gt;        &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;      &lt;dbl&gt;      &lt;dbl&gt; &lt;chr&gt;      &lt;chr&gt;    &lt;dbl&gt;
+#&gt; 1          0      2      6          0          1 Allison    f            1
+#&gt; 2          0      3      6          1          1 Kristen    f            1
+#&gt; 3          0      1      6          0          1 Lakisha    f            1
+#&gt; # … with 4,867 more rows, and 4 more variables: i_male &lt;dbl&gt;, race &lt;chr&gt;,
+#&gt; #   i_black &lt;dbl&gt;, i_white &lt;dbl&gt;
+```
+
+```r
+# 2. Use dim()
+dim(ps1_df)
+```
+
+```
+#&gt; [1] 4870   12
+```
+]
+
+---
+class: clear
+
+**2e.** What are the names of the first five variables? *Hint:* `names(your_df)`
+
+.pink[**Answer** `i_callback`, `n_jobs`, `n_expr`, `i_military`, `i_computer`
+
+```r
+names(ps1_df) %&gt;% head(5)
+```
+
+```
+#&gt; [1] "i_callback" "n_jobs"     "n_expr"     "i_military" "i_computer"
+```
+]
+
+**2f.** What are the first two *first names* in the dataset (`first_name` variable)?
+
+*Hint:* `head(your_df$var_name, 10)` gives the first 10 observations of the variable `var_name` in dataset `your_df`.
+
+.pink[**Answer** Allison and Kristen
+
+```r
+head(ps1_df$first_name, 2)
+```
+
+```
+#&gt; [1] "Allison" "Kristen"
+```
+]
+
+---
+class: clear
+
+## Problem 3: Analysis
+
+Reviewing the basic analysis tools of econometrics.
+
+**Note:** When you use OLS to regress a binary indicator variable (like `i_callback`) on a set of explanatory variables, your coefficients are telling you how the explanatory variables affect the probability that the indicatory variable equals one. So if we regress `i_callback` on `n_jobs`, the coefficient on `n_jobs` tells us how the probability of a callback changes with each additional job listed on the résumé.
+
+**3a.** What percentage of the résumés generated a callback (`i_callback`)?
+
+*Hint:* The mean of a binary indicator variable (_i.e._, `mean(binary_variable)`) gives the percentage of times the variable equals one. *E.g.*, `mean(call_df$female)` would give us the percentage of female individuals in our dataset `call_df`.
+
+.pink[**Answer** Approximately 8.05 percent of résumés received callbacks.
+
+```r
+mean(ps1_df$i_callback)
+```
+
+```
+#&gt; [1] 0.08049281
+```
+]
+
+**3b.** Calculate percentage of callbacks (_i.e._, the mean of `i_callback`) for each racial group (`race`). Does it appear as though employers considered an applicant's race when making callbacks? Explain.
+
+*Hint:* `filter(your_df, race == "b")` will select all observations (from the dataset `your_df`) where the variable `race` takes the value `"b"`. Similarly `filter(your_df, race == "b")$i_callback` will give you the values of `i_callback` for obsevations whose value of `race` is `"b"`.
+
+.pink[**Answer** Résumés with typically black names received a callback rate of approximately 6.4%, while white-sounding names received a callback rate of approximately 9.7%. This disparity is consistent with employers considering race when responding to résumés.
+
+```r
+# Percentage for Black
+filter(ps1_df, race == "b")$i_callback %&gt;% mean()
+```
+
+```
+#&gt; [1] 0.06447639
+```
+
+```r
+# Percentage for White
+filter(ps1_df, race == "w")$i_callback %&gt;% mean()
+```
+
+```
+#&gt; [1] 0.09650924
+```
+]
+
+---
+class: clear
+
+**3c.** What is the difference in the groups' mean callback rate?
+
+.pink[**Answer** The callback rate for résumés with black-sounding was approximately 3.2 percentage points lower than the rate for white-sounding names.
+
+```r
+# Percentage for Black
+mean_b &lt;- filter(ps1_df, race == "b")$i_callback %&gt;% mean()
+# Percentage for White
+mean_w &lt;- filter(ps1_df, race == "w")$i_callback %&gt;% mean()
+# Difference:
+mean_b - mean_w
+```
+
+```
+#&gt; [1] -0.03203285
+```
+]
+
+**3d.** Based upon the difference in percentages that we observe in **3b.**, can we conclude that employers consider race in hiring decisions? **Explain your answer.**
+
+.pink[
+**Answer** No. We have shown a difference in the groups' percentages, but we do not know if this difference is statistically meaningful.
+]
+
+**3e.** Without running a regression, conduct a statistical test for the difference in the two groups' average callback rates (_i.e._, test that the proportion of callbacks is equal for the two groups).
+
+*Hint:* Back to your statistics class—difference in proportions (a *Z* test) or means (a *t* test).
+
+.pink[**Answer**
+
+```r
+# Percentage for everyone
+mean_all &lt;- ps1_df$i_callback %&gt;% mean()
+# Number: Black
+n_b &lt;- filter(ps1_df, race == "b") %&gt;% nrow()
+# Number: White
+n_w &lt;- filter(ps1_df, race == "w") %&gt;% nrow()
+# The Z statistic
+(z_stat &lt;- (mean_b - mean_w) / sqrt(mean_all * (1 - mean_all) * (1/n_b + 1/n_w)))
+```
+
+```
+#&gt; [1] -4.108412
+```
+
+```r
+# The p value
+2 * pnorm(abs(z_stat), lower.tail = F)
+```
+
+```
+#&gt; [1] 3.983887e-05
+```
+
+The _t_ statistic testing the null hypothesis of no difference between the two groups callback percentages is approximately -4.11, which has a *p*-value of approximately 0.00004. Because this *p*-value is smaller than our chosen level of 0.05, we reject the null hypothesis. We conclude there is statistically significant evidence of differential callbacks for black- and white-sounding names.
+]
+
+---
+class: clear
+
+**3f.** Now regress `i_callback` (whether the résumé generated a callback) on `i_black` (whether the résumé's name implied a black applicant). Report the coefficient on `i_black`. Does it match the difference that you found in **3c**?
+
+*Hint:* Use `lm(y ~ x, data = our_df)` to regress `y` on `x` from datatset `our_df`.
+
+.pink[
+**Answer**
+
+
+```r
+lm(i_callback ~ i_black, data = ps1_df) %&gt;% summary()
+```
+
+```
+#&gt; 
+#&gt; Call:
+#&gt; lm(formula = i_callback ~ i_black, data = ps1_df)
+#&gt; 
+#&gt; Residuals:
+#&gt;      Min       1Q   Median       3Q      Max 
+#&gt; -0.09651 -0.09651 -0.06448 -0.06448  0.93552 
+#&gt; 
+#&gt; Coefficients:
+#&gt;              Estimate Std. Error t value Pr(&gt;|t|)    
+#&gt; (Intercept)  0.096509   0.005505  17.532  &lt; 2e-16 ***
+#&gt; i_black     -0.032033   0.007785  -4.115 3.94e-05 ***
+#&gt; ---
+#&gt; Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+#&gt; 
+#&gt; Residual standard error: 0.2716 on 4868 degrees of freedom
+#&gt; Multiple R-squared:  0.003466,	Adjusted R-squared:  0.003261 
+#&gt; F-statistic: 16.93 on 1 and 4868 DF,  p-value: 3.941e-05
+```
+
+This regression finds (exactly) the same difference.
+]
+
+**3g.** Conduct a `\(t\)` test for the coefficient on `i_black` in the regression above in **3f**. Write our your hypotheses (both H.sub[0] and H.sub[A]), the test statistic, the *p*-value, the result of your test (_i.e._, reject or fail to reject H.sub[0]), and your conclusion.
+
+.pink[
+
+
+
+**Answer** H.sub[0]: `\(\beta_1 = 0\)` and H.sub[A]: `\(\beta_1 \neq 0\)`, where `\(\beta_1\)` is the coefficient for the effect of race on the probability a résumé received a callback.
+
+The point estimate for this coefficient is -0.032. Its associated `\(t\)` statistic is -4.11, which has a *p*-value less than 0.001.
+
+We reject the null hypothesis at the 5-percent level. We conclude that there is statistically significant evidence that names' races affected callback rates for names with black or white connotations.
+
+]
+
+---
+class: clear
+
+**3h.** Now regress `i_callback` (whether the résumé generated a callback) on `i_black`, `n_expr` (years of experience), and the interaction between `i_black` and `n_expr`. Interpret the estimates for the coefficients (both the meaning of the coefficients and whether they are statistically significant).
+
+*Hint:* In .mono[R], `lm(y ~ x1 + x2 + x1:x2, data = your_df)` regresses `y` on `x1`, `x2`, and the interaction between `x1` and `x2` (all from the dataset `your_df`).
+
+
+.pink[
+**Answer**
+
+
+```r
+lm(i_callback ~ i_black + n_expr + i_black:n_expr, data = ps1_df) %&gt;% summary()
+```
+
+```
+#&gt; 
+#&gt; Call:
+#&gt; lm(formula = i_callback ~ i_black + n_expr + i_black:n_expr, 
+#&gt;     data = ps1_df)
+#&gt; 
+#&gt; Residuals:
+#&gt;      Min       1Q   Median       3Q      Max 
+#&gt; -0.17797 -0.09011 -0.07620 -0.05874  0.95695 
+#&gt; 
+#&gt; Coefficients:
+#&gt;                  Estimate Std. Error t value Pr(&gt;|t|)    
+#&gt; (Intercept)     0.0692625  0.0101234   6.842 8.79e-12 ***
+#&gt; i_black        -0.0293537  0.0143684  -2.043  0.04111 *  
+#&gt; n_expr          0.0034682  0.0010822   3.205  0.00136 ** 
+#&gt; i_black:n_expr -0.0003304  0.0015409  -0.214  0.83025    
+#&gt; ---
+#&gt; Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+#&gt; 
+#&gt; Residual standard error: 0.2712 on 4866 degrees of freedom
+#&gt; Multiple R-squared:  0.007231,	Adjusted R-squared:  0.006619 
+#&gt; F-statistic: 11.81 on 3 and 4866 DF,  p-value: 1.045e-07
+```
+
+The coefficient on `i_black` is quite similar to the coefficient previously found—suggesting the a black-sounding name reduced the probability of a callback by approximately 3 percentage points. This effect is still significant at the 5-percent level.
+
+The coefficient on the number of years of experience (`n_expr`) implies that for each additional year of experience on the résumé, the probability of a callback increase by 0.3 percentage points. This effect is statistically significant at the 5-percent level.
+
+The coefficient on the interaction between the black indicator variable and the experience variable tests whether the effect of experience on the callback rate differed between black and white résumés. The point estimate is small and is not statistically significant—meaning we cannot rule out the possibility that the interaction does not exist.
+
+]
+
+---
+class: clear
+
+## Problem 4: Thinking about causality
+
+Now for the big picture.
+
+This project by Bertrand and Mullainathan took a decent amount of time and effort—finding job listings, generating fake résumés, responding to the listings, *etc.* It would have been much quicker/cheaper/easier to just go out and get data from job applicants—whether they received callbacks and their races. So why didn't they take the easier, cheaper, and quicker route?
+
+**4a.** Define omitted-variable bias.
+
+.pink[**Answer** Omitted-variable bias is a specific type of *bias* in our OLS estimates that occurs when we omit a variable that (1) correlates with one of the correlated variables and (2) affects our outcome variable.]
+
+**4b.** The central questions here is "Do employers call back individuals at different rates based upon their race (or gender)?".
+
+If we collected data on callbacks and race, and we then regressed *Callback* on *Race*, we would likely get biased estimates due to omitted-variable bias.
+
+Explain why this is the case and provide an example of an omitted variable in this situation.
+
+.pink[
+**Answer** Using real-world collected data on callbacks and race, we would expect to have omitted-variable bias if black applicants and white applicants differ on any variable that also affects callbacks. For example, if black applicants and white applicants differ in their social networks, and their networks help them obtain callbacks, then we will misattribute the effect of social networks to race.
+]
+
+**4c.** The point of experiments is to avoid omitted-variable bias. Explain how randomizing race on these (fake) résumés avoided the concerns for omitted-variable bias.
+
+.pink[
+**Answer** By randomizing the perceived race, the experiment breaks the correlation between race and any other variables—omitted or otherwise. By breaking this correlation, the experiment avoids omitted-variable bias.
+]
+
+---
+class: clear
+
+### Description of variables and names
+&lt;br&gt;
+&lt;table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;"&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Variable &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; Description &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; .mono-small[i_callback] &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Binary variable (0,1) for whether the resume received a callback. &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; .mono-small[n_jobs] &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Number of previous jobs listed on the application. &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; .mono-small[n_expr] &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Number of years of experience listed on the application. &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; .mono-small[i_military] &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Binary variable for whether the application included military status. &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; .mono-small[i_computer] &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Binary variable for whether the application included computer skills. &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; .mono-small[first_name] &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; The first name listed on the application. &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; .mono-small[sex] &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; The implied sex of the first name on the application (.mono-small['f'] or .mono-small['m']). &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; .mono-small[i_female] &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Binary indicator for whether the implied sex was female. &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; .mono-small[i_male] &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Binary indicator for whether the implied sex was male. &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; .mono-small[race] &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; The implied race of the first name on the application (.mono-small['b'] or .mono-small['w']). &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; .mono-small[i_black] &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Binary indicator for whether the implied race was African American. &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; .mono-small[i_white] &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Binary indicator for whether the implied race was White. &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+In general, I've tried to stick with a naming convention. Variables that begin with .mono-small[i\\_] denote binary indicatory variables (taking on the value of .mono-small[0] or .mono-small[1]). Variables that begin with .mono-small[n_] are numeric variables.
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "8.5:11",
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script>
+(function() {
+  var i, text, code, codes = document.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+})();
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
