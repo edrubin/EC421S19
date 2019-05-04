@@ -1,0 +1,587 @@
+---
+title: "Problem Set 2 *Solutions*"
+subtitle: "Unbiasedness, Consistency, and Heteroskedasticity"
+author: "**EC 421:** Introduction to Econometrics"
+date: "<br>Due *before* midnight (11:59pm) on .bold[Friday, 03 May 2019]"
+output:
+  xaringan::moon_reader:
+    css: ['default', 'metropolis', 'metropolis-fonts', 'my-css.css']
+    # self_contained: true
+    nature:
+      ratio: '8.5:11'
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+class: clear
+
+```{R, setup, include = F}
+# Packages
+library(pacman)
+p_load(
+  ggplot2, gridExtra, ggthemes, latex2exp, kableExtra,
+  tidyverse, broom, knitr, magrittr
+)
+# Colors
+red_pink <- "#e64173"
+turquoise <- "#20B2AA"
+grey_light <- "grey70"
+grey_mid <- "grey50"
+grey_dark <- "grey20"
+# Themes
+theme_axes_y <- theme_void() + theme(
+  text = element_text(family = "sans"),
+  axis.title = element_text(size = 11),
+  plot.title = element_text(size = 11, hjust = 0.5),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, -0.2, 0, 0, unit = "lines")),
+  axis.text.y = element_text(
+    size = 10, angle = 0, hjust = 0.9, vjust = 0.5,
+    margin = margin(0, 0.4, 0, 0, unit = "lines")
+  ),
+  axis.line = element_line(
+    color = grey_light,
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.07, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_axes_x <- theme_void() + theme(
+  text = element_text(family = "sans"),
+  axis.title = element_text(size = 11),
+  plot.title = element_text(size = 11, hjust = 0.5),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, -0.2, 0, 0, unit = "lines")),
+  axis.text.x = element_text(
+    size = 10, angle = 0, hjust = 0.9, vjust = 0.5,
+    margin = margin(0, 0.4, 0, 0, unit = "lines")
+  ),
+  axis.line = element_line(
+    color = grey_light,
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.07, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_set(theme_gray(base_size = 11))
+# Knitr options
+opts_chunk$set(
+  comment = "#>",
+  fig.align = "center",
+  warning = F,
+  message = F
+)
+```
+
+## Problem 1: Unbiasedness and consistency
+
+Throughout this course, we will use the OLS estimator $\hat{\beta}$ to estimate $\beta$. We will continue to discuss situations in which the estimator (or other estimators) are (1) unbiased or (2) consistent.
+
+**1a.** What is the formal (mathematical) definition of **bias**?
+
+.pink[
+**Answer** Formally, $\text{Bias}_\beta\left(\hat\beta\right) = \mathop{E}\left[ \hat\beta \right] - \beta$
+]
+
+**1b.** Give a more intuitive definition of **bias** (no expected values).
+
+.pink[
+**Answer** Bias tells us whether, on average, our estimator gets the answer right (whether it hits its mark, on average).
+]
+
+**1c.** Why do we care if the OLS estimator (or any estimator) is **biased**?
+
+.pink[
+**Answer** If our estimator is biased, then it will regularly estimate the wrong number, which can make it harder for us to learn about the unknown parameter that we are trying to estimate.
+]
+
+**1d.** What does it mean for an estimator to be **consistent?**
+
+.pink[
+*Multiple potential answers*
+
+**Answer**.sub[1] (more formal) If our estimator is consistent, (1) the estimator has a probability limit and (2) the probability limit is the parameter that the estimator is trying to estimate.
+
+**Answer**.sub[2] (more intuitive) If our estimator is consistent, then as the sample size approaches infinity $\left( n \rightarrow \infty \right)$, the estimator's distribution collapses to a point located at the parameter the estimator is trying to estimate.
+]
+
+**1e.** **True/False** Unbiasedness is a property for finite-sized samples, while consistency refers to an esimator as sample sizes approach infinity.
+
+.pink[
+**Answer** True.
+]
+
+**1f.** Which of the following two estimators would you choose? Explain your reasoning.
+<br>   Estimator **A** is unbiased and inconsistent.
+<br>   Estimator **B** is biased and consistent.
+
+.pink[
+**Answer** There are many possible answers here.
+
+All else equal, we likely prefer unbiased estimators to consistent estimators if we have a fairly small sample (since consistency refers to *large* samples). However, if the bias is fairly small and/or our sample size is very large, we might opt of the biased and consistent estimator.
+]
+
+---
+class: clear
+
+## Problem 2: Heteroskedasticity
+
+Now we turn to Heteroskedasticity.
+
+**2a.** In which of the subfigures in **Figure 1** (below) is $u_i$ likely .b[heteroskedastic]? Briefly explain your answer. (***Hint*** There may be more than one.)
+
+.pink[
+**Answer** $u_i$ is likely heteroskedastic in subfigures **1b** and **1c**. We can see clear trends (relationships) between the variance of $u_i$ (its dispersion) and $x_i$.
+]
+
+**Figure 1**
+```{R, echo = F, dev = "svg", fig.height = 2.5}
+set.seed(123)
+n <- 101
+# No violations
+p1 <- ggplot(data = tibble(x = 1:n, u = rnorm(n)), aes(x = x, y = u)) +
+geom_hline(yintercept = 0) +
+scale_y_continuous(breaks = 0) +
+geom_point() +
+ggtitle("Figure 1a") +
+theme_axes_y
+# Violates homoskedasticity
+p2 <- ggplot(data = tibble(x = 1:n, u = rnorm(n, sd = abs(sin(x/(100))) + 0.1)), aes(x = x, y = u)) +
+geom_hline(yintercept = 0) +
+scale_y_continuous(breaks = 0) +
+geom_point() +
+ggtitle("Figure 1b") +
+theme_axes_y
+# Violates both
+p3 <- ggplot(data = tibble(x = 1:n, u = runif(n, min = -250, max = (x-50.5)^2)), aes(x = x, y = u)) +
+geom_hline(yintercept = 0) +
+scale_y_continuous(breaks = 0) +
+geom_point() +
+ggtitle("Figure 1c") +
+theme_axes_y
+# Put it all together
+grid.arrange(p1, p2, p3, nrow = 1)
+```
+
+**2b.** In the presence of heteroskedasticity, is OLS still unbiased?
+
+.pink[
+**Answer** Yes.
+]
+
+**2c.** What issues does heteroskedasticity cause for our standard OLS setting?
+
+.pink[
+**Answer** Heteroskedasticity makes (1) OLS inefficient and (2) biases our estimated standard errors.
+]
+
+**2d.** Which ways can we "fix" (or "live with") heteroskedasticity?
+
+.pink[
+**Answer** We discussed three strategies for living with heteroskedasticity:
+
+1. Check that misspecification has not caused the heteroskedasticity.
+2. Use the WLS (weighted least squares) estimator.
+3. Use heteroskedasticity-robust standard errors.
+]
+
+---
+class: clear
+
+**2e.** Imagine that we want to use OLS to estimate the model
+
+$$
+\begin{align}
+  y_i = \beta_0 + \beta_1 x_i + u_i \tag{1}
+\end{align}
+$$
+
+where $x_i$ is a categorical variable that takes the values $1$, $2$, or $3$.
+
+Suppose that we know $\mathop{\text{Var}} \left( u_i \middle| x_i = 1 \right) = 15$ and $\mathop{\text{Var}} \left( u_i \middle| x_i = 2 \right) = 15$. We do not know $\mathop{\text{Var}} \left( u_i \middle| x_i = 3 \right)$, _i.e._, $\mathop{\text{Var}} \left( u_i | x_i = 3 \right) = \sigma_3^2$ for some unknown parameter $\sigma_3^2$.
+
+What value must $\sigma_3^2$ take for our model to be homoskedastic?
+
+.pink[
+**Answer** For the model to be homoskedastic, it must be the case that $\sigma_3^2 = 15$.
+]
+
+**2f.** *Goldfeld-Quandt* In order to test whether the data we will use to estimate equation $(1)$ are homoskedastic/heteroskedastic, we will run a Goldfeld-Quandt test.
+
+We estimate $(1)$ for the upper one third of the dataset (sorted on $x$) and find SSE.sub[3]=100. We estimate $(1)$ on the middle third and find SSE.sub[2]=80. Finally, we estimate $(1)$ on the lower third and find SSE.sub[1]=70. Each of these three groups has 100 observations.
+
+Conduct a Goldfeld-Quandt test. State your hypotheses, calculate the G-Q test statistic, determine the *p*-value, state your conclusion.
+
+***Hint:*** The function `pf(q, df1, df2, lower.tail = F)` calculates the probability of observing a value of `q` or greater in an $F$ distribution with `df1, df2` numerator and denominator degrees of freedom.
+
+.pink[
+**Answer** The hypotheses for our test are
+
+.b[H.sub[o]]: $\sigma_1^2 = \sigma_3^2$ (homoskedasticity) *vs.* .b[H.sub[a]]: $\sigma_1^2 \neq \sigma_3^2$ (heterokedasticity)
+
+For the Goldfeld-Quandt test, we test this null hypthesis using the test statistic
+
+$$
+\begin{align}
+   F = \dfrac{SSE_3}{SSE_1} = \dfrac{100}{70} \approx 1.4286
+\end{align}
+$$
+
+Under the null hypothesis, this test statistic has an $F$ distribution with 98 (=100-2) degrees of freedom in the numerator and denominator. Using .mono[R] we can calculate the *p*-value:
+
+```{R, key-2f}
+# p-value
+pf(100/70, df1 = 100-2, df2 = 100-2, lower.tail = F)
+```
+
+This *p*-value is less than 0.05, so we reject the null hypothesis and conclude that that there is statistically significant evidence of heteroskedasticity (at the 5-percent level).
+]
+
+---
+class: clear
+
+## Problem 3: Data and heteroskedasticity
+
+**3a.** Open up Rstudio, an .mono[R] script, load whichever packages you want, and load the dataset contained in .mono[ps02_data.csv].
+
+.pink[
+**Answer**
+
+```{R, key-3a, message = F, include = T}
+# Load 'pacman'
+library(pacman)
+# Load additional packages
+p_load(tidyverse, broom, magrittr, ggplot2, ggthemes)
+# Load the data
+ps2_df <- read_csv("ps02_data.csv")
+# Check data
+ps2_df %>% head()
+```
+]
+
+**3b.** Describe the distribution of our main variable of interest (`prob_q5_q1`). You can provide statistical or graphical descriptions of this variable—try `summary(dataset$variable)` and `hist(dataset$variable)`, among others. What do you see?
+
+.pink[
+**Answer** The probability that an individual moves from the bottom 20% to the top 20% is fairly low, on average, but there is a decent amount of variation (ranging from almost 0% to 35%).
+
+```{R, key-3b, include = T}
+# Summarize variable
+summary(ps2_df$prob_q5_q1)
+```
+]
+
+---
+class: clear
+
+.pink[
+
+```{R, key-3b1, include = T, dev = 'svg', fig.height = 3}
+# A histogram using 'hist'
+hist(
+  ps2_df$prob_q5_q1,
+  breaks = 25,
+  col = "grey85",
+  xlab = "Probability",
+  main = "Histogram: Probability of moving from Q5 to Q1"
+)
+```
+
+```{R, key-3b2, include = T, dev = 'svg', fig.height = 3}
+# A histogram using 'ggplot'
+ggplot(data = ps2_df, aes(x = prob_q5_q1)) +
+  geom_histogram(fill = red_pink, color = "white", alpha = 0.85) +
+  xlab("Probability") +
+  ggtitle("Histogram: Probability of moving from Q5 to Q1") +
+  theme_pander()
+```
+]
+
+---
+class: clear
+
+**3c.** Regress the probability an individual moves from the bottom fifth of income to the top fifth of income (`prob_q5_q1`) on an intercept and the share of the commuting zone that is **married** (`share_married`). Report your findings—the coefficients, brief interpretations of the coefficients, and whether the coefficients are statistically significant.
+
+.pink[
+**Answer**
+
+```{R, key-3c, include = T}
+# Estimate the model
+reg_3c <- lm(prob_q5_q1 ~ share_married, data = ps2_df)
+# Report the results
+reg_3c %>% tidy()
+```
+
+We estimate that the coefficient on share married is approximately `r round(coef(reg_3c)[2],3)`. This coefficient says that if the share married in a commuting zone increased by 1 percentage point (*e.g.*, from 23% to 24%), then we would expect the probability of moving from the bottom fifth to the top fifth of income to increase by `r round(coef(reg_3c)[2],2)`%. Our estimate is statistically significant (different from zero) at the 5% level.
+]
+
+**3d.** Does it make sense to interpret the intercept in this case? Explain.
+
+.pink[
+**Answer** It does not make sense to interpert the intercept in this setting. The interpretation would be "the average mobility probability for a commuting zone with zero marriage." In our data, the share married population ranges from 37% to 69%—zero percent is not reasonable (also evidenced by the fact that the intercept would suggest a negative probability).
+]
+
+---
+class: clear
+
+**3e.** Plot the residuals from your regression in (3c) on the $y$ axis and `share_married` on the $x$ axis. Do you see evidence of heteroskedasticity? Explain.
+
+**Hint.sub[1]:** You can grab the residuals from a saved `lm` object by (1) using the `residuals()` function or (2) adding the suffix `$residuals` to the end of the `lm` object, *e.g.*, `my_reg$residuals` grabs the residuals from the `lm` object `my_reg`.
+
+**Hint.sub[2]:** `plot(x = dataset$variable1, y = dataset$variable2)` makes quick and simple plots. You can also try `qplot()` from the package `ggplot2`, *i.e.*, `qplot(x = variable1, y = variable2, data = dataset)`.
+
+.pink[
+**Answer** Based upon the funnel-like figure below, heteroskedasticity seems likely.
+
+```{R, key-3e, include = T, dev = 'svg', fig.height = 3.5}
+# Add residuals to the dataset
+ps2_df %<>% mutate(e_3c = residuals(reg_3c))
+# Plot with ggplot
+ggplot(data = ps2_df, aes(x = share_married, y = e_3c)) +
+  geom_point(alpha = 0.5) +
+  labs(
+    x = "Pct. married", y = "OLS residual",
+    main = "Visual inspection for heteroskedasticity in 2c."
+  ) +
+  theme_pander()
+```
+
+]
+
+---
+class: clear
+
+**3f.** Conduct a Breusch-Pagan test for heteroskedasticity in the regression model in (2c). Report your hypotheses, the test statistic, the *p*-value, and your conclusion.
+
+.pink[
+**Answer**
+
+```{R, key-3f, include = T}
+# B-P regression
+reg_3f <- lm(e_3c^2 ~ share_married, data = ps2_df)
+# B-P test statistic
+lm_3f <- summary(reg_3f)$r.squared * 709
+# B-P p-value
+pchisq(q = lm_3f, df = 1, lower.tail = F)
+```
+
+**Hypotheses** Our Breusch-Pagan test here tests the hypotheses H.sub[o] $\alpha_1 = 0$ *vs.* H.sub[a] $\alpha_1 \neq 0$ for $e_i^2 = \alpha_0 + \alpha_1 x_i + v_i$ (where we are using $e_i^2$ to estimate $u_i^2$, which gives us an estimate for $\sigma_i^2$.) If we reject H.sub[o], then we have evidence of heteroskedasticity.
+
+**Test statistic** We calculate a B-P test statistic of approximately `r round(lm_3f, 2)`.
+
+** *p*-value** Under the distribution of a $\chi^2_1$, the implied *p*-value for our LM statistic (the probability of seeing this test statistic or greater) is approximately `r format(pchisq(q = lm_3f, df = 1, lower.tail = F), digits = 2, scientific = F)`.
+
+**Conclusions** Because our *p*-value is less than our standard significance of 0.05, we reject the null hypothesis $\left( \alpha_1 = 0 \right)$—there is statistically significant evidence at the 5% level that $\alpha_1\neq0$, meaning there is statistically significant evidence of a relationship between $e_i^2$ and `share_married` (the commuting zone's share of married residents). Therefore, we have statistically significant evidence of heteroskedasticity.
+
+]
+
+---
+class: clear
+
+**3g.** Conduct a White test for heteroskedasticity in the regression model in (2c). Report your hypotheses, the test statistic, the *p*-value, and your conclusion.
+
+**Hint:** To square the variable `x` in `lm()`, we write `lm(y ~ x + I(x^2), data = dataset)`.
+
+.pink[
+**Answer**
+
+```{R, key-3g, include = T}
+# White regression
+reg_3g <- lm(e_3c^2 ~ share_married + I(share_married^2), data = ps2_df)
+# White test statistic
+lm_3g <- summary(reg_3g)$r.squared * 709
+# White p-value
+pchisq(q = lm_3g, df = 2, lower.tail = F)
+```
+
+**Hypotheses** Our White test in this question tests the hypotheses H.sub[o] $\alpha_1 = \alpha_2 = 0$ *vs.* H.sub[a] $\alpha_1 \neq 0$ *or* $\alpha_2 \neq 0$, where $e_i^2 = \alpha_0 + \alpha_1 x_i + \alpha_2 x_i^2 + v_i$ (where, again, we are using $e_i^2$ to estimate $u_i^2$, which gives us an estimate for $\sigma_i^2$.) If we reject H.sub[o], then we have evidence of heteroskedasticity.
+
+**Test statistic** We calculate a White test statistic of approximately `r round(lm_3g, 2)`.
+
+** *p*-value** Under the distribution of a $\chi^2_2$, the implied *p*-value for our LM statistic (the probability of seeing this test statistic or greater) is approximately `r format(pchisq(q = lm_3g, df = 2, lower.tail = F), digits = 2, scientific = F)`.
+
+**Conclusions** Because our *p*-value is less than our standard significance of 0.05, we reject the null hypothesis $\left( \alpha_j = 0 \right)$—there is statistically significant evidence at the 5% level that either $\alpha_1\neq0$ or $\alpha_2\neq0$. Therefore we find statistically significant evidence of a relationship between $e_i^2$ with `share_married` and `share_married`.super[2] (the commuting zone's share of married residents). We have statistically significant evidence of heteroskedasticity.
+
+]
+
+---
+class: clear
+
+**3h.** Let's imagine that we think heteroskedasticity is present. Estimate heteroskedasticity-robust standard errors. Do your standard errors change? What about the coefficients? Why is this the case?
+
+**Hint:** To do this, use the `felm()` function in the `lfe` package. `felm()` takes a regression formula just like `lm()`. Then use `summary(., robust = T)` to show the heteroskedasticity-robust standard errors.
+
+*Example:*
+
+```{R, ex 2h, eval = F}
+# The regression
+some_reg <- felm(y ~ x, data = fake_data)
+# Print the coefficients w/ het-robust standard errors
+summary(some_reg, robust = T)
+```
+
+.pink[
+**Answer**
+
+```{R, key-2h, include = T, eval = T, results = 'hide'}
+# Load the 'lfe' package
+p_load(lfe)
+# Same regression as in (3c)—but with 'felm'
+reg_3h <- felm(prob_q5_q1 ~ share_married, data = ps2_df)
+# Print the coefficients w/ and w/out het-robust standard errors
+reg_3h %>% summary(robust = T)
+reg_3h %>% summary(robust = F)
+```
+
+```{R, key-3h-ii, include = T, echo = F}
+# Print the coefficients
+summary(reg_3h, robust = T) %>% capture.output() %>% extract(9:12) %>% paste0("\n") %>% cat()
+summary(reg_3h, robust = F) %>% capture.output() %>% extract(9:12) %>% paste0("\n") %>% cat()
+```
+
+The estimated coefficients are the same across the two sets of estimates (with and without heteroskedasticity-robust standard errors), because they both use OLS to estimate the coefficients.
+
+The standard errors change because they use different estimators for the standard errors—a heteroskedasticity-robust estimator and an estimator that assumes homoskedasticity. The heteroskedasticity-robust standard errors are slightly larger.
+
+]
+
+---
+class: clear
+
+**3i.** As we discussed in class, we can introduce heteroskedasticity by mis-specifying our regression model. Try adding the additional variables from this dataset into the regression (possibly also adding interactions, squared explanatory variables, or transformed variables). Then plot the new residuals against share married (`share_married`). *Briefly* describe which regressions you ran and whether it affected the appearance of heteroskedasticity. Which of your specifications appears to do the best?
+
+**Note:** You do not need to formally test for heteroskedasticity.
+
+.pink[
+**Answer**
+If we stick with the outcome variable as a level (not logged), then heteroskedasticity appears likely, even if we include all of the variables in the dataset, their squares, and the two-way interactions.
+
+```{R, key-3i, include = T, fig.height = 3.5, dev = 'svg'}
+# Regression with all variables, quadratics, and interactions
+reg_3i <- lm(
+  prob_q5_q1 ~
+  i_urban +
+  share_black + I(share_black^2) +
+  share_middleclass + I(share_middleclass^2) +
+  share_divorced + I(share_divorced^2) +
+  share_married + I(share_married^2) +
+  share_black:share_middleclass + share_black:share_divorced + share_black:share_married +
+  share_middleclass:share_divorced + share_middleclass:share_married +
+  share_divorced:share_married,
+  data = ps2_df
+)
+# Add residuals to dataset
+ps2_df$e_3i <- residuals(reg_3i)
+# Plot residuals against share_married
+# Plot with ggplot
+ggplot(data = ps2_df, aes(x = share_married, y = e_3i)) +
+  geom_point(alpha = 0.5) +
+  labs(
+    x = "Pct. married", y = "OLS residual, 3i",
+    main = "Visual inspection for heteroskedasticity in 3i."
+  ) +
+  theme_pander()
+```
+]
+
+---
+class: clear
+
+.pink[
+
+However, if we take the log of our previous outcome variable, things start to look much more homoskedastic.
+
+```{R, key-3i-ii, include = T, fig.height = 4, dev = 'svg'}
+# Regression with all variables, quadratics, and interactions
+reg_3i_log <- lm(
+  log(prob_q5_q1) ~
+  i_urban +
+  share_black + I(share_black^2) +
+  share_middleclass + I(share_middleclass^2) +
+  share_divorced + I(share_divorced^2) +
+  share_married + I(share_married^2) +
+  share_black:share_middleclass + share_black:share_divorced + share_black:share_married +
+  share_middleclass:share_divorced + share_middleclass:share_married +
+  share_divorced:share_married,
+  data = ps2_df
+)
+# Add residuals to dataset
+ps2_df$e_3i_log <- residuals(reg_3i_log)
+# Plot residuals against share_married
+# Plot with ggplot
+ggplot(data = ps2_df, aes(x = share_married, y = e_3i_log)) +
+  geom_point(alpha = 0.5) +
+  labs(
+    x = "Pct. married", y = "OLS residual, 3i with logs",
+    main = "Visual inspection for heteroskedasticity in 3i."
+  ) +
+  theme_pander()
+```
+
+]
+
+---
+class: clear
+
+**3j.** Should we interpret the regression results in (3c)—or your preferred specification in (3i)—as *causal*? Explain your answer. If we cannot interpret the regression as causal, can we still learn something interesting here? Explain.
+
+.pink[
+**Answer** We probably should not apply a causal interpretation to our estimated coefficients in (3c). There are likely many omitted variables that are (1) correlated with *share married* and (2) affect the probability an individual moves from the first fifth to the upper fifth of the income distribution. One example may be school quality within the commuting zone.
+
+Another potential example is the share of the commuting zone that is 'middle class'. For example, the correlation between share married and share middleclass is `r cor(ps2_df$share_married, ps2_df$share_middleclass) %>% format(digits = 2)`. If share middle class also affects our outcome variable (the probability an individual growing up in the lowest fifth of the income distribution moves into the top fifth), then our estimate on share married will suffer from omitted-variable bias. Specifically, if we think share middleclass positively affects our outcome variable, then our coefficient should be an overestimate of the true effect of *share married*. Let's try including *share middleclass*.
+
+```{R, key-3j, include = T}
+# The results with only share_middle
+reg_3c %>% tidy()
+# The results from adding in share_middleclass
+lm(prob_q5_q1 ~ share_married + share_middleclass, data = ps2_df) %>% tidy()
+```
+
+Just as we predicted: Including *share middleclass* **decreases** the estimated 'effect' of *share married*.
+
+We might guess that *share black* would also (1) correlate with *share married* and (2) affect our outcome variable. Because the correlation between *share married* and *share black* is negative (correlation of `r cor(ps2_df$share_black, ps2_df$share_married) %>% format(digits = 2)`), and because *share black* may have a downward effect on the probability an individual moves from the lowest to the highest fifth of the income distribution, we would again expect the estimated effect of *share middleclass* to overstate the actual effect due to omitted variable bias. Let's see.
+
+```{R, key-3j-ii, include = T, echo = F}
+# The results from adding in share_married AND share_black
+lm(
+  prob_q5_q1 ~
+  share_married + share_middleclass + share_black,
+  data = ps2_df
+) %>% tidy()
+```
+
+Again, we see that the estimated coefficient on share middleclass drops.
+
+]
+
+---
+class: clear
+
+## Data description
+
+Each row in the dataset gives records statistics for one of 709 commuting zones.
+
+In general, I've tried to stick with a naming convention. Variables that begin with .mono-small[i\\_] denote binary indicatory variables (taking on the value of .mono-small[0] or .mono-small[1]). Variables that begin with .mono-small[share_] give the share.
+
+<br>
+```{R, background variables, echo = F, eval = T}
+ps2_df <- read_csv("ps02_data.csv")
+var_tbl <- data.frame(
+  Variable = names(ps2_df) %>% paste0(".mono-small[", ., "]"),
+  Description = c(
+    "The probability someone born in the lowest 20% of income moves to the highest 20% of income.",
+    "Binary variable (0,1) for whether the commuting zone is considered urban.",
+    "The share of the zone's population who identify as black.",
+    "The share of the zone's population who are middleclass.",
+    "The share of the zone's population who are divorced.",
+    "The share of the zone's population who are married."
+  )
+)
+kable(var_tbl) %>%
+  kable_styling(full_width = F)
+```
+
+```{R, generate pdfs, include = F, eval = T}
+system("decktape remark ps02_solutions.html ps02_solutions.pdf --chrome-arg=--allow-file-access-from-files")
+```
