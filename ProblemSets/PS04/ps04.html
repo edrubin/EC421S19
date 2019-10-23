@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Problem Set 4</title>
+    <meta charset="utf-8">
+    <meta name="author" content="EC 421: Introduction to Econometrics" />
+    <link href="ps04_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="ps04_files/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+    <link href="ps04_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
+    <script src="ps04_files/kePrint-0.0.1/kePrint.js"></script>
+    <link rel="stylesheet" href="my-css.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Problem Set 4
+## Nonstationarity, Causality, Instrumental Variables
+### <strong>EC 421:</strong> Introduction to Econometrics
+### <br>Due <em>before</em> midnight (11:59pm) on Wednesday, 05 June 2019
+
+---
+
+class: clear
+
+
+
+.mono[DUE] Your solutions to this problem set are due *before* midnight on Wednesday, 05 June 2019. Your files must be uploaded to [Canvas](https://canvas.uoregon.edu/).
+
+.mono.b[IMPORTANT] Your submission must include (1) **your responses/answers to the question in a PDF, Word, or similar file** and (2) the .mono[R] script you used to generate your answers. **The .mono[R] script is just for your code. To receive credit, your answers/figures/*etc.* must be in the PDF/Word document.** Each student must turn in her/his own answers.
+
+.mono[OBJECTIVE] This problem set has three purposes: (1) reinforce econometrics topics from class; (2) build your .mono[R] toolset; (3) strengthen your intuition on causality and time series.
+
+## Problem 1: Nonstationarity—the Basics
+
+**1a.** Define stationarity.
+
+*Note:* You can define it using math or words (or both).
+
+**1b.** If our disturbance term `\(u_t\)` follows a .pink[random walk], *i.e.*,
+$$
+`\begin{align}
+  u_{t} = u_{t-1} + \varepsilon_t
+\end{align}`
+$$
+then it's variance is `\(\mathop{\text{Var}} \left( u_t \right) = t \sigma_{\varepsilon}^2\)`. Explain how this expression of its variance shows that the disturbance is .purple[nonstationary] (*i.e.*, it violates .pink[stationarity]).
+
+**1c.** We previously discussed autocorrelated distrubances, *e.g.*, an AR(1) process such that
+$$
+`\begin{align}
+  u_{t} = \rho u_{t-1} + \varepsilon_t
+\end{align}`
+$$
+Under which circumstances would this AR(1) process become a random walk?
+
+*Hint:* Consider the values of `\(\rho\)`.
+
+---
+class: clear
+
+## Problem 2: Nonstationarity—the Simulation
+
+In this problem, we are going to create two independent, .hi-purple[nonstationary] time series. Specifically, we'll create two random walks. Then, we'll regress the first random walk on the second random walk.
+
+*Hint:* Generating random walks is *nearly* identical to generating AR(1) processes, as you did in lab.
+
+**2a.** Generate the first 50-period random walk. We will name it `v`.
+$$
+`\begin{align}
+  v_t = v_{t-1} + \varepsilon_t
+\end{align}`
+$$
+where `\(\varepsilon_t\)` comes from a normal distribution with mean 0 and standard deviation 1.
+
+Here is some .mono[R] to help.
+
+
+```r
+# Set a seed (so your results stay the same)
+set.seed(1234)
+# Generate the initial number, (this will be v[1])
+v &lt;- rnorm(1, mean = 0, sd = 1)
+# For loop to create the random walk
+for (t in 2:50) {
+  # Create the 'next' observation
+  ...
+}
+```
+while you're filling in the `for` loop, keep in mind (**1**) our equation for the random walk at the beginning of this question (meaning `\(v_t\)` depends upon `\(v_{t-1}\)` and `\(\varepsilon_t\)`) and (**2**) the fact that you can reference different observations in .mono[R], *e.g.*,
+
+- `v[t]` refers to the `\(t\)`.super[th] observation
+- `v[t-1]` refers to the `\((t-1)\)`.super[th] observation
+- `v[3]` refers to the `\(3\)`.super[rd] observation
+
+If you need more help on for loops, don't forget there are lab materials on Canvas and resources online (*e.g.*, [datamentor.io](https://www.datamentor.io/r-programming/for-loop/) and [datacamp.com](https://www.datacamp.com/community/tutorials/tutorial-on-loops-in-r) have lots of resources).
+
+**2b.** Generate a second 50-period random walk called `w`. This part is exactly the same as (2a), but you **use a different seed** (*i.e.*, `set.seed(456)`) and **name the variable** `w`.
+
+**2c.** We .orange[independently] generated these two time series. Ideally (from a statistical point of view), should we find a statistically significant relationship between the two series? Explain.
+
+**2d.** Regress `w` on `v`. Report the results from the `\(t\)` test. Do they match your expectations from (2c)? Explain.
+
+**2e.** As we've mentioned, one (simple) way you can work with the nonstationary from random walks is to take differences, _i.e._, `\(v_t - v_{t-1}\)`. The interpretation of the relationship does not change, whether we regress `\(w\)` on `\(v\)` or `\(\Delta w\)` on `\(\Delta v\)` (where `\(\Delta w = w_t - w_{t-1}\)`). In .mono[R], you can use the `diff()` function to take difference, _i.e._, `diff(v)` will calculate the differences for the variable `v`.
+
+Regress the differenced `w` on the differenced `v`. Does it change your results from **2d**?
+
+---
+class: clear
+
+## Problem 3: Causality
+
+Following the Rubin causal model, imagine that we observe the following data (which would be impossible observe in real life):
+
+.center[
+.bold[Table: Imaginary dataset]
+]
+&lt;table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;"&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:right;"&gt; .math[i] &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Trt. &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; y.sub[1] &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; y.sub[0] &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 1 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 0 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 25 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 17 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 2 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 0 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 15 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 11 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 3 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 1 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 11 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 3 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 4 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 1 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 13 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 9 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+**3a.** Calculate the treatment effect **for each individaul** (*i.e.*, `\(\tau_i\)`).
+
+**3b.** **[T/F]** The treatment effect is constant across individuals.
+
+**3c.** Calculate the **average treatment effect**.
+
+**3d** **Estimate the average treatment effect** by comparing the **mean of the treatment group** to the **mean of the control group**.
+
+**3e.** Should we expect our estimator in (3d) to provide unbiased estimates? **Explain.**
+
+**3f.** Why would it be impossible to actually observe all of the data in the table (in real life)?
+
+**3g.** How does your answer in (3f) relate to *the fundametal problem of causal inference*?
+
+
+## Problem 4: Instrumental Variables
+
+**4a.** What are the two requirements for a valid instrument?
+
+We're interested in estimating `\(\beta_1\)` in
+$$
+`\begin{align}
+  \text{Wage}_i = \beta_0 + \beta_1 \text{Education}_i + u_i
+\end{align}`
+$$
+but we have a problem with omitted-variable bias. Instrumental variables can potentially help.
+
+**4b.** As we've discussed, we need an instrument for (endogenous) education. Do you think the number of children would be a valid instrument? Explain why it passes/fails ech of the two requirements for a valid instrument.
+
+**4c.** Which estimates would you trust more—OLS or IV, where number-of-children is your instrument? Explain.
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "8.5:11",
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script>
+(function() {
+  var i, text, code, codes = document.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+})();
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

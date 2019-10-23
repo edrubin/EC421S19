@@ -1,0 +1,162 @@
+---
+title: "Problem Set 4"
+subtitle: "Nonstationarity, Causality, Instrumental Variables"
+author: "**EC 421:** Introduction to Econometrics"
+date: "<br>Due *before* midnight (11:59pm) on Wednesday, 05 June 2019"
+output:
+  xaringan::moon_reader:
+    css: ['default', 'metropolis', 'metropolis-fonts', 'my-css.css']
+    # self_contained: true
+    nature:
+      ratio: '8.5:11'
+      # ratio: '8.8:11.4'
+      # ratio: '8.4:10.87'
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+class: clear
+
+```{R, include = F}
+library(pacman)
+p_load(tidyverse, broom, kable, kableExtra, magrittr)
+```
+
+.mono[DUE] Your solutions to this problem set are due *before* midnight on Wednesday, 05 June 2019. Your files must be uploaded to [Canvas](https://canvas.uoregon.edu/).
+
+.mono.b[IMPORTANT] Your submission must include (1) **your responses/answers to the question in a PDF, Word, or similar file** and (2) the .mono[R] script you used to generate your answers. **The .mono[R] script is just for your code. To receive credit, your answers/figures/*etc.* must be in the PDF/Word document.** Each student must turn in her/his own answers.
+
+.mono[OBJECTIVE] This problem set has three purposes: (1) reinforce econometrics topics from class; (2) build your .mono[R] toolset; (3) strengthen your intuition on causality and time series.
+
+## Problem 1: Nonstationarity—the Basics
+
+**1a.** Define stationarity.
+
+*Note:* You can define it using math or words (or both).
+
+**1b.** If our disturbance term $u_t$ follows a .pink[random walk], *i.e.*,
+$$
+\begin{align}
+  u_{t} = u_{t-1} + \varepsilon_t
+\end{align}
+$$
+then it's variance is $\mathop{\text{Var}} \left( u_t \right) = t \sigma_{\varepsilon}^2$. Explain how this expression of its variance shows that the disturbance is .purple[nonstationary] (*i.e.*, it violates .pink[stationarity]).
+
+**1c.** We previously discussed autocorrelated distrubances, *e.g.*, an AR(1) process such that
+$$
+\begin{align}
+  u_{t} = \rho u_{t-1} + \varepsilon_t
+\end{align}
+$$
+Under which circumstances would this AR(1) process become a random walk?
+
+*Hint:* Consider the values of $\rho$.
+
+---
+class: clear
+
+## Problem 2: Nonstationarity—the Simulation
+
+In this problem, we are going to create two independent, .hi-purple[nonstationary] time series. Specifically, we'll create two random walks. Then, we'll regress the first random walk on the second random walk.
+
+*Hint:* Generating random walks is *nearly* identical to generating AR(1) processes, as you did in lab.
+
+**2a.** Generate the first 50-period random walk. We will name it `v`.
+$$
+\begin{align}
+  v_t = v_{t-1} + \varepsilon_t
+\end{align}
+$$
+where $\varepsilon_t$ comes from a normal distribution with mean 0 and standard deviation 1.
+
+Here is some .mono[R] to help.
+
+```{R, 2a_help, eval = F}
+# Set a seed (so your results stay the same)
+set.seed(1234)
+# Generate the initial number, (this will be v[1])
+v <- rnorm(1, mean = 0, sd = 1)
+# For loop to create the random walk
+for (t in 2:50) {
+  # Create the 'next' observation
+  ...
+}
+```
+while you're filling in the `for` loop, keep in mind (**1**) our equation for the random walk at the beginning of this question (meaning $v_t$ depends upon $v_{t-1}$ and $\varepsilon_t$) and (**2**) the fact that you can reference different observations in .mono[R], *e.g.*,
+
+- `v[t]` refers to the $t$.super[th] observation
+- `v[t-1]` refers to the $(t-1)$.super[th] observation
+- `v[3]` refers to the $3$.super[rd] observation
+
+If you need more help on for loops, don't forget there are lab materials on Canvas and resources online (*e.g.*, [datamentor.io](https://www.datamentor.io/r-programming/for-loop/) and [datacamp.com](https://www.datacamp.com/community/tutorials/tutorial-on-loops-in-r) have lots of resources).
+
+**2b.** Generate a second 50-period random walk called `w`. This part is exactly the same as (2a), but you **use a different seed** (*i.e.*, `set.seed(456)`) and **name the variable** `w`.
+
+**2c.** We .orange[independently] generated these two time series. Ideally (from a statistical point of view), should we find a statistically significant relationship between the two series? Explain.
+
+**2d.** Regress `w` on `v`. Report the results from the $t$ test. Do they match your expectations from (2c)? Explain.
+
+**2e.** As we've mentioned, one (simple) way you can work with the nonstationary from random walks is to take differences, _i.e._, $v_t - v_{t-1}$. The interpretation of the relationship does not change, whether we regress $w$ on $v$ or $\Delta w$ on $\Delta v$ (where $\Delta w = w_t - w_{t-1}$). In .mono[R], you can use the `diff()` function to take difference, _i.e._, `diff(v)` will calculate the differences for the variable `v`.
+
+Regress the differenced `w` on the differenced `v`. Does it change your results from **2d**?
+
+---
+class: clear
+
+## Problem 3: Causality
+
+Following the Rubin causal model, imagine that we observe the following data (which would be impossible observe in real life):
+
+.center[
+.bold[Table: Imaginary dataset]
+]
+```{R, 3a_table, echo = F, warning = F, message = F, error = F}
+rubin_df <- data.frame(
+  i = 1:4,
+  trt = rep(c(0,1), each = 2),
+  y1 = 1 + 2 * c(12, 7, 5, 6),
+  y0 = 1 + 2 * c(8, 5, 1, 4)
+)
+rubin_df %>%
+kable(
+  col.names = c(".math[i]", "Trt.", "y.sub[1]", "y.sub[0]"),
+  escape = F
+) %>%
+kable_styling(full_width = F) %>%
+row_spec(1:4, background = "white")
+```
+
+**3a.** Calculate the treatment effect **for each individaul** (*i.e.*, $\tau_i$).
+
+**3b.** **[T/F]** The treatment effect is constant across individuals.
+
+**3c.** Calculate the **average treatment effect**.
+
+**3d** **Estimate the average treatment effect** by comparing the **mean of the treatment group** to the **mean of the control group**.
+
+**3e.** Should we expect our estimator in (3d) to provide unbiased estimates? **Explain.**
+
+**3f.** Why would it be impossible to actually observe all of the data in the table (in real life)?
+
+**3g.** How does your answer in (3f) relate to *the fundametal problem of causal inference*?
+
+
+## Problem 4: Instrumental Variables
+
+**4a.** What are the two requirements for a valid instrument?
+
+**4b.** We're interested in estimating $\beta_1$ in
+$$
+\begin{align}
+  \text{Wage}_i = \beta_0 + \beta_1 \text{Education}_i + u_i
+\end{align}
+$$
+but we have a problem with omitted-variable bias. Instrumental variables can potentially help.
+
+As we've discussed, we need an instrument for (endogenous) education. Do you think the number of children would be a valid instrument? Explain why it passes/fails each of the two requirements for a valid instrument.
+
+**4c.** Which estimates would you trust more—OLS or IV, where number-of-children is your instrument? Explain.
+
+```{R, generate pdfs, include = F, eval = T}
+system("decktape remark ps04.html ps04.pdf --chrome-arg=--allow-file-access-from-files")
+```

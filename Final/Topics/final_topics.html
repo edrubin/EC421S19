@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>EC 421</title>
+    <meta charset="utf-8">
+    <link href="final_topics_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="final_topics_files/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+    <link href="final_topics_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
+    <link rel="stylesheet" href="my-css.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# EC 421
+## Final Topics from “New” Lectures
+### Spring 2019<br><br>.smallest[<strong>Note.sub[1]:</strong> The final exam will focus on the following topics. I will also assume an understanding of the material from the midterm.<br><br><strong>Note.sub[2]:</strong> As with the midterm, you do not need to memorize proofs. Understand the steps/reasoning. Intuition is paramount. I might ask how you get from one step to the next. I won’t ask you to write down a full proof.]
+
+---
+
+class: clear
+
+## Slide Set 7: Time Series
+
+- Notation
+- Assumptions
+- Static models
+- Dynamic models
+  - With lagged explanatory variables
+  - Autoregressive, distributed lag (ADL) models
+  - ADL(p,q)
+  - Long-run vs. short-run effects
+- Contemporaenous exogeneity
+
+## Slide Set 8: Autocorrelation
+
+- Definition of autocorrelation
+- Negative and positive autocorrelation
+- Equation/formula for AR(p) processes
+- OLS implications for static models and dynamic models with lagged explanatory variables
+- OLS implications/bias for dynamic models with lagged dependent variables
+- Breusch-Godfrey test
+  - Hypotheses
+  - Interpretation of results
+  - Conclusion
+- Misspecification
+- FGLS: General idea
+
+## Slide Set 9: Non-Stationary Time Series
+
+- Definition/requirements of nonstationarity
+  - Mean
+  - Variance
+  - Covariance
+- Random walks
+- Spurious correlations
+- Differencing
+
+---
+class: clear
+
+## Slide Set 10: Causality
+
+- Prediction vs. causal inference/estimation
+- Correlation vs. causation
+- Experiments/RCTs
+- The "ideal experiment" (ideal dataset)
+- Treatment effects:
+  - Individual effects
+  - Average treatment effects
+  - Constant treatment effects
+- Selection bias
+
+## Slide Set 11: Instrumental Variables
+
+- Exogeneity and endogeneity
+- Requirements for a valid instrument
+  - Relevant
+  - Exogenous
+- Probability limit
+- Venn diagrams
+- First stage and reduced form
+- Two-stage least squares
+  - Motivation
+  - First stage
+  - Second stage
+- Interpretation
+
+---
+exclude: true
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "8.5:11",
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script>
+(function() {
+  var i, text, code, codes = document.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+})();
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

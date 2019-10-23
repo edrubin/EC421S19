@@ -1,0 +1,337 @@
+---
+title: "EC 421"
+subtitle: "Midterm"
+author: "<br>12 February 2019"
+date: "<br><br>**Full Name** `<-`<br><br>**UO ID** `<-`<br><br><br>No phones, calculators, or outside materials."
+output:
+  xaringan::moon_reader:
+    css: ['default', 'metropolis', 'metropolis-fonts', 'my-css.css']
+    # self_contained: true
+    nature:
+      ratio: '8.5:11'
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+class: clear
+
+```{R, setup, include = F}
+# Packages
+library(pacman)
+p_load(ggplot2, gridExtra, ggthemes, latex2exp, dplyr, broom, knitr, magrittr)
+# Colors
+red_pink <- "#e64173"
+turquoise <- "#20B2AA"
+grey_light <- "grey70"
+grey_mid <- "grey50"
+grey_dark <- "grey20"
+# Themes
+theme_axes_y <- theme_void() + theme(
+  text = element_text(family = "sans"),
+  axis.title = element_text(size = 11),
+  plot.title = element_text(size = 11, hjust = 0.5),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, -0.2, 0, 0, unit = "lines")),
+  axis.text.y = element_text(
+    size = 10, angle = 0, hjust = 0.9, vjust = 0.5,
+    margin = margin(0, 0.4, 0, 0, unit = "lines")
+  ),
+  axis.line = element_line(
+    color = grey_light,
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.07, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_axes_x <- theme_void() + theme(
+  text = element_text(family = "sans"),
+  axis.title = element_text(size = 11),
+  plot.title = element_text(size = 11, hjust = 0.5),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, -0.2, 0, 0, unit = "lines")),
+  axis.text.x = element_text(
+    size = 10, angle = 0, hjust = 0.9, vjust = 0.5,
+    margin = margin(0, 0.4, 0, 0, unit = "lines")
+  ),
+  axis.line = element_line(
+    color = grey_light,
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.07, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_set(theme_gray(base_size = 11))
+# Knitr options
+opts_chunk$set(
+  comment = "#>",
+  fig.align = "center",
+  warning = F,
+  message = F
+)
+```
+
+
+## A. True/False and Multiple Choice
+
+**40 points**
+
+**Note:** You do not need to explain to your answers **in this section**.
+
+**01.** **[T/F]** (**2pts**) For the model $log(y_i) = \beta_0 + \beta_1 x_i + u_i$, we interpret the coefficient $\beta_1$ as the expected percentage change in $y_i$ due to a 1-percent increase in $x_i$.
+<br><br><br>
+
+**02.** **[T/F]** (**2pts**) The difference between the White test for heteroskedasticity and the Breusch-Pagan test for heteroskedasticity is that the Bruesch-Pagan test uses interactions and squared terms.
+<br><br><br>
+
+**03.** **[T/F]** (**2pts**) If the *p*-value corresponding to our estimate of $\beta_1$ is 0.08, then we reject the null hypothesis at the 5-percent level.
+<br><br><br>
+
+**04.** **[T/F]** (**2pts**) Heteroskedasticity occurs when $\mathop{E}\left[ u_i | x_i \right] \neq 0$.
+<br><br><br>
+
+**05.** **[T/F]** (**2pts**) Omitted-variable bias results in OLS estimates that are biased toward zero.
+<br><br><br>
+
+**06.** **[T/F]** (**2pts**) If we have an omitted variable, we can use weighted least squares (WLS) to avoid bias.
+<br><br><br>
+
+**07.** **[T/F]** (**2pts**) Exogeneity requires that the mean of the disturbances $\left( \mathop{E}\left[ u_i \right] \right)$ is uncorrelated with all explanatory variables $\left( x_i \right)$.
+<br><br><br>
+
+**08.** **[T/F]** (**2pts**) If you omit a variable from your regression, then you will have omitted-variable bias.
+<br><br><br>
+
+**09.** **[T/F]** (**2pts**) OLS's consistency is also affected by omitted-variable "bias".
+<br><br><br>
+
+---
+class: clear
+
+**10.** **[T/F]** (**2pts**) In the presence of heteroskedasticity, OLS estimates for the coefficients are biased.
+<br><br><br>
+
+**11.** **[T/F]** (**2pts**) In the presence of heteroskedasticity, OLS estimates for the standard errors are biased.
+<br><br><br>
+
+**12.** **[T/F]** (**2pts**) If an estimator is biased, then it is also inconsistent.
+<br><br><br>
+
+**13.** **[T/F]** (**2pts**) Weighted least squares (WLS) gives more weight to observations with low-variance disturbances and less weight to observations with high-variance disturbances.
+<br><br><br>
+
+**14.**  Consider the model $\text{Employed}_i = \beta_0 + \beta_1 \text{School}_i + \beta_2 \text{Female}_i + u_i$, where $\text{Employed}_i$ is a binary indicator for whether individual $i$ is employed, $\text{School}_i$ gives the number of years of schooling for individual $i$, and $\text{Female}_i$ is a binary indicator for whether $i$ is female.
+
+.move-right[
+**a.**  **[T/F]** (**2pts**) The coefficient $\beta_1$ gives the expected increase in the probability of employment (in *percentage points*) for a one-year increase in schooling (holding everything else constant).
+]
+
+<br><br><br>
+
+.move-right[
+**b.**  **[T/F]** (**2pts**) This model allows the effects of schooling to vary by gender.
+]
+
+<br><br>
+
+.move-right[
+**c.**  **[T/F]** (**2pts**) If race is correlated with education and does not affect employment status, then OLS estimates of $\beta_1$ will be biased.
+]
+
+<br><br><br><br>
+
+**15.** **Multiple choice** (**4pts**) Choose **all** correct answers.
+<br>If an estimator $\hat{\theta}$ is unbiased for $\theta$, then<br>
+  **A.**  $\hat\theta = \theta$
+  **B.**  $\mathop{E}\left[ \hat\theta \right] = \theta$
+  **C.**  $\text{plim}\!\left( \hat\theta \right) = \theta$
+  **D.**  $\mathop{E}\left[ \hat\theta \right] - \theta = 0$
+<br><br><br>
+
+**16.** **Multiple choice** (**4pts**) Choose **all** correct answers.
+<br>Which of the following are part of our assumptions?<br>
+  **A.**  $\mathop{E}\left[ u_i | x_i \right] = 0$
+  **B.**  $\mathop{\text{Var}} \left( x \right) = 0$
+  **C.**  $\mathop{E}\left[ u_i \right] = 0$
+  **D.**  $\mathop{\text{Var}} \left( u_i \right) = 0$
+
+---
+class: clear
+
+## B. Short Answer
+
+**60 points**
+
+**Note:** You will typically need to explain/justify your answers in this section.
+
+**17.** (**3pts**) Define what we mean by "the standard error of an estimator".
+<br><br><br><br><br><br><br><br><br><br>
+
+**18.** (**3pts**) What does it mean if the estimator $\hat{\beta}$ is consistent for $\beta$?
+<br><br><br><br><br><br><br><br><br><br>
+
+**19.** (**3pts**) What is the difference between $e_i$ and $u_i$ in the following models?
+$$
+\begin{align}
+  y_i &= \beta_0 + \beta_1 x_i + u_i \tag{a}\\
+  y_i &= \hat{\beta}_0 + \hat{\beta}_1 x_i + e_i \tag{b}
+\end{align}
+$$
+<br><br><br><br><br><br><br><br>
+
+---
+class: clear
+
+**20.** (**2pts**) What is measurement error?
+<br><br><br><br><br><br><br><br><br>
+
+**21.** (**2pts**) How does measurement error in an explanatory variable affect OLS estimates?
+<br><br><br><br><br><br><br><br>
+
+**22.** For the model $\text{Health}_i = \beta_0 + \beta_1 \text{Income}_i + u_i$
+
+.move-right[
+**a.** (**4pts**) Which **two** conditions must be true for an omitted variable to bias our estimates of $\beta_1$?
+]
+
+<br><br><br><br><br><br><br><br><br><br>
+
+.move-right[
+**b.** (**2pts**) Provide an example of an omitted variable that could cause bias in this scenario. Explain your reasoning.
+]
+
+---
+class: clear
+
+**23.** For the model $\text{Income}_i = \beta_0 + \beta_1 \text{Female}_i + u_i$, where $\text{Female}_i$ is a binary indicator for whether individual $i$ is female,
+
+.move-right[**a.** (**3pts**) The term .ul[.white[aaaaaaaaaa]] gives the average income for men.]
+
+<br><br><br>
+
+.move-right[**b.** (**3pts**) The term .ul[.white[aaaaaaaaaa]] gives the difference between the average income for women and the average income for men.]
+
+<br><br><br>
+
+.move-right[**c.** (**3pts**) The sum .ul[.white[aaaaaaaaaaaaaaaaaaaa]] gives the average income for women.]
+
+<br><br>
+
+**24.** In our proof of the consistency of the OLS estimator for $\beta_1$ (for simple linear regression), we showed
+$$
+\begin{align}
+  \mathop{\text{plim}} \hat{\beta}_1 = \beta_1 + \dfrac{\mathop{\text{Cov}}(x,\,u)}{\mathop{\text{Var}}(x)}
+\end{align}
+$$
+
+.move-right[
+**a.** (**2pts**) If the OLS estimator $\hat{\beta}_1$ is consistent for $\beta_1$, then what does the right-hand side of this equation equal?
+]
+
+<br><br><br><br><br><br>
+
+.move-right[
+**b.** (**3pts**) What is the "next step" (and last step) in this derivation? How/why do we get the result that OLS is indeed consistent for $\beta_1$?
+]
+
+<br><br><br><br><br><br><br>
+
+**25.** (**4pts**) Compare **and** contrast the concepts of consistency and unbiasedness.
+<br>*Hint:* "Compare" means how they are similar; "contrast" means how they differ.
+
+---
+class: clear
+
+**26.** Time for some drawing.
+
+.move-right[
+**a.** (**3pts**) For $y_i = \beta_0 + \beta_1 x_i + u_i$, draw a picture/plot that depicts **homoskedastic** disturbances. Make sure you label both axes. Add an explanation if you'd like.
+]
+
+<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+
+.move-right[
+**b.** (**3pts**) For $y_i = \beta_0 + \beta_1 x_i + u_i$, draw a picture/plot that depicts **heteroskedastic** disturbances. Make sure you label both axes. Add an explanation if you'd like.
+]
+
+---
+class: clear
+
+**27.** Suppose we model the relationship between crime and policing at the city level using
+$$
+\begin{align}
+  \text{Crime}_i = \beta_0 + \beta_1 \text{Police}_i + u_i \tag{2}
+\end{align}
+$$
+where $i$ indexes a city, $\text{Crime}_i$ gives the number of crimes committed in city $i$, and $\text{Police}_i$ gives the number of police officers working in city $i$.
+
+.move-right[
+**a.** (**2pts**) We estimate $\hat{\beta}_1 = -3.1$. How do we interpret this coefficient?
+]
+
+<br><br><br><br><br><br>
+
+.move-right[
+**b.** (**2pts**) We estimate $\hat{\beta}_0 = 537.3$. How do we interpret this coefficient? Explain why this interpretation doesn't really make sense.
+]
+
+<br><br><br><br><br><br><br>
+
+.move-right[
+**c.** (**5pts**) We're concerned about heteroskedasticity and decide to run a White test. Write out the steps we need to carry out to conduct a White test, describing each step (including any hypotheses, regression equations, *etc.*).
+]
+
+---
+class: clear
+
+.move-right[
+**d.** (**4pts**) Suppose we ran a White test and calculated an $LM$ test statistics of 7.3, which implies a *p*-value of 0.026 (using a $\chi^2$ with 2 degrees of freedom). What do we conclude from this test statistic and *p*-value? Include an interpretation.
+]
+
+<br><br><br><br><br><br><br><br><br><br>
+
+.move-right[
+**e.** (**2pts**) Which part of the White-test procedure that you outlined in part (**c.**) changes if we opt for a Breusch-Pagan test (as opposed to a White test)? What is the change?
+]
+
+<br><br><br><br><br><br><br><br>
+
+
+.move-right[
+**f.** (**2pts**) We are also concerned about omitted-variable bias—specifically with respect to a city's average income $\left( \text{Income}_i \right)$. In class we showed that the probability limit of the OLS estimator for $\beta_1$ is
+$$
+\begin{align}
+   \mathop{\text{plim}} \hat{\beta}_1 = \beta_1 + \beta_2 \dfrac{\mathop{\text{Cov}} \left(\text{Police},\, \text{Income} \right)}{\mathop{\text{Var}} \left( \text{Police} \right)} \tag{2}
+\end{align}
+$$
+If (*i*) cities with higher incomes have more police officers and (*ii*) higher incomes lead to less crime, then *how* (which direction) will OLS be biased for $\beta_1$ in equation $(2)$? Explain your answer.
+]
+
+---
+class: clear
+## C. Extra Credit
+
+**8 points**
+
+**EC.sub[1]** **[T/F]** (**2pts**) Omitted-variable bias has nothing to do with whether we interpret regression estimates as causal.
+
+<br><br>
+
+**EC.sub[2]** (**2pts**) Write down the regression equation that we would estimate in the following line of .mono[R] code (_i.e._, the equation with $\beta$s).
+
+```{R, ec-2, eval = F}
+lm(crime ~ police + income + police:income, data = city_df)
+```
+
+<br><br><br><br>
+
+**EC.sub[3]** (**2pts**) Draw a plot of disturbances that depicts a **violation of exogeneity**.
+
+<br><br><br><br><br><br><br><br>
+
+**EC.sub[4]** (**2pts**) Draw a plot of **heteroskedastic disturbances** for which the Goldfeld-Quandt test would fail to find significant evidence of heteroskedasticity.
+
+```{R, generate-pdfs, include = F, eval = T}
+system("decktape remark midterm.html midterm.pdf --chrome-arg=--allow-file-access-from-files")
+```

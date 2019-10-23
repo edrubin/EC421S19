@@ -1,0 +1,271 @@
+---
+title: "Problem Set 3"
+subtitle: "Time Series and Autocorrelation"
+author: "**EC 421:** Introduction to Econometrics"
+date: "<br>Due *before* midnight (11:59pm) on Wednesday, 29 May 2019"
+output:
+  xaringan::moon_reader:
+    css: ['default', 'metropolis', 'metropolis-fonts', 'my-css.css']
+    # self_contained: true
+    nature:
+      ratio: '8.5:11'
+      # ratio: '8.8:11.4'
+      # ratio: '8.4:10.87'
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+class: clear
+
+.mono[DUE] Your solutions to this problem set are due *before* midnight on Wednesday, 29 May 2019. Your files must be uploaded to [Canvas](https://canvas.uoregon.edu/).
+
+.mono.b[IMPORTANT] Your submission must include (1) **your responses/answers to the question in a PDF, Word, or similar file** and (2) the .mono[R] script you used to generate your answers. **The .mono[R] script is just for your code. To receive credit, your answers/figures/*etc.* must be in the PDF/Word document.** Each student must turn in her/his own answers.
+
+.mono[OBJECTIVE] This problem set has three purposes: (1) reinforce the econometrics topics we reviewed in class; (2) build your .mono[R] toolset; (3) start building your intuition about causality and time series within econometrics.
+
+## Problem 1: Time Series
+
+Imagine that we are interested in estimating the effect of monthly oil prices on monthly natural gas prices. The dataset `ps03_data.csv` contains these prices—the monthly average oil price (the price in dollars per barrel of *Brent Crude oil*, as measured by the [US EIA](https://www.eia.gov/dnav/pet/hist/RBRTED.htm)) and the monthly average price of natural gas (dollars per million BTUs for natural gas at the *Henry Hub*, recorded by the [US EIA](https://www.eia.gov/dnav/ng/hist/rngwhhdm.htm)).
+
+The table on the last page describes the variables in this dataset.
+
+**1a.** First, we consider the possibility that $P_t^\text{Oil}$ (the price of oil in month $t$) only depends upon a constant $\beta_0$, $P_t^\text{Gas}$ (the price of natural gas in month $t$), and a random disturbance $u_t$.
+
+$$
+\begin{align}
+  P_t^\text{Oil} = \beta_0 + \beta_1 P_t^\text{Gas} + u_t \tag{1a}
+\end{align}
+$$
+
+If model $(1\text{a})$ is the true model, should we expect OLS to be consistent for $\beta_1$? **Explain.**
+
+**1b.** Read `ps03_data.csv` and summarize them.
+
+How many observations do you have? Which months/years do they cover? (*Hint:* use `nrow()`, `head()`, and `tail()`).
+
+Now estimate model $(1\text{a})$ with OLS. Interpret your estimate for $\beta_1$ and comment on its statistical significance.
+
+```{R, key 1b, message = F, include = F}
+# Load packages
+library(pacman)
+p_load(tidyverse, broom, here)
+# Load data
+price_df <- read_csv("ps03_data.csv")
+# Estimate model 1a with OLS
+ols_1a <- lm(price_oil ~ price_gas, data = price_df)
+# Results
+tidy(ols_1a)
+```
+
+**1c.** In (1b), you should have found that the coefficient on $P_t^\text{Gas}$ is statistically significant. Does this finding also mean that the price of natural gas explains a lot of the variation in the price of oil?
+
+*Hint:* What is the R.super[2]? (In .mono[R], you can find R.super[2] using `summary()` applied to a model you estimated with `lm()`.)
+
+```{R, key 1c, message = F, include = F}
+summary(ols_1a)
+```
+
+**1d.** The model that we estimated in (1a) is a static model—meaning it does not allow previous periods' prices to affect the current price of oil. Suppose we think believe that the previous two months' natural gas prices also affect the price of oil, *i.e.*,
+
+$$
+\begin{align}
+  P_t^\text{Oil} = \beta_0 + \beta_1 P_t^\text{Gas} + \beta_2 P_{t-1}^\text{Gas} + \beta_3 P_{t-2}^\text{Gas} + u_t \tag{1d}
+\end{align}
+$$
+
+Estimate this model and compare your new estimate for $\beta_1$ to your previous estimate (from model 1a).
+
+*Hint:* Use the function `lag(x, n)` from the `dplyr` package to take the `n`.sup[th] lag of variable `x`.
+
+---
+class: clear
+
+```{R, key 1d, include = F}
+# Estimate model 1a with OLS
+ols_1d <- lm(
+  price_oil ~ price_gas + lag(price_gas, 1) + lag(price_gas, 2),
+  data = price_df
+)
+# Results
+tidy(ols_1d)
+```
+
+**1e.** Interpret your estimated coefficients for $\beta_2$ and $\beta_3$. Are they statistically significant?
+
+**1f.** Has the amount of variation that we can explain increased very much? Compare the R.super[2] values for model (1a) and (1d). Also consider the *adjusted* R.super[2].
+
+**1g.** Formally test model $(1\text{a})$ vs. model $(1\text{d})$ using an $F$ test.
+
+*Hint:* You can test one model against another model in .mono[R] using the `waldtest()` function from the `lmtest` package. For example,
+
+```{R, hint 1e, eval = F}
+# OLS model of y on x and two lags
+est_model <- lm(y ~ x + lag(x) + lag(x, 2), data = example_df)
+# Jointly test the coefficients on lag(x) and lag(x, 2)
+waldtest(est_model, c("lag(x)", "lag(x, 2)"), test = "F")
+```
+calculates an $F$ test for the coefficients on `lag(x)` and `lag(x, 2)` in the model `est_model`.
+
+**Note:** For some reason, `lag(x, n)` needs to have a space between the comma (`,`) and `n` when you use `waldtest` to test lags.
+
+```{R, key 1e, include = F}
+# Load 'lmtest'
+p_load(lmtest)
+# F test
+waldtest(ols_1d, c("lag(price_gas, 1)", "lag(price_gas, 2)"))
+```
+
+**1h.** If model $(1\text{d})$ is the true model, should we expect OLS to be consistent for $\beta_1$? **Explain.**
+
+**1i.** Suppose we now think that the actual model includes the current price of natural gas *and* the previous month's prices of natural gas and oil, *i.e.*,
+
+$$
+\begin{align}
+  P_t^\text{Oil} = \beta_0 + \beta_1 P_t^\text{Gas} + \beta_2 P_{t-1}^\text{Gas} + \beta_3 P_{t-1}^\text{Oil} + u_t \tag{1i}
+\end{align}
+$$
+
+Estimate this model. Interpret the coefficients on $\beta_1$ and $\beta_3$. How has your estimate on $\beta_1$ changed?
+
+```{R, key 1i, include = F}
+# Estimate model 1a with OLS
+ols_1i <- lm(
+  price_oil ~ price_gas + lag(price_gas, 1) + lag(price_oil, 1),
+  data = price_df
+)
+# Results
+tidy(ols_1i)
+```
+
+**1j.** Compare the R.super[2] from model $(1\text{i})$ to the R.super[2]s of the previous models. Explain what happened.
+
+**1k.** Plot the prices against time. Does it look like we should be concerned about nonstationarity? Explain.
+
+**1l.** If we assume $u_t$ in $(1\text{i})$ (**A**) follows our assumption of *contemporaneous exogeneity* and (**B**) is not autocorrelated, should we expect OLS to produce consistent estimates for the $\beta$s in this model? **Explain.**
+
+---
+class: clear
+
+## Problem 2: Autocorrelation
+
+**2a.** After starting to estimate these time-series models, you remember that autocorrelation affects OLS. For each of the three models above (1a, 1d, and 1i), explain how autocorrelation will affect OLS.
+
+**2b.** Add the residuals from your estimate of model $(1\text{i})$ to your dataset.
+
+**Important:** Don't forget that you will need to tell .mono[R] that you have a missing observation (since we have a lag in our model).
+
+```{R, hint 2b}
+# Add residuals from our estimated model in 1i to dataset 'price_df'
+price_df$e_1i <- c(NA, residuals(ols_1i))
+```
+
+Here, I'm adding a new column to the dataset `price_df` for the residuals from the model I saved as `ols_1i`. The first observation is missing, because our model `ols_1i` includes a single lag.
+
+**2c.** Construct two plots with the residuals from $(1\text{i})$: .hi[1] plot the residuals against the time variable (`t_month`) and .hi[2] plot the residuals against their lag. Do you see any evidence of autocorrelation? What would autocorrelation look like?
+
+I strongly encourage you to use `ggplot2` for these graphs.
+
+```{R, key 2c, fig.height = 3, warning = F, include = F}
+# Load 'ggplot2' and 'ggthemes' packages
+p_load(ggplot2, ggthemes)
+# Plot 1: Residuals over time
+ggplot(data = price_df, aes(x = t_month, y = e_1i)) +
+geom_path(size = 0.3) +
+geom_point() +
+xlab("Time") + ylab("Residual (1i)") +
+theme_pander()
+# Plot 2: Residuals against their lags
+ggplot(data = price_df, aes(x = lag(e_1i), y = e_1i)) +
+geom_point() +
+xlab("Lagged residual (1i)") + ylab("Residual (1i)") +
+theme_pander()
+```
+
+**2d.** Add the residuals from the models in $(1\text{a})$ and $(1\text{d})$ to your dataset. See below (we have to keep track of missing observations due to lags).
+
+```{R, hint 2d, include = T}
+# Residuals from the model in 1a
+price_df$e_1a <- residuals(ols_1a)
+# Residuals from the model in 1d
+price_df$e_1d <- c(NA, NA, residuals(ols_1d))
+```
+
+**2e.** Repeat the plots from above—.hi[1] plot the residuals against the time variable (`t_month`) and .hi[2] plot the residuals against their lag—for both sets of residuals, *i.e.*, for the residuals from $(1\text{a})$ and for the residuals from $(1\text{d})$. You should end up with four graphs for this part.
+
+
+```{R, key 2e 1a, fig.height = 3, warning = F, include = F}
+# Plot 1a 1: Residuals over time
+ggplot(data = price_df, aes(x = t_month, y = e_1a)) +
+geom_path(size = 0.3) +
+geom_point() +
+xlab("Time") + ylab("Residual (1a)") +
+theme_pander()
+# Plot 1a 2: Residuals against their lags
+ggplot(data = price_df, aes(x = lag(e_1a), y = e_1a)) +
+geom_point() +
+xlab("Lagged residual (1a)") + ylab("Residual (1a)") +
+theme_pander()
+```
+
+```{R, key 2e 1d, fig.height = 3, warning = F, include = F}
+# Plot 1d 1: Residuals over time
+ggplot(data = price_df, aes(x = t_month, y = e_1d)) +
+geom_path(size = 0.3) +
+geom_point() +
+xlab("Time") + ylab("Residual (1d)") +
+theme_pander()
+# Plot 1d 2: Residuals against their lags
+ggplot(data = price_df, aes(x = lag(e_1d), y = e_1d)) +
+geom_point() +
+xlab("Lagged residual (1d)") + ylab("Residual (1d)") +
+theme_pander()
+```
+
+**2f.** Why do you think the residuals from $(1\text{a})$ and $(1\text{d})$ appear to have autocorrelation, while the residuals in $(1\text{i})$ show much less evidence of autocorrelation?
+
+*Hint:* Think back to our discussion of the ways we can work/live with autocorrelation.
+
+**2g.** Following the steps for the Breusch-Godfrey test that we discussed in class, test the residuals from the model in $(1\text{i})$ for second-order autocorrelation.
+
+*Hint:* You can use the `waldtest()` from the `lmtest` package, as shown in the lecture slides.
+
+```{R, key 2g, include = F}
+# Regress residuals on explanatory variables and two lags of residuals
+bg_2g <- lm(
+  e_1i ~ price_gas + lag(price_gas, 1) + lag(price_oil, 1) + lag(e_1i, 1) + lag(e_1i, 2),
+  data = price_df
+)
+# F test
+waldtest(bg_2g, c("lag(e_1i, 1)", "lag(e_1i, 2)"))
+```
+
+**2h.** If we assume $u_t$ is **not** autocorrelated, then can we trust OLS to be consistent for its estimates of the coefficients in model $(1\text{i})$? **Explain.**
+
+**2i.** Should we interpret our estimates from $(1\text{i})$ as causal? **Explain.**
+
+---
+class: clear
+
+### Description of variables and names
+<br>
+```{R, background variables, echo = F, warning = F, message = F, error = F}
+p_load(kable, kableExtra)
+var_tbl <- data.frame(
+  Variable = names(price_df) %>% magrittr::extract(1:7) %>% paste0(".mono-small[", ., "]"),
+  Description = c(
+    "The observation's month and year (.mono-small[character])",
+    "The month (.mono-small[numeric])",
+    "The year (.mono-small[numeric])",
+    "The average (Henry Hub) price of natural gas, $ per 1MM BTU (.mono-small[numeric])",
+    "The average (Brent Crude) price of oil, $ per barrel (.mono-small[numeric])",
+    "Time, measured by months in the dataset (.mono-small[numeric])",
+    "Time, approximately by fractions of years (.mono-small[numeric])"
+  )
+)
+kable(var_tbl) %>%
+  kable_styling(full_width = F)
+```
+
+```{R, generate pdfs, include = F, eval = T}
+system("decktape remark ps03.html ps03.pdf --chrome-arg=--allow-file-access-from-files")
+```

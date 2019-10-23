@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Problem Set 3</title>
+    <meta charset="utf-8">
+    <meta name="author" content="EC 421: Introduction to Econometrics" />
+    <link href="ps03_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="ps03_files/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+    <link href="ps03_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
+    <script src="ps03_files/kePrint-0.0.1/kePrint.js"></script>
+    <link rel="stylesheet" href="my-css.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Problem Set 3
+## Time Series and Autocorrelation
+### <strong>EC 421:</strong> Introduction to Econometrics
+### <br>Due <em>before</em> midnight (11:59pm) on Wednesday, 29 May 2019
+
+---
+
+class: clear
+
+.mono[DUE] Your solutions to this problem set are due *before* midnight on Wednesday, 29 May 2019. Your files must be uploaded to [Canvas](https://canvas.uoregon.edu/).
+
+.mono.b[IMPORTANT] Your submission must include (1) **your responses/answers to the question in a PDF, Word, or similar file** and (2) the .mono[R] script you used to generate your answers. **The .mono[R] script is just for your code. To receive credit, your answers/figures/*etc.* must be in the PDF/Word document.** Each student must turn in her/his own answers.
+
+.mono[OBJECTIVE] This problem set has three purposes: (1) reinforce the econometrics topics we reviewed in class; (2) build your .mono[R] toolset; (3) start building your intuition about causality and time series within econometrics.
+
+## Problem 1: Time Series
+
+Imagine that we are interested in estimating the effect of monthly oil prices on monthly natural gas prices. The dataset `ps03_data.csv` contains these prices—the monthly average oil price (the price in dollars per barrel of *Brent Crude oil*, as measured by the [US EIA](https://www.eia.gov/dnav/pet/hist/RBRTED.htm)) and the monthly average price of natural gas (dollars per million BTUs for natural gas at the *Henry Hub*, recorded by the [US EIA](https://www.eia.gov/dnav/ng/hist/rngwhhdm.htm)).
+
+The table on the last page describes the variables in this dataset.
+
+**1a.** First, we consider the possibility that `\(P_t^\text{Oil}\)` (the price of oil in month `\(t\)`) only depends upon a constant `\(\beta_0\)`, `\(P_t^\text{Gas}\)` (the price of natural gas in month `\(t\)`), and a random disturbance `\(u_t\)`.
+
+$$
+`\begin{align}
+  P_t^\text{Oil} = \beta_0 + \beta_1 P_t^\text{Gas} + u_t \tag{1a}
+\end{align}`
+$$
+
+If model `\((1\text{a})\)` is the true model, should we expect OLS to be consistent for `\(\beta_1\)`? **Explain.**
+
+**1b.** Read `ps03_data.csv` and summarize them.
+
+How many observations do you have? Which months/years do they cover? (*Hint:* use `nrow()`, `head()`, and `tail()`).
+
+Now estimate model `\((1\text{a})\)` with OLS. Interpret your estimate for `\(\beta_1\)` and comment on its statistical significance.
+
+
+
+**1c.** In (1b), you should have found that the coefficient on `\(P_t^\text{Gas}\)` is statistically significant. Does this finding also mean that the price of natural gas explains a lot of the variation in the price of oil?
+
+*Hint:* What is the R.super[2]? (In .mono[R], you can find R.super[2] using `summary()` applied to a model you estimated with `lm()`.)
+
+
+
+**1d.** The model that we estimated in (1a) is a static model—meaning it does not allow previous periods' prices to affect the current price of oil. Suppose we think believe that the previous two months' natural gas prices also affect the price of oil, *i.e.*,
+
+$$
+`\begin{align}
+  P_t^\text{Oil} = \beta_0 + \beta_1 P_t^\text{Gas} + \beta_2 P_{t-1}^\text{Gas} + \beta_3 P_{t-2}^\text{Gas} + u_t \tag{1d}
+\end{align}`
+$$
+
+Estimate this model and compare your new estimate for `\(\beta_1\)` to your previous estimate (from model 1a).
+
+*Hint:* Use the function `lag(x, n)` from the `dplyr` package to take the `n`.sup[th] lag of variable `x`.
+
+---
+class: clear
+
+
+
+**1e.** Interpret your estimated coefficients for `\(\beta_2\)` and `\(\beta_3\)`. Are they statistically significant?
+
+**1f.** Has the amount of variation that we can explain increased very much? Compare the R.super[2] values for model (1a) and (1d). Also consider the *adjusted* R.super[2].
+
+**1g.** Formally test model `\((1\text{a})\)` vs. model `\((1\text{d})\)` using an `\(F\)` test.
+
+*Hint:* You can test one model against another model in .mono[R] using the `waldtest()` function from the `lmtest` package. For example,
+
+
+```r
+# OLS model of y on x and two lags
+est_model &lt;- lm(y ~ x + lag(x) + lag(x, 2), data = example_df)
+# Jointly test the coefficients on lag(x) and lag(x, 2)
+waldtest(est_model, c("lag(x)", "lag(x, 2)"), test = "F")
+```
+calculates an `\(F\)` test for the coefficients on `lag(x)` and `lag(x, 2)` in the model `est_model`.
+
+**Note:** For some reason, `lag(x, n)` needs to have a space between the comma (`,`) and `n` when you use `waldtest` to test lags.
+
+
+
+**1h.** If model `\((1\text{d})\)` is the true model, should we expect OLS to be consistent for `\(\beta_1\)`? **Explain.**
+
+**1i.** Suppose we now think that the actual model includes the current price of natural gas *and* the previous month's prices of natural gas and oil, *i.e.*,
+
+$$
+`\begin{align}
+  P_t^\text{Oil} = \beta_0 + \beta_1 P_t^\text{Gas} + \beta_2 P_{t-1}^\text{Gas} + \beta_3 P_{t-1}^\text{Oil} + u_t \tag{1i}
+\end{align}`
+$$
+
+Estimate this model. Interpret the coefficients on `\(\beta_1\)` and `\(\beta_3\)`. How has your estimate on `\(\beta_1\)` changed?
+
+
+
+**1j.** Compare the R.super[2] from model `\((1\text{i})\)` to the R.super[2]s of the previous models. Explain what happened.
+
+**1k.** Plot the prices against time. Does it look like we should be concerned about nonstationarity? Explain.
+
+**1l.** If we assume `\(u_t\)` in `\((1\text{i})\)` (**A**) follows our assumption of *contemporaneous exogeneity* and (**B**) is not autocorrelated, should we expect OLS to produce consistent estimates for the `\(\beta\)`s in this model? **Explain.**
+
+---
+class: clear
+
+## Problem 2: Autocorrelation
+
+**2a.** After starting to estimate these time-series models, you remember that autocorrelation affects OLS. For each of the three models above (1a, 1d, and 1i), explain how autocorrelation will affect OLS.
+
+**2b.** Add the residuals from your estimate of model `\((1\text{i})\)` to your dataset.
+
+**Important:** Don't forget that you will need to tell .mono[R] that you have a missing observation (since we have a lag in our model).
+
+
+```r
+# Add residuals from our estimated model in 1i to dataset 'price_df'
+price_df$e_1i &lt;- c(NA, residuals(ols_1i))
+```
+
+Here, I'm adding a new column to the dataset `price_df` for the residuals from the model I saved as `ols_1i`. The first observation is missing, because our model `ols_1i` includes a single lag.
+
+**2c.** Construct two plots with the residuals from `\((1\text{i})\)`: .hi[1] plot the residuals against the time variable (`t_month`) and .hi[2] plot the residuals against their lag. Do you see any evidence of autocorrelation? What would autocorrelation look like?
+
+I strongly encourage you to use `ggplot2` for these graphs.
+
+
+
+**2d.** Add the residuals from the models in `\((1\text{a})\)` and `\((1\text{d})\)` to your dataset. See below (we have to keep track of missing observations due to lags).
+
+
+```r
+# Residuals from the model in 1a
+price_df$e_1a &lt;- residuals(ols_1a)
+# Residuals from the model in 1d
+price_df$e_1d &lt;- c(NA, NA, residuals(ols_1d))
+```
+
+**2e.** Repeat the plots from above—.hi[1] plot the residuals against the time variable (`t_month`) and .hi[2] plot the residuals against their lag—for both sets of residuals, *i.e.*, for the residuals from `\((1\text{a})\)` and for the residuals from `\((1\text{d})\)`. You should end up with four graphs for this part.
+
+
+
+
+
+
+**2f.** Why do you think the residuals from `\((1\text{a})\)` and `\((1\text{d})\)` appear to have autocorrelation, while the residuals in `\((1\text{i})\)` show much less evidence of autocorrelation?
+
+*Hint:* Think back to our discussion of the ways we can work/live with autocorrelation.
+
+**2g.** Following the steps for the Breusch-Godfrey test that we discussed in class, test the residuals from the model in `\((1\text{i})\)` for second-order autocorrelation.
+
+*Hint:* You can use the `waldtest()` from the `lmtest` package, as shown in the lecture slides.
+
+
+
+**2h.** If we assume `\(u_t\)` is **not** autocorrelated, then can we trust OLS to be consistent for its estimates of the coefficients in model `\((1\text{i})\)`? **Explain.**
+
+**2i.** Should we interpret our estimates from `\((1\text{i})\)` as causal? **Explain.**
+
+---
+class: clear
+
+### Description of variables and names
+&lt;br&gt;
+&lt;table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;"&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Variable &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; Description &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; .mono-small[month_year] &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; The observation's month and year (.mono-small[character]) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; .mono-small[month] &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; The month (.mono-small[numeric]) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; .mono-small[year] &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; The year (.mono-small[numeric]) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; .mono-small[price_gas] &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; The average (Henry Hub) price of natural gas, $ per 1MM BTU (.mono-small[numeric]) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; .mono-small[price_oil] &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; The average (Brent Crude) price of oil, $ per barrel (.mono-small[numeric]) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; .mono-small[t_month] &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Time, measured by months in the dataset (.mono-small[numeric]) &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; .mono-small[t] &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Time, approximately by fractions of years (.mono-small[numeric]) &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "8.5:11",
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script>
+(function() {
+  var i, text, code, codes = document.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+})();
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

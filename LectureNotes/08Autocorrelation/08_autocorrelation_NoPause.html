@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Autocorrelation</title>
+    <meta charset="utf-8">
+    <meta name="author" content="Edward Rubin" />
+    <meta name="date" content="2019-05-20" />
+    <link href="08_autocorrelation_NoPause_files/remark-css/default.css" rel="stylesheet" />
+    <link href="08_autocorrelation_NoPause_files/remark-css/metropolis.css" rel="stylesheet" />
+    <link href="08_autocorrelation_NoPause_files/remark-css/metropolis-fonts.css" rel="stylesheet" />
+    <link rel="stylesheet" href="my-css.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Autocorrelation
+## EC 421, Set 8
+### Edward Rubin
+### 20 May 2019
+
+---
+
+class: inverse, middle
+
+
+
+# Prologue
+
+---
+name: schedule
+
+# Schedule
+
+## Last Time
+
+Midterm `+` Introduction to time series `+` Autocorrelation
+
+## Today
+
+Autocorrelation
+
+## Upcoming
+
+Assignment 3 soon.
+
+---
+layout: true
+# .mono[R] showcase
+---
+name: r_showcase
+
+## .mono[ggplot2]
+
+I previously mentioned the .mono[R] package `ggplot2`.
+
+Today, I'm going to show you a bit of the basics of `ggplot2`.
+
+## Functions
+
+I'm also going to tell you a bit about writing your own functions.
+
+---
+layout: true
+# .mono[ggplot2]
+---
+name: ggplot2
+
+
+
+The `ggplot` function `aes` arguments define variables from `data`.
+
+
+```r
+ggplot(data = birth_df, aes(x = time, y = births))
+```
+
+&lt;img src="08_autocorrelation_NoPause_files/figure-html/gg1-1.svg" style="display: block; margin: auto;" /&gt;
+---
+count: false
+
+You can apply mathematical operators to the variables.
+
+
+```r
+ggplot(data = birth_df, aes(x = time, y = births/10000))
+```
+
+&lt;img src="08_autocorrelation_NoPause_files/figure-html/gg2-1.svg" style="display: block; margin: auto;" /&gt;
+---
+count: false
+
+You add *geometries* (points, lines, *etc*.) layer by layer.
+
+
+```r
+ggplot(data = birth_df, aes(x = time, y = births/10000)) +
+  geom_point()
+```
+
+&lt;img src="08_autocorrelation_NoPause_files/figure-html/gg3-1.svg" style="display: block; margin: auto;" /&gt;
+---
+count: false
+
+Color is easy.
+
+
+```r
+ggplot(data = birth_df, aes(x = time, y = births/10000)) +
+  geom_point(color = "deeppink")
+```
+
+&lt;img src="08_autocorrelation_NoPause_files/figure-html/gg4-1.svg" style="display: block; margin: auto;" /&gt;
+---
+count: false
+
+You can even use variables to color.
+
+
+```r
+ggplot(data = birth_df, aes(x = time, y = births/10000)) +
+  geom_point(aes(color = post_ww2))
+```
+
+&lt;img src="08_autocorrelation_NoPause_files/figure-html/gg5-1.svg" style="display: block; margin: auto;" /&gt;
+---
+count: false
+
+Add labels
+
+
+```r
+ggplot(data = birth_df, aes(x = time, y = births/10000)) +
+  geom_point() +
+  xlab("Time") + ylab("Births (10,000s)")
+```
+
+&lt;img src="08_autocorrelation_NoPause_files/figure-html/gg6-1.svg" style="display: block; margin: auto;" /&gt;
+---
+count: false
+
+Change the theme...
+
+
+```r
+ggplot(data = birth_df, aes(x = time, y = births/10000)) +
+  geom_point() +
+  xlab("Time") + ylab("Births (10,000s)") +
+  theme_pander(base_size = 20)
+```
+
+&lt;img src="08_autocorrelation_NoPause_files/figure-html/gg7-1.svg" style="display: block; margin: auto;" /&gt;
+---
+count: false
+
+Add other geometries—_e.g._, connect the dots (`line`) and a regression line
+
+
+```r
+ggplot(data = birth_df, aes(x = time, y = births/10000)) +
+  geom_line(color = "grey85") +
+  geom_point() +
+  geom_smooth(se = F, method = lm) +
+  xlab("Time") + ylab("Births (10,000s)") +
+  theme_pander(base_size = 20)
+```
+
+&lt;img src="08_autocorrelation_NoPause_files/figure-html/gg8-1.svg" style="display: block; margin: auto;" /&gt;
+---
+count: false
+
+Compare births and its 9-month lag...
+
+
+```r
+ggplot(data = birth_df, aes(x = lag(births, 9)/10000, y = births/10000)) +
+  geom_line(color = "grey85") +
+  geom_point() +
+  geom_smooth(se = F) +
+  xlab("Births 9 months ago (10,000s)") + ylab("Births (10,000s)") +
+  theme_pander(base_size = 20)
+```
+
+&lt;img src="08_autocorrelation_NoPause_files/figure-html/gg9-1.svg" style="display: block; margin: auto;" /&gt;
+---
+layout: true
+# Writing functions
+---
+name: functions
+## Functions are everywhere
+
+Everything you do in .mono[R] involves some sort of function, _e.g._,
+- `mean()`
+- `lm()`
+- `summary()`
+- `read_csv()`
+- `ggplot()`
+- `+`
+
+The basic idea in .mono[R] is doing things to objects with functions.
+---
+
+## Functions can help
+
+We write functions to make life easier. Instead of copying and pasting the same line of code a million times, you can write one function.
+
+In .mono[R], you use the `function()` function to write functions.&lt;sup&gt;.pink[†]&lt;/sup&gt;
+
+.footnote[
+.pink[†] Meta, right?
+]
+
+
+```r
+# Our first function
+the_name &lt;- function(arg1, arg2) {
+  # Insert code that involves arg1 and arg2 (this is where the magic happens)
+}
+```
+- `the_name`: The name we are giving to our new function.
+- `arg1`: The first argument of our function.
+- `arg2`: The second argument of our function.
+---
+
+## Our first real function
+
+Let's write a function that multiplies two numbers. (It needs two arguments.)
+
+
+```r
+# Create our function
+the_product &lt;- function(x, y) {
+  x * y
+}
+```
+
+Did it work?
+
+
+
+```r
+the_product(7, 15)
+```
+
+```
+#&gt; [1] 105
+```
+
+.bigger[💪]
+---
+
+## Functions can do anything
+
+... that you tell them.
+
+If you are going to repeat a task (_e.g._, a simulation), then you have a good situation for writing your own function.
+
+.mono[R] offers many functions (via its many packages), but you will sometimes find a scenario for which no one has written a function.
+
+Now you know how to write your own.
+
+
+```r
+# An ad lib function
+ad_lib &lt;- function(noun1, verb1, noun2) {
+  paste("The next", noun1, "of our lecture", verb1, noun2)
+}
+```
+---
+
+
+```r
+ad_lib(noun1 = "part", verb1 = "reviews", noun2 = "time series.")
+```
+
+```
+#&gt; [1] "The next part of our lecture reviews time series."
+```
+
+---
+layout: true
+# Time series
+## Review
+---
+class: inverse, middle
+---
+name: review
+
+Changes to our model/framework.
+
+- Our model now has `\(\color{#e64173}{t}\)` subscripts for .hi[time periods].
+
+- .hi[Dynamic models] allow .hi[lags] of explanatory and/or outcome variables.
+
+- We changed our **exogeneity** assumption to .hi[contemporaneous exogeneity], _i.e._, `\(\mathop{\boldsymbol{E}}\left[ u_t \middle| X_t \right] = 0\)`
+
+- Including .hi-orange[lags of outcome variables] can lead to .hi[biased coefficient estimates] from OLS.
+
+- .hi-orange[Lagged explanatory variables] make .hi[OLS inefficient].
+
+---
+layout: false
+class: inverse, middle
+
+# Autocorrelation
+---
+layout: false
+name: intro
+# Autocorrelation
+## What is it?
+
+.hi[Autocorrelation] occurs when our disturbances are correlated over time, _i.e._, `\(\mathop{\text{Cov}} \left( u_t,\, u_s \right) \neq 0\)` for `\(t\neq s\)`.
+
+
+Another way to think about: If the *shock* from disturbance `\(t\)` correlates with "nearby" shocks in `\(t-1\)` and `\(t+1\)`.
+
+
+*Note:* **Serial correlation** and **autocorrelation** are the same thing.
+
+
+Why is autocorrelation prevalent in time-series analyses?
+---
+class: clear
+
+.hi-slate[Positive autocorrelation]: Disturbances `\(\left( u_t \right)\)` over time
+&lt;img src="08_autocorrelation_NoPause_files/figure-html/positive auto u-1.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+
+.hi-slate[Positive autocorrelation]: Outcomes `\(\left( y_t \right)\)` over time
+&lt;img src="08_autocorrelation_NoPause_files/figure-html/positive auto y-1.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+
+.hi-slate[Negative autocorrelation]: Disturbances `\(\left( u_t \right)\)` over time
+&lt;img src="08_autocorrelation_NoPause_files/figure-html/negative auto u-1.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+
+.hi-slate[Negative autocorrelation]: Outcomes `\(\left( y_t \right)\)` over time
+&lt;img src="08_autocorrelation_NoPause_files/figure-html/negative auto y-1.svg" style="display: block; margin: auto;" /&gt;
+---
+layout: true
+# Autocorrelation
+## In static time-series models
+---
+name: static_models
+
+Let's start with a very common model: a static time-series model whose disturbances exhibit .hi[first-order autocorrelation], *a.k.a.* .pink[AR(1)]:
+
+$$
+`\begin{align}
+  \text{Births}_t &amp;= \beta_0 + \beta_1 \text{Income}_t + u_t
+\end{align}`
+$$
+where
+$$
+`\begin{align}
+  \color{#e64173}{u_t} = \color{#e64173}{\rho \, u_{t-1}} + \varepsilon_t
+\end{align}`
+$$
+and the `\(\varepsilon_t\)` are independently and identically distributed (*i.i.d.*).
+
+
+.hi-purple[Second-order autocorrelation], or .purple[AR(2)], would be
+
+$$
+`\begin{align}
+  \color{#6A5ACD}{u_t} = \color{#6A5ACD}{\rho_1 u_{t-1}} + \color{#6A5ACD}{\rho_2 u_{t-2}} + \varepsilon_t
+\end{align}`
+$$
+---
+
+An .turquoise[AR(p)] model/process has a disturbance structure of
+
+$$
+`\begin{align}
+  u_t = \sum_{j=1}^\color{#20B2AA}{p} \rho_j u_{t-j} + \varepsilon_t
+\end{align}`
+$$
+
+allowing the current disturbance to correlated with up to `\(\color{#20B2AA}{p}\)` of its lags.
+
+---
+layout: false
+name: ols_static
+# Autocorrelation
+## OLS
+
+For **static models** or **dynamic models with lagged explanatory variables**, in the presence of autocorrelation
+
+1. OLS provides .pink[**unbiased** estimates for the coefficients.]
+
+1. OLS creates .pink[**biased** estimates for the standard errors.]
+
+1. OLS is .pink[**inefficient**.]
+
+*Recall:* Same implications as heteroskedasticity.
+
+Autocorrelation get trickier with lagged outcome variables.
+---
+layout: true
+# Autocorrelation
+## OLS and lagged outcome variables
+---
+name: ols_adl
+
+Consider a model with one lag of the outcome variable—ADL(1, 0)—model with AR(1) disturbances
+
+$$
+`\begin{align}
+  \text{Births}_t = \beta_0 + \beta_1 \text{Income}_t + \beta_2 \text{Births}_{t-1} + u_t
+\end{align}`
+$$
+where
+$$
+`\begin{align}
+  u_t = \rho u_{t-1} + \varepsilon_t
+\end{align}`
+$$
+
+
+**Problem:**
+ Both `\(\text{Births}_{t-1}\)` (a regressor in the model for time `\(t\)`) and `\(u_{t}\)` (the disturbance for time `\(t\)`) depend upon `\(u_{t-1}\)`. *I.e.*, a regressor is correlated with its contemporaneous disturbance.
+
+
+**Q:** Why is this a problem?
+&lt;br&gt;
+**A:** It violates .pink[contemporaneous exogeneity]
+, *i.e.*, `\(\mathop{\text{Cov}} \left( x_t,\,u_t \right) \neq 0\)`.
+---
+
+To see this problem, first write out the model for `\(t\)` and `\(t-1\)`:
+$$
+`\begin{align}
+  \text{Births}_t &amp;= \beta_0 + \beta_1 \text{Income}_t + \beta_2 \text{Births}_{t-1} + u_t \\
+  \text{Births}_{t-1} &amp;= \beta_0 + \beta_1 \text{Income}_{t-1} + \beta_2 \text{Births}_{t-2} + u_{t-1}
+\end{align}`
+$$
+and now note that `\(u_t = \rho u_{t-1} + \varepsilon_t\)`. Substituting...
+$$
+`\begin{align}
+  \text{Births}_t &amp;= \beta_0 + \beta_1 \text{Income}_t + \beta_2 \color{#6A5ACD}{\text{Births}_{t-1}} + \overbrace{\left( \rho \color{#e64173}{u_{t-1}} + \varepsilon_t \right)}^{u_t} \tag{1} \\
+  \color{#6A5ACD}{\text{Births}_{t-1}} &amp;= \beta_0 + \beta_1 \text{Income}_{t-1} + \beta_2 \text{Births}_{t-2} + \color{#e64173}{u_{t-1}} \tag{2}
+\end{align}`
+$$
+
+In `\((1)\)`, we can see that `\(u_t\)` depends upon (covaries with) `\(\color{#e64173}{u_{t-1}}\)`.
+&lt;br&gt; In `\((2)\)`, we can see that `\(\color{#6A5ACD}{\text{Births}_{t-1}}\)`, a regressor in `\((1)\)`, also covaries with `\(u_{t-1}\)`.
+
+
+∴ This model violates our contemporaneous exogeneity requirement.
+---
+
+*Implications:* For models with **lagged outcome variables** and **autocorrelated disturbances**
+
+1. The models .pink[**violate contemporaneous exogeneity**.]
+
+1. OLS is .pink[**biased and inconsistent** for the coefficients.]
+
+---
+
+*Intuition?* Why is OLS inconsistent and biased when we violate exogeneity?
+
+Think back to omitted-variable bias...
+
+$$
+`\begin{align}
+  y_t &amp;= \beta_0 + \beta_1 x_t + u_t
+\end{align}`
+$$
+
+When `\(\mathop{\text{Cov}} \left( x_t,\, u_t \right)\neq0\)`, we cannot separate the effect of `\(u_t\)` on `\(y_t\)` from the effect of `\(x_t\)` on `\(y_t\)`. Thus, we get inconsistent estimates for `\(\beta_1\)`.
+ Similarly,
+
+$$
+`\begin{align}
+  \text{Births}_t &amp;= \beta_0 + \beta_1 \text{Income}_t + \beta_2 \text{Births}_{t-1} + \overbrace{\left( \rho u_{t-1} + \varepsilon_t \right)}^{u_t} \tag{1}
+\end{align}`
+$$
+
+we cannot separate the effects of `\(u_t\)` on `\(\text{Births}_t\)` from `\(\text{Births}_{t-1}\)` on `\(\text{Births}_{t}\)`, because both `\(u_t\)` and `\(\text{Births}_{t-1}\)` depend upon `\(u_{t-1}\)`.
+ `\(\color{#e64173}{\hat{\beta}_2}\)` .pink[is **biased** (w/ OLS).]
+---
+layout: true
+# Autocorrelation and bias
+## Simulation
+---
+name: ar2_simulation
+
+To see how this bias can look, let's run a simulation.
+
+$$
+`\begin{align}
+  y_t = 1 + 2 x_t + 0.5 y_{t-1} + u_t \\
+  u_t &amp;= 0.9 u_{t-1} + \varepsilon_t
+\end{align}`
+$$
+
+
+One (easy) way generate 100 disturbances from AR(1), with `\(\rho = 0.9\)`:
+
+
+```r
+arima.sim(model = list(ar = c(0.9)), n = 100)
+```
+
+
+We are going to run 10,000 iterations with `\(T=100\)`.
+
+
+**Q:**  Will this simulation tell us about *bias* or *consistency*?
+&lt;br&gt;**A:** Bias. We would need to let `\(T\rightarrow\infty\)` to consider consistency.
+---
+
+Outline of our simulation:
+
+.pseudocode-small[
+1. Generate T=100 values of x
+
+1. Generate T=100 values of u
+
+  - Generate T=100 values of ε
+
+  - Use ε and ρ=0.9 to calculate u.sub[t] = ρ u.sub[t-1] + ε.sub[t]
+
+1. Calculate y.sub[t] = β.sub[0] + β.sub[1] x.sub[t] + β.sub[2] y.sub[t-1] + u.sub[t]
+
+1. Regress y on x; record estimates
+
+Repeat 1–4 10,000 times
+]
+---
+layout: false
+class: clear
+
+
+
+
+
+.pull-left[
+.hi-slate[Distribution of OLS estimates,] `\(\hat{\beta}_2\)`
+] .pull.right[
+`\(y_t = 1 + 2 x_t + \color{#e64173}{0.5} y_{t-1} + u_t\)`
+]
+
+&lt;img src="08_autocorrelation_NoPause_files/figure-html/sim density b2-1.svg" style="display: block; margin: auto;" /&gt;
+
+---
+layout: false
+class: clear
+
+.pull-left[
+.hi-slate[Distribution of OLS estimates,] `\(\hat{\beta}_1\)`
+] .pull.right[
+`\(y_t = 1 + \color{#FFA500}{2} x_t + 0.5 y_{t-1} + u_t\)`
+]
+
+&lt;img src="08_autocorrelation_NoPause_files/figure-html/sim density b1-1.svg" style="display: block; margin: auto;" /&gt;
+---
+layout: false
+class: inverse, middle
+name: testing
+# Testing for autocorrelation
+---
+layout: true
+# Testing for autocorrelation
+## Static models
+---
+name: testing_static
+
+Suppose we have the **static model**,
+$$
+`\begin{align}
+  \text{Births}_t = \beta_0 + \beta_1 \text{Income}_t + u_t \tag{A}
+\end{align}`
+$$
+and we want to test for an AR(1) process in our disturbances `\(u_t\)`.
+
+
+.hi[Test for autocorrelation:] Test for correlation in the lags of our residuals:
+
+
+$$
+`\begin{align}
+  e_t = \color{#e64173}{\rho} e_{t-1} + v_t
+\end{align}`
+$$
+
+
+Does `\(\color{#e64173}{\hat{\rho}}\)` differ significantly from zero?
+
+
+**Familiar idea:** Use residuals to learn about disturbances.
+
+---
+
+Specifically, to test for AR(1) disturbances in the static model
+$$
+`\begin{align}
+  \text{Births}_t = \beta_0 + \beta_1 \text{Income}_t + u_t \tag{A}
+\end{align}`
+$$
+
+.pseudocode-small[
+
+1\. Estimate `\((\text{A})\)` via OLS.
+
+2\. Calculate residuals from the OLS regression in step 1.
+
+3\. Regress the residuals on their lags (without an intercept).
+
+&lt;center&gt;
+  e.sub[t] = ρ e.sub[t-1] + v.sub[t]
+&lt;/center&gt;
+
+4\. Use a _t_ test to determine whether there is statistically significant evidence that ρ differs from zero.
+
+5\. Rejecting H.sub[0] implies significant evidence of autocorrelation.
+]
+---
+layout: false
+class: clear, middle
+
+For an example, let's return to our plot of negative autocorrelation.
+
+---
+class: clear
+
+.hi-slate[Negative autocorrelation]: Disturbances `\(\left( u_t \right)\)` over time
+&lt;img src="08_autocorrelation_NoPause_files/figure-html/negative auto u 2-1.svg" style="display: block; margin: auto;" /&gt;
+---
+layout: true
+# Testing for autocorrelation
+## Example: Static model and AR(1)
+---
+
+**Step 1:** Estimate the static model `\(\left( y_t = \beta_0 + \beta_1 x_t + u_t \right)\)` with OLS
+
+
+```r
+reg_est &lt;- lm(y ~ x, data = ar_df)
+```
+
+
+**Step 2:** Add the residuals to our dataset
+
+
+```r
+ar_df$e &lt;- residuals(reg_est)
+```
+
+
+**Step 3:** Regress the residual on its lag (**no intercept**)
+
+
+```r
+reg_resid &lt;- lm(e ~ -1 + lag(e), data = ar_df)
+```
+---
+
+**Step 4:** _t_ test for the estimated `\((\hat{\rho})\)` coefficient in step 3.
+
+```r
+tidy(reg_resid)
+```
+
+```
+#&gt; # A tibble: 1 x 5
+#&gt;   term   estimate std.error statistic  p.value
+#&gt;   &lt;chr&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
+#&gt; 1 lag(e)   -0.851    0.0535     -15.9 6.88e-29
+```
+
+
+That's a very small *p*-value—much smaller than 0.05.
+
+
+.hi[Reject H.sub[0]] (H.sub[0] was `\(\rho=0\)`, _i.e._, no autocorrelation).
+
+
+**Step 5:** Conclude. Statistically significant evidence of autocorrelation.
+---
+layout: true
+# Testing for autocorrelation
+## Example: Static model and AR(3)
+---
+
+What if we wanted to test for AR(3)?
+
+- We add more lags of residuals to the regression in *Step 3*.
+
+- We **jointly** test the significance of the coefficients (_i.e._, `\(\text{LM}\)` or `\(F\)`).
+
+Let's do it.
+---
+
+**Step 1:** Estimate the static model `\(\left( y_t = \beta_0 + \beta_1 x_t + u_t \right)\)` with OLS
+
+
+```r
+reg_est &lt;- lm(y ~ x, data = ar_df)
+```
+
+
+**Step 2:** Add the residuals to our dataset
+
+
+```r
+ar_df$e &lt;- residuals(reg_est)
+```
+
+
+**Step 3:** Regress the residual on its lag (**no intercept**)
+
+
+```r
+reg_ar3 &lt;- lm(e ~ -1 + lag(e) + lag(e, 2) + lag(e, 3), data = ar_df)
+```
+
+*Note:* `lag(v, n)` from `dplyr` takes the .mono[n].super[th] lag of the variable .mono[v].
+---
+
+**Step 4:** Calculate the `\(\text{LM} = n\times R_e^2\)` test statistic—distributed `\(\chi_k^2\)`.
+&lt;br&gt;
+`\(k\)` is the number of regressors in the regression in *Step 3* (here, `\(k=3\)`).
+
+
+```r
+# Grab R squared
+r2_e &lt;- summary(reg_ar3)$r.squared
+# Calculate the LM test statistic: n times r2_e
+(lm_stat &lt;- 100 * r2_e)
+```
+
+```
+#&gt; [1] 72.38204
+```
+
+```r
+# Calculate the p-value
+(pchisq(q = lm_stat, df = 3, lower.tail = F))
+```
+
+```
+#&gt; [1] 1.318485e-15
+```
+---
+
+**Step 5:** Conclude.
+
+
+*Recall:* Our hypotheses consider the model
+$$
+`\begin{align}
+  e_t = \rho_1 e_{t-1} + \rho_2 e_{t-2} + \rho_3 e_{t-3}
+\end{align}`
+$$
+
+
+which we are actually using to learn about the model
+$$
+`\begin{align}
+  u_t = \rho_1 u_{t-1} + \rho_2 u_{t-2} + \rho_3 u_{t-3}
+\end{align}`
+$$
+
+
+H.sub[0]: `\(\rho_1 = \rho_2 = \rho_3 = 0\)`
+ *vs.* H.sub[A]: `\(\rho_j \neq 0\)` for at least one `\(j\)` in `\(\{1,\, 2,\, 3\}\)`
+
+Our p-value is less than 0.05.
+ .hi[Reject H.sub[0].]
+
+
+Conclude there is statistically significant evidence of autocorrelation.
+---
+layout: true
+# Testing for autocorrelation
+## Dynamic models with lagged outcome variables
+---
+name: testing_adl
+
+**Recall:** OLS is biased and inconsistent when our model has *both*
+
+1. a lagged dependent variable
+
+1. autocorrelated disturbances
+
+
+**Problem:** If OLS is biased for `\(\beta\)`, then it is also biased for `\(u_t\)`.
+
+
+∴ We can't apply our nice trick of *just* using `\(e_t\)` to learn about `\(u_t\)`.
+
+
+**Solution:** .hi-purple[Breusch-Godfrey] test includes the other explanatory variables,
+
+$$
+`\begin{align}
+  e_t = \color{#6A5ACD}{\underbrace{\gamma_0 + \gamma_1 x_{1t} + \gamma_2 x_{2t} + \cdots}_{\text{Explanatory variables}}} + \color{#e64173}{\underbrace{\rho_1 e_{t-1} + \rho_2 e_{t-2} + \cdots}_{\text{Lagged residuals}}} + \varepsilon_t
+\end{align}`
+$$
+---
+
+Specifically, to test for AR(2) disturbances in the ADL(1, 0) model
+$$
+`\begin{align}
+  \text{Births}_t = \beta_0 + \beta_1 \text{Income}_t + \beta_2 \text{Births}_{t-1} + u_t \tag{B}
+\end{align}`
+$$
+
+.pseudocode-small[
+1\. Estimate `\((\text{B})\)` via OLS.
+
+2\. Calculate residuals (e.sub[t]) from the OLS regression in step 1.
+
+3\. Regress residuals on an intercept, explanatory variables, and lagged residuals.
+
+&lt;center&gt;
+  e.sub[t] = γ.sub[0] + γ.sub[1] Income.sub[t] + ρ.sub[1] e.sub[t-1] + ρ.sub[2] e.sub[t-2] + v.sub[t]
+&lt;/center&gt;
+
+4\. Conduct LM or F test for ρ.sub[1] = ρ.sub[2] = 0.
+
+5\. Rejecting H.sub[0] implies significant evidence of AR(2).
+]
+---
+
+For an example, let's consider the relationship between monthly presidential approval ratings and oil prices during President George W. Bush's&lt;sup&gt;.pink[†]&lt;/sup&gt; presidency.
+
+We will specify the process as ADL(1, 0) and test for an AR(2) process in our disturbances.
+
+$$
+`\begin{align}
+  \text{Approval}_t = \beta_0 + \beta_1 \text{Approval}_{t-1} + \beta_2 \text{Price}_t + u_t
+\end{align}`
+$$
+
+.footnote[
+.pink[†] [Fun with approval ratings](https://projects.fivethirtyeight.com/trump-approval-ratings/).
+]
+
+
+*Note:* We're ignoring any other violations of exogeneity for the moment.
+
+
+---
+exclude: true
+
+
+---
+layout: false
+class: clear
+
+.hi-slate[Monthly presidential approval ratings, 2001–2006]
+&lt;img src="08_autocorrelation_NoPause_files/figure-html/approval 1-1.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+
+.hi-slate[Approval rating vs. its one-month lag, 2001–2006]
+&lt;img src="08_autocorrelation_NoPause_files/figure-html/approval 2-1.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+
+.hi-slate[Approval rating vs. its two-month lag, 2001–2006]
+&lt;img src="08_autocorrelation_NoPause_files/figure-html/approval 3-1.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+
+.hi-slate[Oil prices, 2001–2006]
+&lt;img src="08_autocorrelation_NoPause_files/figure-html/approval 4-1.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+
+.hi-slate[Approval rating vs. oil prices, 2001–2006]
+&lt;img src="08_autocorrelation_NoPause_files/figure-html/approval 5-1.svg" style="display: block; margin: auto;" /&gt;
+---
+layout: true
+# Testing for autocorrelation
+## Example: Approval ratings and oil prices
+---
+
+**Step 1:** Estimate our ADL(1, 0) model with OLS.
+
+
+```r
+# Estimate the model
+ols_est &lt;- lm(
+  ap ~ lag(approve) + price_oil,
+  data = approval_df
+)
+# Summary
+tidy(ols_est)
+```
+
+```
+#&gt; # A tibble: 3 x 5
+#&gt;   term         estimate std.error statistic  p.value
+#&gt;   &lt;chr&gt;           &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
+#&gt; 1 (Intercept)   16.2       7.86        2.06 4.40e- 2
+#&gt; 2 lag(approve)   0.841     0.0752     11.2  2.17e-16
+#&gt; 3 price_oil     -0.0410    0.0215     -1.90 6.15e- 2
+```
+---
+
+**Step 2:** Record residuals from the OLS regression.
+
+```r
+# Grab residuals
+approval_df$e &lt;- c(NA, residuals(ols_est))
+```
+
+**Note:** We need to add an `NA` because we use a lag—the first element is missing.
+
+
+*E.g.*,
+&lt;br&gt;.mono[{1, 2, 3, 4, 5, 6, 7, 8, 9} = x]
+&lt;br&gt;.mono[{.pink[?], 1, 2, 3, 4, 5, 6, 7, 8} = lag(x)]
+&lt;br&gt;.mono[{.pink[?], .pink[?], 1, 2, 3, 4, 5, 6, 7} = lag(x, 2)]
+&lt;br&gt;.mono[{.pink[?], .pink[?], .pink[?], 1, 2, 3, 4, 5, 6} = lag(x, 3)]
+
+---
+
+&lt;img src="08_autocorrelation_NoPause_files/figure-html/bg2b-1.svg" style="display: block; margin: auto;" /&gt;
+---
+
+**Step 3:** Regress residuals on an intercept, the explanatory variables, and lagged residuals.
+
+
+```r
+# BG regression
+bg_reg &lt;- lm(
+  e ~ lag(approve) + price_oil + lag(e) + lag(e, 2),
+  data = approval_df
+)
+```
+
+
+```
+#&gt;              Estimate Std. Error t value Pr(&gt;|t|)  
+#&gt;  (Intercept)   7.92474    9.30455   0.852   0.3979  
+#&gt;  lag(approve) -0.08503    0.09192  -0.925   0.3589  
+#&gt;  price_oil    -0.01690    0.02407  -0.702   0.4854  
+#&gt;  lag(e)        0.25236    0.14648   1.723   0.0903 .
+#&gt;  lag(e, 2)     0.07865    0.14471   0.544   0.5889
+```
+---
+
+**Step 4:** `\(F\)` (or `\(\text{LM}\)`) test for `\(\rho_1=\rho_2=0\)`.
+
+*Recall:* We can test joint significance using an `\(F\)` test that compares the restricted (here: `\(\rho_1=\rho_2=0\)`) and unrestricted models.
+$$
+`\begin{align}
+  F_{q,\,n-p} = \dfrac{\left(\text{SSE}_r - \text{SSE}_u\right)\big/q}{\text{SSE}_u\big/\left( n-p \right)}
+\end{align}`
+$$
+where `\(q\)` is the number of restrictions and `\(p\)` is the number of parameters in our unrestricted model (include the intercept).
+
+We can use the `waldtest()` function from the `lmtest` package for this test.
+
+---
+
+**Step 4:** `\(F\)` (or `\(\text{LM}\)`) test for `\(\rho_1=\rho_2=0\)`.
+
+
+```r
+# BG regression
+bg_reg &lt;- lm(
+  e ~ lag(approve) + price_oil + lag(e) + lag(e, 2),
+  data = approval_df
+)
+# Test significance of the lags using 'waldtest' from 'lmtest' package
+p_load(lmtest)
+waldtest(bg_reg, c("lag(e)", "lag(e, 2)"))
+```
+Here, we're telling `waldtest` to test
+- the model we specified in `bg_reg` (our .hi[unrestricted model])
+- against a model without `lag(e)` and `lag(e, 2)` (our .hi[restricted model])
+
+---
+count: false
+
+**Step 4:** `\(F\)` (or `\(\text{LM}\)`) test for `\(\rho_1=\rho_2=0\)`.
+
+
+```r
+# BG regression
+bg_reg &lt;- lm(
+  e ~ lag(approve) + price_oil + lag(e) + lag(e, 2),
+  data = approval_df
+)
+# Test significance of the lags using 'waldtest' from 'lmtest' package
+p_load(lmtest)
+waldtest(bg_reg, c("lag(e)", "lag(e, 2)"))
+```
+
+```
+#&gt; Wald test
+#&gt; 
+#&gt; Model 1: e ~ lag(approve) + price_oil + lag(e) + lag(e, 2)
+#&gt; Model 2: e ~ lag(approve) + price_oil
+#&gt;   Res.Df Df      F Pr(&gt;F)
+#&gt; 1     57                 
+#&gt; 2     59 -2 1.6153 0.2078
+```
+---
+
+**Step 5:** Conclusion of hypothesis test
+
+With a *p*-value of ∼0.208, .hi[we fail to reject the null hypothesis.]
+
+- We cannot reject `\(\rho_1=\rho_2=0\)`.
+
+- We cannot reject "no autocorrelation".
+
+
+
+
+However, .hi[we tested for a specific type of autocorrelation]: AR(2).
+
+We might get different answers with different tests.
+
+The *p*-value for AR(1) is 0.0896—suggestive of first-order autocorrelation.
+---
+layout: false
+class: inverse, middle
+# Living with autocorrelation
+---
+layout: true
+# Autocorrelation
+## Working with it
+---
+name: fixes
+
+Suppose we believe autocorrelation is present. What do we do?
+
+
+I'll give you three options.&lt;sup&gt;.pink[†]&lt;/sup&gt;
+
+1. .hi[Misspecification]
+
+1. .hi[Serial-correlation robust standard errors] (a.k.a. *Newey-West*)
+
+1. .hi[FGLS]
+
+.footnote[
+.pink[†] You should take .mono[EC 422] to go much deeper into time-series analysis/forecasting.
+]
+---
+layout: true
+# Autocorrelation
+## Option 1: Misspecification
+---
+name: misspecification
+
+.hi[Misspecification] with autocorrelation is very similar to our discussion with heteroskedasticity.
+
+By incorrectly specifying your model, you can create autocorrelation.
+
+Omitting variables that are correlated through time will cause your disturbances to be correlated through time.
+
+---
+
+**Example:** Suppose births depend upon income and previous births
+$$
+`\begin{align}
+  \text{Births}_t = \beta_0 + \beta_1 \text{Births}_{t-1} + \beta_2 \text{Income}_t + u_t
+\end{align}`
+$$
+but we write down the model as only depending upon previous births, _i.e._,
+$$
+`\begin{align}
+  \text{Births}_t = \beta_0 + \beta_1 \text{Births}_{t-1} + v_t
+\end{align}`
+$$
+Then our disturbance `\(v_t\)` is
+$$
+`\begin{align}
+  v_t = \beta_2 \text{Income}_t + u_t
+\end{align}`
+$$
+which is likely autocorrelated, since income is correlated in time.
+
+
+*Note:* This autocorrelation has nothing to do with `\(u_t\)`.
+---
+
+**"Proof"**
+
+$$
+`\begin{align}
+  v_{t} &amp;= \beta_2 \text{Income}_{t} + u_{t} \\
+  v_{t-1} &amp;= \beta_2 \text{Income}_{t-1} + u_{t-1}
+\end{align}`
+$$
+
+`\(\mathop{\text{Cov}} \left( v_{t},\,v_{t-1} \right)\)`
+
+
+.pull-left[
+`\(= \mathop{\text{Cov}} \left( \beta_2 \text{Income}_{t} + u_{t},\, \beta_2 \text{Income}_{t-1} + u_{t-1} \right)\)`
+]
+
+
+.pull-left[
+`\(= \color{#e64173}{\mathop{\text{Cov}} \left( \beta_2 \text{Income}_{t},\, \beta_2 \text{Income}_{t-1} \right)} + \mathop{\text{Cov}} \left( \beta_2 \text{Income}_{t},\, u_t \right) + \mathop{\text{Cov}} \left(u_{t},\, \beta_2 \text{Income}_{t-1}\right) + \mathop{\text{Cov}} \left( u_{t},\, u_{t-1} \right)\)`
+]
+
+
+.pull-left[
+`\(\neq 0\)` (in general) even if `\(u_t\)` is exogenous and without autocorrelation.
+]
+
+
+---
+layout: true
+# Autocorrelation
+## Option 2: Newey-West standard errors
+---
+name: newey
+
+As was also the case with heteroskedasticity, you can still estimate consistent standard errors (and inference) in the presence of autocorrelation.
+
+These standard errors are called *serial-correlation robust standard errors* (or *Newey-West standard errors*).
+
+We are not going to derive the estimator for these standard errors.
+---
+layout: true
+# Autocorrelation
+## Option 3: FGLS
+---
+name: gls
+
+If we do not have a lagged outcome variable, then .pink[feasible generalized least squares] (.hi[FGLS]) can give us efficient and consistent standard errors.
+
+
+Let's start with a simple static model that includes an AR(1) disturbance `\(u_t\)`.
+
+$$
+`\begin{align}
+  \text{Births}_t &amp;= \beta_0 + \beta_1 \text{Income}_t + u_t \tag{1} \\
+  u_t &amp;= \rho u_{t-1} + \varepsilon_t \tag{2}
+\end{align}`
+$$
+
+
+Now our old trick: Write out `\((1)\)` for period `\(t-1\)` (and then multiple by `\(\rho\)`)
+$$
+`\begin{align}
+  \text{Births}_{t-1} &amp;= \beta_0 + \beta_1 \text{Income}_{t-1} + u_{t-1} \tag{3} \\
+  \rho \text{Births}_{t-1} &amp;= \rho \beta_0 + \rho \beta_1 \text{Income}_{t-1} + \rho u_{t-1} \tag{4}
+\end{align}`
+$$
+
+
+And now subtract `\((4)\)` from `\((1)\)`…
+---
+
+$$
+`\begin{align}
+  \text{Births}_t - \rho \text{Births}_{t-1} =&amp; \beta_0 \left( 1 - \rho \right) + \\
+  &amp; \beta_1 \text{Income}_t - \rho \beta_1 \text{Income}_{t-1} + \\
+  &amp; u_t - \rho u_{t-1}
+\end{align}`
+$$
+which gives us a very specific dynamic model
+$$
+`\begin{align}
+  \text{Births}_t =&amp; \beta_0 \left( 1 - \rho \right) + \rho \text{Births}_{t-1} +\\
+  &amp; \beta_1 \text{Income}_t - \rho \beta_1 \text{Income}_{t-1} + \\
+  &amp; \color{#e64173}{\underbrace{u_t - \rho u_{t-1}}_{=\varepsilon_t}} \\
+  \color{#ffffff}{=}&amp; \color{#ffffff}{\beta_0 \left( 1 - \rho \right) + \rho \text{Births}_{t-1} +}\\
+  &amp;\color{#ffffff}{ \beta_1 \text{Income}_t - \rho \beta_1 \text{Income}_{t-1} + \varepsilon_t}
+\end{align}`
+$$
+---
+count: false
+
+$$
+`\begin{align}
+  \text{Births}_t - \rho \text{Births}_{t-1} =&amp; \beta_0 \left( 1 - \rho \right) + \\
+  &amp; \beta_1 \text{Income}_t - \rho \beta_1 \text{Income}_{t-1} + \\
+  &amp; u_t - \rho u_{t-1}
+\end{align}`
+$$
+which gives us a very specific dynamic model
+$$
+`\begin{align}
+  \text{Births}_t =&amp; \beta_0 \left( 1 - \rho \right) + \rho \text{Births}_{t-1} +\\
+  &amp; \beta_1 \text{Income}_t - \rho \beta_1 \text{Income}_{t-1} + \\
+  &amp; \color{#e64173}{\underbrace{u_t - \rho u_{t-1}}_{=\varepsilon_t}} \\
+  =&amp; \beta_0 \left( 1 - \rho \right) + \rho \text{Births}_{t-1} +\\
+  &amp; \beta_1 \text{Income}_t - \rho \beta_1 \text{Income}_{t-1} + \color{#e64173}{\varepsilon_t}
+\end{align}`
+$$
+that happens to be .hi[free of autocorrelation].
+---
+
+This .hi[transformed model] is free of autocorrelation.
+$$
+`\begin{align}
+  \text{Births}_t =&amp; \beta_0 \left( 1 - \rho \right) + \rho \text{Births}_{t-1} +\\
+  &amp; \beta_1 \text{Income}_t - \rho \beta_1 \text{Income}_{t-1} + \color{#e64173}{\varepsilon_t}
+\end{align}`
+$$
+
+**Q:** How do we actually estimate this model? (We don't know `\(\rho\)`.)
+&lt;br&gt;**A:** FGLS (of course)…
+
+
+.pseudocode-small[
+1. Estimate the original (untransformed) model; save residuals.
+2. Estimate `\(\rho\)`: Regress residuals on their lags (no intercept).
+3. Estimate the **transformed model**, plugging in `\(\hat{\rho}\)` for `\(\rho\)`.
+]
+---
+layout: false
+# Table of contents
+
+.pull-left[
+### Admin
+.smallest[
+
+1. [Schedule](#schedule)
+1. [.mono[R] showcase](#r_showcase)
+  - [.mono[ggplot2]](#ggplot2)
+  - [Writing functions](#functions)
+1. [Review: Time series](#review)
+]
+]
+
+.pull-right[
+### Autocorrelation
+.smallest[
+
+1. [Introduction](#intro)
+1. [In static models](#static_models)
+1. [OLS and bias/consistency](#ols_static)
+  - [Static models](#ols_static)
+  - [Dynamic models with lagged `\(y\)`](#ols_adl)
+1. [Simulation: Bias](#ar2_simulation)
+1. [Testing for autocorrelation](#testing)
+  - [Static models](#testing_static)
+  - [Dynamic models with lagged `\(y\)`](#testing_adl)
+1. [Working with autocorrelation](#fixes)
+  - [Misspecification](#misspecification)
+  - [Newey-West standard errors](#newey)
+  - [FGLS](#gls)
+]
+]
+---
+exclude: true
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script>
+(function() {
+  var i, text, code, codes = document.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+})();
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Non-Stationary Time Series</title>
+    <meta charset="utf-8">
+    <meta name="author" content="Edward Rubin" />
+    <meta name="date" content="2019-05-22" />
+    <link href="09_nonstationarity_files/remark-css/default.css" rel="stylesheet" />
+    <link href="09_nonstationarity_files/remark-css/metropolis.css" rel="stylesheet" />
+    <link href="09_nonstationarity_files/remark-css/metropolis-fonts.css" rel="stylesheet" />
+    <link rel="stylesheet" href="my-css.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Non-Stationary Time Series
+## EC 421, Set 9
+### Edward Rubin
+### 22 May 2019
+
+---
+
+class: inverse, middle
+
+
+
+# Prologue
+
+---
+name: schedule
+
+# Schedule
+
+## Last Time
+
+Autocorrelation
+
+## Today
+
+- Brief introduction to nonstationarity
+- Then: Causality
+
+## Upcoming
+
+- **Assignment** this afternoon.
+---
+layout: false
+class: inverse, middle
+# Nonstationarity
+---
+layout: true
+name: intro
+# Nonstationarity
+---
+
+## Intro
+
+Let's go back to our assumption of .hi[weak dependence/persistence]
+
+&gt; 1. **Weakly persistent outcomes**—essentially, `\(x_{t+k}\)` in the distant period `\(t+k\)` weakly correlates with `\(x_t\)` (when `\(k\)` is "big").
+
+--
+
+We're essentially saying we need the time series `\(x\)` to behave.
+
+--
+
+We'll define this *good behavior* as .hi[stationarity].
+---
+
+## Stationarity
+
+Requirements for .hi[stationarity] (a *stationary* time-series process):
+
+--
+
+1. The .hi[mean] of the distribution is independent of time, _i.e._,
+.center[
+`\(\mathop{\boldsymbol{E}}\left[ x_t \right]  = \mathop{\boldsymbol{E}}\left[ x_{t-k} \right]\)` for all `\(k\)`
+]
+--
+
+2. The .hi[variance] of the distribution is independent of time, _i.e._,
+.center[
+`\(\mathop{\text{Var}} \left( x_t \right) = \mathop{\text{Var}} \left( x_{t-k} \right)\)` for all `\(k\)`
+]
+
+--
+3. The .hi[covariance] between `\(x_t\)` and `\(x_{t-k}\)` depends only on `\(k\)`—.pink[not on] `\(\color{#e64173}{t}\)`, _i.e._,
+.center[
+`\(\mathop{\text{Cov}} \left( x_t,\,x_{t-k} \right) = \mathop{\text{Cov}} \left( x_s,\, x_{s-k} \right)\)` for all `\(t\)` and `\(s\)`
+]
+
+---
+name: walks
+
+## Random walks
+
+.hi[Random walks] are a famous example of a nonstationary process:
+
+--
+
+$$
+`\begin{align}
+  x_t = x_{t-1} + \varepsilon_t
+\end{align}`
+$$
+
+--
+
+Why?
+--
+ `\(\mathop{\text{Var}} \left( x_t \right) = t \sigma_\varepsilon^2\)`, which .pink[violates stationary variance].
+
+--
+
+$$
+`\begin{align}
+   \mathop{\text{Var}} \left( x_t \right)
+   &amp;= \mathop{\text{Var}} \left( x_{t-1} + \varepsilon_t \right) \\
+   &amp;= \mathop{\text{Var}} \left( x_{t-2} + \varepsilon_{t-1} + \varepsilon_t \right) \\
+   &amp;= \mathop{\text{Var}} \left( x_{t-3} + \varepsilon_{t-2} + \varepsilon_{t-1} + \varepsilon_t \right) \\
+   &amp;\cdots \\
+   &amp;= \mathop{\text{Var}} \left( x_0 + \varepsilon_1 + \cdots + \varepsilon_{t_2} + \varepsilon_{t-1} + \varepsilon_t \right) \\
+   &amp;= \sigma^2_\varepsilon + \cdots + \sigma^2_\varepsilon + \sigma^2_\varepsilon + \sigma^2_\varepsilon \\
+   &amp;= t \sigma^2_\varepsilon
+\end{align}`
+$$
+
+
+---
+layout: false
+class: clear, middle
+
+**Q:** What's the big deal with this violation?
+---
+class: clear
+
+.hi-slate[One 100-period random walk]
+&lt;img src="09_nonstationarity_files/figure-html/walk1-1.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+
+.hi-slate[Two 100-period random walks]
+&lt;img src="09_nonstationarity_files/figure-html/walk2-1.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+
+.hi-slate[Three 100-period random walks]
+&lt;img src="09_nonstationarity_files/figure-html/walk3-1.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+
+.hi-slate[Four 100-period random walks]
+&lt;img src="09_nonstationarity_files/figure-html/walk4-1.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+
+.hi-slate[Five 100-period random walks]
+&lt;img src="09_nonstationarity_files/figure-html/walk5-1.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+
+.hi-slate[Fifty 100-period random walks]
+&lt;img src="09_nonstationarity_files/figure-html/walk50-1.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+
+.hi-slate[1,000 100-period random walks]
+&lt;img src="09_nonstationarity_files/figure-html/walk1000-1.svg" style="display: block; margin: auto;" /&gt;
+---
+# Nonstationarity
+## Problem
+
+*One* problem is that nonstationary processes can lead to .hi[spurious] results.
+
+--
+
+&gt;**Defintion:** .hi[Spurious]
+&gt;- not being what it purports to be; false or fake
+&gt;- apparently but not actually valid
+
+--
+
+Back in 1974, Granger and Newbold showed that when they **generated random walks** and **regressed the random walks on each other**, .hi[77/100 regressions were statistically significant] at the 5% level (should have been approximately 5/100).
+
+---
+class: clear
+
+.hi-slate[Granger and Newbold simulation example:] _t_ statistic ≈ -10.58
+
+&lt;img src="09_nonstationarity_files/figure-html/gb12-1.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+
+.hi-slate[Granger and Newbold simulation example:] _t_ statistic ≈ -8.92
+
+&lt;img src="09_nonstationarity_files/figure-html/gb34-1.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+
+.hi-slate[Granger and Newbold simulation example:] _t_ statistic ≈ -7.23
+
+&lt;img src="09_nonstationarity_files/figure-html/gb56-1.svg" style="display: block; margin: auto;" /&gt;
+---
+layout: true
+# Nonstationarity
+---
+name: problem
+
+## Problem
+
+
+
+In our data, 74.6 percent of (independently generated) pairs reject the null hypothesis at the 5% level.
+
+--
+
+**The point?**
+--
+ If our disturbance is nonstationary, we cannot trust plain OLS.
+
+--
+
+Random walks are only one example of .pink[nonstationary processes]...
+
+.hi[Random walk:] `\(u_t = u_{t-1} + \varepsilon_t\)`
+
+--
+
+.hi[Random walk with drift:] `\(u_t = \alpha_0 + u_{t-1} + \varepsilon_t\)`
+
+--
+
+.hi[Deterministic trend:] `\(u_t = \alpha_0 + \beta_1 t + \varepsilon_t\)`
+
+---
+layout: true
+# Nonstationarity
+## A potential solution
+---
+name: solution
+
+Some processes are .hi[difference stationary], which means we can get back to our stationarity (good behavior) requirement by taking the difference between `\(u_t\)` and `\(u_{t-1}\)`.
+
+--
+
+.hi-slate[Nonstationary:] `\(u_t = u_{t-1} + \varepsilon_t\)` .slate[(a random walk)]
+--
+&lt;br&gt;.hi[Stationary:] `\(u_t - u_{t-1} = u_{t-1} + \varepsilon_t - u_{t-1} = \color{#e64173}{\varepsilon_t}\)`
+
+--
+
+So if we have good reason to believe that our disturbances follow a random walk, we can use OLS on the differences, _i.e._,
+--
+$$
+`\begin{align}
+  y_t &amp;= \beta_0 + \beta_1 x_t + u_t \\
+  y_{t-1} &amp;= \beta_0 + \beta_1 x_{t-1} + u_{t-1} \\
+  y_t - y_{t-1} &amp;= \beta_1 \left( x_t - x_{t-1} \right) + \left( u_t - u_{t-1} \right) \\
+  \Delta y_t &amp;= \beta_1 \Delta x_t + \Delta u_t
+\end{align}`
+$$
+---
+name: test
+layout: false
+# Nonstationarity
+## Testing
+
+.pink[Dickey-Fuller] and .pink[augmented Dickey-Fuller] tests are popular ways to test of random walks and other forms of nonstationarity.
+
+--
+
+.hi[Dickey-Fuller tests] compare
+
+H.sub[o]: `\(y_t = \beta_0 + \beta_1 y_{t-1} + u_t\)` with `\(|\beta_1|&lt;1\)` (.hi[stationarity])
+&lt;br&gt;
+H.sub[a]: `\(y_t = y_{t-1} + \varepsilon_t\)` (.hi[random walk])
+
+--
+
+using a *t* test that `\(|\beta_1|&lt;1\)`.&lt;sup&gt;.pink[†]&lt;/sup&gt;
+
+.footnote[
+.pink[†] People often just test `\(\beta_1&lt;1\)`.
+]
+
+---
+layout: false
+# Table of contents
+
+.pull-left[
+### Admin
+.smallest[
+
+1. [Schedule](#schedule)
+]
+]
+
+.pull-right[
+### Nonstationarity
+.smallest[
+
+1. [Introduction](#intro)
+1. [Random walks](#walks)
+1. [The actual problem](#problem)
+1. [A potential solution](#solution)
+1. [Dickey-Fuller tests](#test)
+]
+]
+---
+exclude: true
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script>
+(function() {
+  var i, text, code, codes = document.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+})();
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

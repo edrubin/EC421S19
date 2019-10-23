@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>EC 421</title>
+    <meta charset="utf-8">
+    <link href="final_review_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="final_review_files/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+    <link href="final_review_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
+    <link rel="stylesheet" href="my-css.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# EC 421
+## Final Review Questions from “New” Lectures
+### Spring 2019
+
+---
+
+class: clear
+
+**Note:** These questions should help you review—along with our four problem sets. This review is not necessarily comprehensive. I still suggest reviewing the problem sets, notes, and other course material.
+
+**Note.sub[2]:** **We will not provide an answer key to these review questions.**
+
+0\. If `\(y_i = \beta_0 + \beta_1 x_i + u_i\)`, does `\(\mathop{\text{Cov}} \left( x_i,\, u_i \right)\neq0\)` violate any of our assumptions? If so: which assumptions are violated and how does this affect OLS?
+
+1\. What is the difference between a **static** time-series model and a **dynamic** time-series model?
+
+2\. How would we estimate the *total effect* of **income** on **births** using the following estimated model?
+$$
+`\begin{align}
+  \text{Births}_t = \hat{\beta}_0 + \hat{\beta}_1 \text{Income}_{t} + \hat{\beta}_2 \text{Income}_{t-1} + \hat{\beta}_3 \text{Income}_{t-2} + e_t
+\end{align}`
+$$
+
+3\. We are interested in the effect of income on births. Write down an ADL(2,2) model.
+
+4\. **T/F** By including a lagged dependent variable, we implicitly include many lags of the explanatory variable.
+
+5\. **T/F** In the model `\(\text{Births}_t = \beta_0 + \beta_1 \text{Income}_t + u_t\)`, the parameter `\(\beta_1\)` gives the effect of income in the previous time period on births in the current period.
+
+6\. **T/F** OLS is consistent for dynamic time-series models with lagged dependent variables as long as the model maintains the contemporaenous exogeneity assumption.
+
+7\. How do lagged explanatory variables affect OLS? Is this effect different from lagged dynamic variables?
+
+8\. Define autocorrelation. Give an example of a variable that you believe is autocorrelated and, using your definition, explain why you believe it is autocorrelated.
+
+9\. Write down the formula/equation for an AR(3) process.
+
+10\. How does autocorrelation impact OLS's estimates for static models? What about dynamic models with lagged explanatory variables?
+
+11\. Explain why OLS is biased for dyanmic models with lagged dependent variables and autocorrelated disturbances. It may be helpful to `\((a)\)` write out a model with a lagged dependent variable and `\((b)\)` write out an AR(1) disturbance.
+
+12\. What are the null and alternative hypotheses for a Breusch-Godfrey test?
+
+13\. If a Breusch-Godfrey test rejects H.sub[o], what do we conclude? What if it fails to reject H.sub[o]?
+
+14\. Explain how misspecification can lead to autoregressive disturbances.
+
+15\. What does it mean for the variance of a random variable to be stationary?
+
+16\. If the covariance between `\(u_t\)` and `\(u_{t-1}\)` increases as `\(t\)` gets larger, then is `\(u_t\)` stationary? Briefly explain.
+
+17\. Write down the function for a random walk. Is it stationary?
+
+---
+class: clear
+
+18\. We discussed random walks and autocorrelated variables. How are these concepts similar? How are they different?
+
+19\. **T/F** Nonstationary processes can cause OLS to find significant and spurious relationships.
+
+20\. How do randomized experiments help us causally estimate treatment effects?
+
+21\. What is the fundamental problem of causal inferenece? How do we "deal" with it?
+
+22\. Define selection bias and give an example.
+
+23\. What problem does instrumental variables attempt to solve?
+
+24\. What are the two requirements for a valid instrument?
+
+25\. **T/F** An instrument is *exogenous* if it directly affects `\(y\)` (the outcome) and also affects `\(y\)` through the endogenous variable `\(x\)`.
+
+26\. Explain why *physical fitness* is probably an invalid instrument for military service, while *military draft* is likely a valid instrument.
+
+27\. The probability limit of the instrumental variables estimator is
+$$
+`\begin{align}
+  \mathop{\text{plim}}\left( \hat{\beta}_1^{\text{IV}} \right) = \beta_1 + \dfrac{\mathop{\text{Cov}} \left( z,\,u \right)}{\mathop{\text{Cov}} \left( z,\,x \right)}
+\end{align}`
+$$
+where `\(z\)` is our instrument, `\(u\)` is the disturbance, and `\(x\)` is our endogenous variable.
+
+Use this equation to show how the two requirements of a valid instrument give us consistency.
+
+28\. Define unbiasedness, consistency, and efficiency.
+
+29\. Under which circumstances can we trust OLS to be unbiased and/or consistent? When is it efficient?
+
+30\. Under which circumstances is OLS to be biased and/or inconsistent?
+
+**"Suggestions"**
+
+A\. Review the Venn diagrams in the instrumental variables lecture. Using the diagram explain omitted-variable bias, how *valid* instrumental variables can avoid omitted-variable bias, and how instruments can "break" (be in valid).
+
+B\. Review the "ideal dataset/experiment" in the causality lecture and instrumental variables lecture. Explain why the "ideal" is not possible? Using the provided example data, calculate (**1**) individual treatment effects, (**2**) average treatment effects, (**3**) difference in means between the treatment and control groups, and (**4**) selection bias.
+
+---
+exclude: true
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "8.5:11",
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script>
+(function() {
+  var i, text, code, codes = document.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+})();
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

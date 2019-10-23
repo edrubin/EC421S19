@@ -121,13 +121,80 @@ Asymptotics, probability limits, and consistency
 
 ## Today
 
-Time series
+- Midterm
+- Time series
 
 ## Upcoming
 
-Assignment, survey, midterm
+Survey
 ---
+# Midterm
 
+```{R, load-midterm, include = F}
+# Load data
+grade_df <- read_csv("../../Data/grades.csv") %>% mutate(ps_avg = 0.5 * ps1 + 0.5 * ps2)
+```
+
+## Summary of grades
+
+- **Min**: `r min(grade_df$midterm, na.rm = T) %>% round(0)`
+
+- **25.super[th]**: `r quantile(grade_df$midterm, probs = 0.25, na.rm = T) %>% round(0)`
+
+- **Mean**: `r mean(grade_df$midterm, na.rm = T) %>% round(0)`
+
+- **Median**: `r median(grade_df$midterm, na.rm = T) %>% round(0)`
+
+- **75.super[th]**: `r quantile(grade_df$midterm, probs = 0.75, na.rm = T) %>% round(0)`
+
+- **Max**: `r max(grade_df$midterm, na.rm = T) %>% round(0)`
+---
+# Midterm
+
+```{R, plot-midterm, echo = F}
+# Regression model
+grade_lm <- lm(midterm ~ ps1 + ps2, data = grade_df)
+# Plot
+ggplot(data = grade_df, aes(x = ps_avg, y = midterm)) +
+xlab("Avg. homework score") +
+ylab("Midterm score") +
+geom_point(size = 2.5, alpha = 0.8) +
+geom_smooth(se = F, method = lm) +
+theme_pander(base_size = 20, base_family = "Fira Sans Book")
+```
+---
+# Midterm
+
+```{R, plot-midterm1, echo = F}
+# Load data
+grade_df <- read_csv("../../Data/grades.csv") %>% mutate(ps_avg = 0.5 * ps1 + 0.5 * ps2)
+# Regression model
+grade_lm <- lm(midterm ~ ps1 + ps2, data = grade_df)
+# Plot
+ggplot(data = grade_df, aes(x = ps1, y = midterm)) +
+xlab("First homework score") +
+ylab("Midterm score") +
+geom_point(size = 2.5, alpha = 0.8) +
+geom_smooth(se = F, method = lm) +
+theme_pander(base_size = 20, base_family = "Fira Sans Book")
+```
+---
+# Midterm
+
+```{R, plot-midterm2, echo = F}
+# Load data
+grade_df <- read_csv("../../Data/grades.csv") %>% mutate(ps_avg = 0.5 * ps1 + 0.5 * ps2)
+# Regression model
+grade_lm <- lm(midterm ~ ps1 + ps2, data = grade_df)
+# Plot
+ggplot(data = grade_df, aes(x = ps2, y = midterm)) +
+xlab("Second homework score") +
+ylab("Midterm score") +
+geom_point(size = 2.5, alpha = 0.8) +
+geom_smooth(se = F, method = lm) +
+theme_pander(base_size = 20, base_family = "Fira Sans Book")
+```
+---
 # EC 421
 ## About our class
 

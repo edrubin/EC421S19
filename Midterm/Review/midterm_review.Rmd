@@ -2,7 +2,7 @@
 title: "EC 421"
 subtitle: "Midterm Review Quetions"
 #author: "Edward Rubin"
-date: "07 February 2019"
+date: "Spring 2019"
 output:
   xaringan::moon_reader:
     css: ['default', 'metropolis', 'metropolis-fonts', 'my-css.css']

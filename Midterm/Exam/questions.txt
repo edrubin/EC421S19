@@ -1,0 +1,108 @@
+
+## T/F, Multiple choice, Fill in the blank
+
+### T/F
+
+**q** For the model $log(y_i) = \beta_0 + \beta_1 x_i + u_i$, we interpret the coefficient $\beta_1$ as the expected percentage change in $y_i$ due to a 1-percent increase in $x_i$.
+
+**q** The difference between the White test for heteroskedasticity and the Breusch-Pagan test for heteroskedasticity is that the Bruesch-Pagan test uses interactions and squared terms.
+
+**q** For the model $y_i = \beta_0 + \beta_1 x_i + u_i$:
+<br>If *p*-value for our estimate of $\beta_1$ is 0.08, then we reject the null hypothesis at the 5-percent level.
+
+**q** Heteroskedasticity occurs when $\mathop{E}\left[ u_i | x_i \right] \neq 0$.
+
+**q** Omitted-variable bias results in OLS estimates that are biased toward zero.
+
+**q** If we have an omitted variable, we can use weighted least squares (WLS) to avoid bias.
+
+**q** Exogeneity requires that the mean of the disturbances $\left( \mathop{E}\left[ u_i \right] \right)$ is uncorrelated with all explanatory variables $\left( x_i \right)$.
+
+**q** If you omit a variable from your regression, then you will have omitted-variable bias.
+
+**q** OLS's consistency is also affected by omitted-variable "bias".
+
+**q** In the presence of heteroskedasticity, OLS estimates for the coefficients are biased.
+
+**q** In the presence of heteroskedasticity, OLS estimates for the standard errors are biased.
+
+**q** If an estimator is biased, then it is also inconsistent.
+
+**q** Weighted least squares (WLS) gives more weight to observations with low-variance disturbances and less weight to observations with high-variance disturbances.
+
+**q** **Multiple choice** (Choose **all** correct answers) If an estimator $\hat{\theta}$ is unbiased for $\theta$, then
+- $\hat\theta = \theta$
+- $\mathop{E}\left[ \hat\theta \right] = \theta$
+- $\text{plim}\!\left( \hat\theta \right) = \theta$
+- $\mathop{E}\left[ \hat\theta \right] - \hat\theta = 0$
+
+**q** **Multiple choice** (Choose **all** correct answers) Which of the following are part of our assumptions?
+- $\mathop{E}\left[ u_i | x_i \right] = 0$
+- $\mathop{\text{Var}} \left( x \right) = 0$
+- $\mathop{E}\left[ u_i \right] = 0$
+- $\mathop{\text{Cov}} \left( u_i,\,u_j \right) = 0$ for $i\neq j$
+- $\mathop{\text{Var}} \left( u_i \right) = 0$
+
+## Short Answer
+
+**q** What is the standard error for an estimator?
+
+**q** For the model $\text{Income}_i = \beta_0 + \beta_1 \text{Female}_i + u_i$, where $\text{Female}_i$ is a binary indicator for whether individual $i$ is female,
+- the term .white[aaaaaaaaaa] gives the average income for men
+- the term .white[aaaaaaaaaa] gives the difference between the average income for women and the average income for men
+- the sum .white[aaaaaaaaaa] gives the average income for women
+
+**q** In our proof of the consistency of the OLS estimator for $\beta_1$ (for simple linear regression), we showed that
+$$
+\begin{align}
+  \text{plim} \hat{\beta}_1 = \beta_1 + \dfrac{\mathop{\text{Cov}}(x_1,\,u)}{\mathop{\text{Var}}(x_1)}
+\end{align}
+$$
+- What does the right-hand side of this equation need to simplify to if OLS is a consistent estimator for $\beta_1$?
+- What is the "next step" in this derivation? How/why do we get the result that OLS is indeed consistent for $\beta_1$?
+
+**q** What is measurement error?
+
+**q** How does measurement error in an explanatory variable affect OLS estimates?
+
+**q** What does it mean for an estimator to be consistent?
+
+**q** For the model $y_i = \beta_0 + \beta_1 x_i + u_i$, which **two** things must be true for an omitted variable to bias our estimates of $\beta_1$?
+
+**q** For the models
+$$
+\begin{align}
+  y_i &= \beta_0 + \beta_1 x_i + u_i \\
+  \hat{y}_i &= \hat{\beta}_0 + \hat{beta}_1 x_i + e_i \\
+\end{align}
+$$
+what is the difference between $e_i$ and $u_i$?
+
+**q** For $y_i = \beta_0 + \beta_1 x_i + u_i$, draw a picture/plot that depicts homoskedastic disturbances. Make sure you label both axes.
+For $y_i = \beta_0 + \beta_1 x_i + u_i$, draw a picture/plot that depicts heteroskedastic disturbances. Make sure you label both axes.
+
+**q** Suppose we model the relationship between crime and policing at the city level using
+$$
+\begin{align}
+  \text{Crime}_i = \beta_0 + \beta_1 \text{Police} + u_i \tag{1}
+\end{align}
+$$
+where $i$ indexes a city, $\text{Crime}_i$ gives the number of crimes committed in city $i$, and $\text{Police}_i$ gives the number of police officers working in city $i$.
+- We estimate $\hat{\beta}_1 = -3.1$. How do we interpret this coefficient?
+- We estimate $\hat{\beta}_0 = 537.3$. How do we interpret this coefficient? Explain whether it makes sense to interpret this coefficient.
+- We're concerned about heteroskedasticity and decide to run a White test. Write out the steps we need to carry out to conduct a White test, describing each step (including any hypotheses, regression equations, *etc.*).
+- Which part of the test changes if we opt for a Breusch-Pagan test, rather than a White test?
+- We are also concerned about omitted-variable bias—specifically with respect to a city's average income $\left( \text{Income}_i \right)$. In class we showed that the probability limit OLS estimator for $\beta_1$ is
+$$
+\begin{align}
+   \mathop{\text{plim}}(\hat{\beta}_1) = \beta_1 + \dfrac{\mathop{\text{Cov}} \left(\text{Police},\, \text{Income} \right)}{\mathop{\text{Var}} \left( \text{Police} \right)}
+\end{align}
+$$
+If (a) cities with higher incomes have more police officers and (b) higher incomes lead to less crime, then *how* (which direction) will OLS be biased for $\beta_1$ in equation $(1)$? Explain your answer.
+
+---
+class: clear
+
+## Extra Credit
+
+**ec** Draw a picture of heteroskedastic disturbances in which the Goldfeld-Quandt test for heteroskedasticity would fail to find evidence of heteroskedasticity.

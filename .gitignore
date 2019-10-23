@@ -2,5 +2,8 @@
 *.rdb
 *.DS_Store
 .Rproj.user
+Data/grades.csv
 
-Midterm/Exam*
+PS03/IDEAS
+
+Final/Exam

@@ -1,0 +1,1443 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Instrumental Variables</title>
+    <meta charset="utf-8">
+    <meta name="author" content="Edward Rubin" />
+    <meta name="date" content="2019-05-29" />
+    <link href="11_instrumental_variables_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="11_instrumental_variables_files/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+    <link href="11_instrumental_variables_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
+    <script src="11_instrumental_variables_files/kePrint-0.0.1/kePrint.js"></script>
+    <link rel="stylesheet" href="my-css.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Instrumental Variables
+## EC 421, Set 11
+### Edward Rubin
+### 29 May 2019
+
+---
+
+class: inverse, middle
+
+
+
+# Prologue
+
+---
+name: schedule
+
+# Schedule
+
+## Last Time
+
+Causality
+
+## Today
+
+- Review: Causality
+- New: Instrumental variables
+
+## Upcoming
+
+Assignment soon.
+
+---
+layout: false
+class: inverse, middle
+# Causality
+## Review
+---
+layout: true
+# Causality
+## Review
+---
+name: causality_review
+
+In our last lecture, we returned to the concept of .hi[causality].
+
+--
+
+We worked through the *Rubin causal model*, in which we defined
+
+- `\(\color{#e64173}{y_{1i}:}\)` the outcome for individual `\(i\)` if she had received treatment
+
+--
+- `\(\color{#6A5ACD}{y_{0i}:}\)` the outcome for individual `\(i\)` if she had not received treatment
+
+--
+
+and we referred to individuals who did not receive treatment as *control*.
+
+--
+
+***If*** we were able to know both `\(\color{#e64173}{y_{1i}}\)` ***and*** `\(\color{#6A5ACD}{y_{0i}}\)`, we could calculate the causal effect of treatment for individual `\(i\)`, _i.e._,
+
+--
+
+$$
+`\begin{align}
+  \tau_i = \color{#e64173}{y_{1i}} - \color{#6A5ACD}{y_{0i}}
+\end{align}`
+$$
+
+---
+
+.hi-slate[Fundamental problem of causal inference:]
+&lt;br&gt;We cannot simultaneously know `\(\color{#e64173}{y_{1i}}\)` and `\(\color{#6A5ACD}{y_{0i}}\)`.
+
+--
+
+Either we observe individual `\(i\)` in the treatment group, _i.e._,
+$$
+`\begin{align}
+  \tau_i = \color{#e64173}{y_{1i}} - \color{#6A5ACD}{?}
+\end{align}`
+$$
+
+--
+
+or we observe `\(i\)` in the control group, _i.e._,
+$$
+`\begin{align}
+  \tau_i = \color{#e64173}{?} - \color{#6A5ACD}{y_{0i}}
+\end{align}`
+$$
+
+--
+
+but never both at the same time.
+---
+
+If we want to know `\(\tau_i\)` (or at least `\(\overline{\tau}\)`), what can we do?
+
+--
+
+**Idea:** Estimate the .hi-slate[average treatment effect] as the difference between the average outcomes in the treatment group and the control group, _i.e._,
+
+$$
+`\begin{align}
+  \color{#e64173}{\mathop{Avg}\left( y_i\mid D_i = 1 \right)} - \color{#6A5ACD}{\mathop{Avg}\left( y_i\mid D_i =0 \right)}
+\end{align}`
+$$
+where `\(D_i=1\)` if `\(i\)` received treatment, and `\(D_i=0\)` if `\(i\)` is in the control group.
+
+---
+
+**Result:** We showed that even when the treatment effect is constant (meaning `\(\tau_i=\tau\)` for all `\(i\)`),
+$$
+`\begin{align}
+  &amp;\color{#e64173}{\mathop{Avg}\left( y_i\mid D_i = 1 \right)} - \color{#6A5ACD}{\mathop{Avg}\left( y_i\mid D_i =0 \right)} \\
+  &amp;\quad\quad = \tau + \underbrace{\color{#e64173}{\mathop{Avg}\left(\color{#6A5ACD}{y_{0,i}} \mid D_i = 1 \right)} - \color{#6A5ACD}{\mathop{Avg}\left( y_{0,i}\mid D_i =0 \right)}}_{\color{#FFA500}{\text{Selection bias}}}
+\end{align}`
+$$
+
+which says that the difference in the groups' means will give us a **biased estimate** for the causal effect of treatment .hi-orange[if we have selection bias.]
+---
+
+**Q:** What is this .hi-orange[selection bias]?
+
+--
+
+**A:** **(Informal)** We have selection bias when our control group doesn't offer a good comparison for our treatment group.
+
+--
+
+Specifically, the control group doesn't give us a good .hi-orange[counterfactual] for .orange[what our treatment group would have looked like if the members had not received treatment.]
+--
+ Basically, the groups are different.
+
+--
+
+**A:** **(Formal)** The .pink[average *untreated* outcome for a member of our **treatment group**] (which we cannot observe) differs from the .purple[average *untreated* outcome for a member of our **control group**], _i.e._,
+$$
+`\begin{align}
+  \color{#e64173}{\mathop{Avg}\left(\color{#6A5ACD}{y_{0,i}} \mid D_i = 1 \right)} - \color{#6A5ACD}{\mathop{Avg}\left( y_{0,i}\mid D_i =0 \right)}
+\end{align}`
+$$
+---
+
+.hi-slate[Practical problem:] Selection bias is also difficult to observe
+
+$$
+`\begin{align}
+  \underbrace{\color{#e64173}{\mathop{Avg}\left(\color{#6A5ACD}{y_{0,i}} \mid D_i = 1 \right)}}_{\color{#e64173}{\text{Unobservable}}} - \color{#6A5ACD}{\mathop{Avg}\left( y_{0,i}\mid D_i =0 \right)}
+\end{align}`
+$$
+
+(back to the *fundamental problem of causal inference*)
+
+--
+
+.hi-slate[Bigger problem:] If selection bias is present, our estimate for `\(\tau\)` is biased, preventing us from understanding the causal effect of treatment.
+
+--
+
+Sounds a bit like omitted-variable bias, right?
+--
+ Our .pink[treatment] variable is correlated with something that makese the two groups different.
+---
+
+**Example:** Imagine we have two people—Al and Bri—and a single binary treatment, college. We interested in the effect of college on earnings.
+
+.pull-left[.center[
+.pink[Earn.sub[1,Al]] = .pink[$60K]
+&lt;br&gt;.purple[Earn.sub[0,Al]] = .purple[$30K]
+]]
+.pull-right[
+.pink[Earn.sub[1,Bri]] = .pink[$140K]
+&lt;br&gt;.purple[Earn.sub[0,Bri]] = .purple[$110K]
+]
+
+--
+
+They both have the same treatment effect (return to college)
+--
+&lt;br&gt; `\(\quad\quad\tau\)`.sub[Al] = .pink[Earn.sub[1,Al]] - .purple[Earn.sub[0,Al]] = .pink[$60K] - .purple[$30K] = $30K
+--
+&lt;br&gt; `\(\quad\quad\tau\)`.sub[Bri] = .pink[Earn.sub[1,Bri]] - .purple[Earn.sub[0,Bri]] = .pink[$140K] - .purple[$100K] = $30K
+
+--
+
+but any real-world estimate would have serious selection issues since .purple[Earn.sub[0,Al]] ≠ .purple[Earn.sub[0,Bri].]
+---
+count: false
+
+**Example:** Imagine we have two people—Al and Bri—and a single binary treatment, college. We interested in the effect of college on earnings.
+
+.pull-left[.center[
+.pink[Earn.sub[1,Al]] = .pink[$60K]
+&lt;br&gt;.purple[Earn.sub[0,Al]] = .purple[$30K]
+]]
+.pull-right[
+.pink[Earn.sub[1,Bri]] = .pink[$140K]
+&lt;br&gt;.purple[Earn.sub[0,Bri]] = .purple[$110K]
+]
+
+The selection bias...
+
+--
+
+If Bri attended college (D.sub[Bri]=1) and Al did not (D.sub[Al]=0):
+&lt;br&gt;
+`\(\quad\quad\hat{\tau}\)` = .pink[Earn.sub[1,Bri]] - .purple[Earn.sub[0,Al]] = .pink[$140K] - .purple[$30K] = $110K
+
+--
+
+If Al attended college (D.sub[Al]=1) and Bri did not (D.sub[Bri]=0):
+&lt;br&gt;
+`\(\quad\quad\hat{\tau}\)` = .pink[Earn.sub[1,Al]] - .purple[Earn.sub[0,Bri]] = .pink[$60K] - .purple[$110K] = -$50K
+
+
+
+---
+
+We have (at least) two problems...
+
+1. Selection bias is difficult to observe
+
+2. If selection bias is present, our estimate for `\(\tau\)` is biased, preventing us from understanding the causal effect of treatment.
+
+--
+
+.hi-slate[Solution:] Eliminate/minimize selection bias.
+
+--
+
+- .hi-slate[Option 1:] .hi-pink[Distribute treatment] in a way such that the treatment and control groups are essentially identical
+--
+ (experiments).
+
+--
+
+- .hi-slate[Option 2:] .hi-purple[Build a control] group that *matches* the treatment group
+--
+ &lt;br&gt;(life with observational data).
+---
+layout: true
+# Instrumental variables
+---
+class: inverse, middle
+---
+name: intro
+
+## Intro
+
+.hi[Instrumental variables (IV)] is one route econometricians often take toward estimating the causal effect of a treatment/program.
+
+--
+
+*Recall:* .hi-orange[Selection bias] means our .pink[treatment] and .purple[control] groups differ on some unobserved/omitted dimension. (.hi-slate[Endogeneity])
+
+--
+
+.hi-pink[Instrumental variables] attempts to separate out
+
+- the .hi-slate[exogenous] part of `\(x\)`, which gives us unbiased estimates
+- the .hi-slate[endogenous] part of `\(x\)`, which biases our results
+
+--
+
+If we use only the exogenous (*good*) variation in `\(x\)`, then we can avoid selection bias/omitted-variable bias.
+---
+
+## Introductory example
+
+*Example:* If we want to estimate the effect of veteran status on earnings,
+$$
+`\begin{align}
+  \text{Earnings}_i = \beta_0 + \beta_1 \text{Veteran}_i + u_i \tag{1}
+\end{align}`
+$$
+
+--
+
+We would love to calculate `\(\color{#e64173}{\text{Earnings}_{1i}} - \color{#6A5ACD}{\text{Earnings}_{0i}}\)`, but we can't.
+
+--
+
+And OLS will likely be biased for `\((1)\)` due to selection/omitted-variable bias.
+
+---
+
+## Introductory example
+
+Imagine that we can split veteran status into an exogenous part and an endogenous part...
+
+--
+
+$$
+`\begin{align}
+  \text{Earnings}_i
+  &amp;= \beta_0 + \beta_1 \text{Veteran}_i + u_i \tag{1} \\
+  &amp;= \beta_0 + \beta_1 \left(\text{Veteran}_i^{\text{Exog.}} + \text{Veteran}_i^{\text{Endog.}}\right) + u_i \\
+  &amp;= \beta_0 + \beta_1 \text{Veteran}_i^{\text{Exog.}} + \underbrace{\beta_1 \text{Veteran}_i^{\text{Endog.}} + u_i}_{w_i} \\
+  &amp;= \beta_0 + \beta_1 \text{Veteran}_i^{\text{Exog.}} + w_i
+\end{align}`
+$$
+
+--
+
+We could use this exogenous variation in veteran status to consistently estimate `\(\beta_1\)`.
+
+--
+
+**Q:** What would exogenous variation in veteran status mean?
+---
+
+## Introductory example
+
+**Q:** What would exogenous variation in veteran status mean?
+
+--
+
+**A.sub[1]:** Choices to enlist in the military that are essentially random—or at least uncorrelated with omitted variables and the disturbance.
+
+--
+
+**A.sub[2]:** .hi-orange[No selection bias:]
+$$
+`\begin{align}
+  \color{#e64173}{\mathop{Avg}\left(\text{Earnings}_{0i}\mid\text{Veteran}_i = 1\right)} - \color{#6A5ACD}{\mathop{Avg}\left( \text{Earnings}_{0i} \mid \text{Veteran}_i = 0 \right)} = 0
+\end{align}`
+$$
+
+---
+name: instruments
+
+## Instruments
+
+**Q:** How do we isolate this *exogenous variation* in our explanatory variable?
+--
+&lt;br&gt;**A:** Find an instrument (an instrumental variable).
+
+--
+
+**Q:** What's an instrument?
+--
+&lt;br&gt;**A:** An .hi-pink[instrument] is a variable that is
+
+1. **correlated** with the **explanatory variable** of interest (.hi[relevant]),
+2. **uncorrelated** with the **disturbance** (.hi[exogenous]).
+
+---
+
+## Instruments
+
+&gt;**Q:** What's an instrument?
+&gt;&lt;br&gt;**A:** An .hi-pink[instrument] is a variable that is
+&gt;
+&gt;1. **correlated** with the **explanatory variable** of interest (.hi[relevant]),
+&gt;2. **uncorrelated** with the **disturbance** (.hi[exogenous]).
+
+--
+
+So if we want an instrument `\(z_i\)` for endogenous veteran status in
+$$
+`\begin{align}
+  \text{Earnings}_i = \beta_0 + \beta_1 \text{Veteran}_i + u_i
+\end{align}`
+$$
+
+1. .hi[Relevant:] `\(\mathop{\text{Cov}} \left( \text{Veteran}_i,\, z_i \right) \neq 0\)`
+2. .hi[Exogenous:] `\(\mathop{\text{Cov}} \left( z_i,\, u_i \right) = 0\)`
+---
+name: relevant
+
+## Instruments: Relevance
+
+.hi[Relevance:] We need the instrument to cause a change in (correlate with) our endogenous explanatory variable.
+
+We can actually test this requirement using regression and a *t* test.
+
+--
+
+***Example:*** For the .pink[veteran status], consider three potential instruments:
+
+.pull-left[1\. Social security number&lt;br&gt;.white[blank]]
+
+--
+
+.pull-right[.hi-slate[Probably not relevant]&lt;br&gt;uncorrelated with military service]
+
+--
+
+.pull-left[2\. Physical fitness&lt;br&gt;.white[blank]]
+
+--
+
+.pull-right[.hi-pink[Potentially relevant]&lt;br&gt;service may correlate with fitness]
+
+--
+
+.pull-left[3\. Vietnam War draft]
+
+--
+
+.pull-right[.hi-pink[Relevant]&lt;br&gt;being draw led to service]
+
+---
+name: exogenous
+
+## Instruments: Exogeneity
+
+.hi[Exogeneity:] The instrument to be independent of omitted factors that affect our outcome variable—as good as randomly assigned.
+
+`\(z_i\)` must be uncorrelated with our disturbance `\(u_i\)`. .hi[Not testable.]
+
+--
+
+***Example:*** For the .pink[veteran status], consider three potential instruments:
+
+.pull-left[1\. Social security number&lt;br&gt;.white[blank]]
+
+--
+
+.pull-right[.hi-pink[Exogenous]&lt;br&gt;Indep. of other factors of service]
+
+--
+
+.pull-left[2\. Physical fitness&lt;br&gt;.white[blank]]
+
+--
+
+.pull-right[.hi-slate[Not exogenous]&lt;br&gt;fitness correlates with many things]
+
+--
+
+.pull-left[3\. Vietnam War draft]
+
+--
+
+.pull-right[.hi-pink[Exogenous]&lt;br&gt;the lottery was random]
+
+---
+
+## Instrumental review
+
+Let's recap...
+
+- Our instrument must be .hi[correlated with our endogenous variable].
+
+- Our instrument must be .hi[uncorrelated with any other variable that affects the outcome].
+
+--
+
+.hi-slate[In other words:]
+&lt;br&gt;The instrument only affects our outcome through the endogenous variable.
+---
+
+## Back to our example
+
+For .pink[veteran status] we considered three potential instruments:
+
+--
+
+.pull-left[1\. Social security number&lt;br&gt;.white[blank]&lt;br&gt;.white[blank]]
+
+.pull-right[.hi-slate[Not relevant]&lt;br&gt;.hi-pink[Exogenous]&lt;br&gt;.white[blank]]
+
+--
+
+.pull-left[2\. Physical fitness&lt;br&gt;.white[blank]&lt;br&gt;.white[blank]]
+
+.pull-right[.hi-pink[Probably relevant]&lt;br&gt;.hi-slate[Not exogenous]&lt;br&gt;.white[blank]]
+
+--
+
+.pull-left[3\. Vietnam War draft&lt;br&gt;.white[blank]&lt;br&gt;.white[blank]]
+
+.pull-right[.hi-pink[Relevant]&lt;br&gt;.hi-pink[Exogenous]&lt;br&gt;.white[blank]]
+
+--
+
+Thus, only the Vietnam War's draft lottery appears to be a .hi[*valid* instrument].
+
+---
+layout: false
+class: clear, middle
+
+If we have a *valid* instrument (_e.g._, the draft lottery), how do we use it?
+---
+layout: true
+# Instrumental variables
+## Estimation
+---
+name: iv_estimation
+
+*Recall:* We want to estimate the effect of veteran status on earnings.
+$$
+`\begin{align}
+  \color{#FFA500}{\text{Earnings}_i} = \beta_0 + \beta_1 \color{#6A5ACD}{\text{Veteran}_i} + u_i
+\end{align}`
+$$
+
+--
+
+Let's consider two related effects:
+
+--
+
+1. The effect of the .hi-pink[instrument] on the .hi-purple[endogenous variable], _e.g._,
+$$
+`\begin{align}
+  \color{#6A5ACD}{\text{Veteran}_i} = \gamma_0 + \gamma_1 \color{#e64173}{\text{Draft}_i} + v_i
+\end{align}`
+$$
+
+--
+1. The effect of the .hi-pink[instrument] on the .hi-orange[outcome variable], _e.g._,
+$$
+`\begin{align}
+  \color{#FFA500}{\text{Earnings}_i} = \pi_0 + \pi_1 \color{#e64173}{\text{Draft}_i} + w_i
+\end{align}`
+$$
+---
+
+*Recall:* We want to estimate the effect of veteran status on earnings.
+$$
+`\begin{align}
+  \color{#FFA500}{\text{Earnings}_i} = \beta_0 + \beta_1 \color{#6A5ACD}{\text{Veteran}_i} + u_i
+\end{align}`
+$$
+and we know that the draft affected veteran status.
+
+--
+
+.center[
+.hi-pink[Draft] ⟶ .hi-purple[Veteran status] ⟶ .hi-orange[Earnings]
+]
+
+Using our assumptions on independence and exogeneity:
+
+(Effect of .hi-pink[the draft] on .hi-orange[earnings]) =
+&lt;br&gt;  (Effect of .hi-pink[the draft] on .hi-purple[veteran status])×
+&lt;br&gt;  (Effect of .hi-purple[veteran status] on .hi-orange[earnings])
+---
+
+We just wrote out an expression for the effect of .hi-pink[the draft] on .hi-orange[earnings], _i.e._,
+
+(Effect of .hi-pink[the draft] on .hi-orange[earnings]) =
+&lt;br&gt;  (Effect of .hi-pink[the draft] on .hi-purple[veteran status])×
+&lt;br&gt;  (Effect of .hi-purple[veteran status] on .hi-orange[earnings])
+
+--
+
+but we want to know the effect of .hi-purple[veteran status] on .hi-orange[earnings].
+--
+ Rearrange!
+
+--
+
+(Effect of .hi-purple[veteran status] on .hi-orange[earnings]) =
+&lt;br&gt;  .top[(Effect of .hi-pink[the draft] on .hi-orange[earnings])]
+&lt;br&gt;  .bottom[(Effect of .hi-pink[the draft] on .hi-purple[veteran status])]
+
+--
+
+Our .hi-pink[instrument] consistently estimates both parts of this fraction!
+---
+layout: true
+# Instrumental variables
+## Estimation: Bring it all together
+---
+
+By estimating two regressions involving our .hi-pink[instrument],
+
+1. The effect of the .hi-pink[instrument] on the .hi-purple[endogenous variable], _e.g._,
+$$
+`\begin{align}
+  \color{#6A5ACD}{\text{Veteran}_i} = \gamma_0 + \gamma_1 \color{#e64173}{\text{Draft}_i} + v_i
+\end{align}`
+$$
+
+1. The effect of the .hi-pink[instrument] on the .hi-orange[outcome variable], _e.g._,
+$$
+`\begin{align}
+  \color{#FFA500}{\text{Earnings}_i} = \pi_0 + \pi_1 \color{#e64173}{\text{Draft}_i} + w_i
+\end{align}`
+$$
+
+--
+
+we can estimate our desired effect:
+
+--
+
+(Effect of .hi-purple[veteran status] on .hi-orange[earnings]) =
+&lt;br&gt;  .top[(Effect of .hi-pink[the draft] on .hi-orange[earnings])]
+&lt;br&gt;  .bottom[(Effect of .hi-pink[the draft] on .hi-purple[veteran status])]
+
+---
+count: false
+
+By estimating two regressions involving our .hi-pink[instrument],
+
+1. The effect of the .hi-pink[instrument] on the .hi-purple[endogenous variable], _e.g._,
+$$
+`\begin{align}
+  \color{#6A5ACD}{\text{Veteran}_i} = \gamma_0 + \gamma_1 \color{#e64173}{\text{Draft}_i} + v_i
+\end{align}`
+$$
+
+1. The effect of the .hi-pink[instrument] on the .hi-orange[outcome variable], _e.g._,
+$$
+`\begin{align}
+  \color{#FFA500}{\text{Earnings}_i} = \pi_0 + \pi_1 \color{#e64173}{\text{Draft}_i} + w_i
+\end{align}`
+$$
+
+we can estimate our desired effect:
+
+(Effect of .hi-purple[veteran status] on .hi-orange[earnings]) = `\(\dfrac{\pi_1}{\gamma_1}\)`
+---
+
+So with instrumental variables, we estimate `\(\beta_1\)` using
+$$
+`\begin{align}
+  \hat{\beta}_1^\text{IV} = \dfrac{\hat{\pi}_1}{\hat{\gamma}_1}
+\end{align}`
+$$
+where `\(\hat{\pi}_1\)` and `\(\hat{\gamma}_1\)` come from the two equations we just discussed.
+
+--
+
+**Q:** Can we trust `\(\hat{\beta}_1^\text{IV}\)`?
+--
+&lt;br&gt;**A:** Yes... **if we have a valid instrument.**
+
+--
+$$
+`\begin{align}
+  \mathop{\text{plim}}\left( \hat{\beta}_1^\text{IV} \right) = \beta_1 + \dfrac{\mathop{\text{Cov}} \left( \color{#e64173}{\text{Instrument}},\, u \right)}{\mathop{\text{Cov}} \left( \color{#e64173}{\text{Instrument}},\, \color{#6A5ACD}{\text{Endog. variable}} \right)}
+\end{align}`
+$$
+--
+which equals `\(\beta_1\)` as long as our instrument is .hi-pink[exogenous] (numerator) and .hi-purple[relevant] (denominator).
+---
+layout: false
+class:clear
+name: venn
+
+&lt;img src="11_instrumental_variables_files/figure-html/venn_iv-1.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+count: false
+
+&lt;img src="11_instrumental_variables_files/figure-html/venn_iv_endog-1.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+count: false
+
+&lt;img src="11_instrumental_variables_files/figure-html/venn_iv_irrelevant-1.svg" style="display: block; margin: auto;" /&gt;
+---
+class: clear
+count: false
+
+&lt;img src="11_instrumental_variables_files/figure-html/venn_iv_endog2-1.svg" style="display: block; margin: auto;" /&gt;
+---
+layout: false
+# Venn diagram explanation
+
+In these figures (Venn diagrams)
+
+- Each circle illustrates a variable.
+- Overlap gives the share of correlatation between two variables.
+- Dotted borders denote *omitted* variables.
+
+Take-aways
+
+- Figure 1: .hi-pink[Valid instrument] (relevant; exogenous)
+- Figure 2: .hi-slate[Invalid instrument] (relevant; not exogenous)
+- Figure 3: .hi-slate[Invalid instrument] (not relevant; not exogenous)
+- Figure 4: .hi-slate[Invalid instrument] (relevant; not exogenous)
+
+---
+layout: false
+class: clear, middle
+
+Let's work an example in .mono[R].
+---
+layout: true
+# Instrumental variables
+## Example in .mono[R]
+---
+name: r_example
+
+Back to our age-old battle to estimate the returns to education.
+
+
+```
+#&gt; # A tibble: 722 x 4
+#&gt;     wage education education_dad education_mom
+#&gt;    &lt;int&gt;     &lt;int&gt;         &lt;int&gt;         &lt;int&gt;
+#&gt;  1   769        12             8             8
+#&gt;  2   808        18            14            14
+#&gt;  3   825        14            14            14
+#&gt;  4   650        12            12            12
+#&gt;  5   562        11            11             6
+#&gt;  6   600        10             8             8
+#&gt;  7  1154        15             5            14
+#&gt;  8  1000        12            11            12
+#&gt;  9   930        18            14            13
+#&gt; 10   900        15            12            12
+#&gt; # … with 712 more rows
+```
+---
+
+OLS for the returns to education with will likely (definitely) be biased...
+$$
+`\begin{align}
+  \color{#FFA500}{\text{Wage}_i} = \beta_0 + \beta_1 \color{#6A5ACD}{\text{Education}}_i + u_i
+\end{align}`
+$$
+
+--
+
+.hi-slate[(Likely biased) OLS results:]
+&lt;table class="table" style="font-size: 20px; margin-left: auto; margin-right: auto;"&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Term &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Est. &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; S.E. &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; t stat. &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; p-Value &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;background-color: white;"&gt; Intercept &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 176.504 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 89.152 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 1.98 &lt;/td&gt;
+   &lt;td style="text-align:left;background-color: white;"&gt; 0.0481 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;background-color: white;font-weight: bold;color: #6A5ACD;"&gt; Education &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #6A5ACD;"&gt; 58.594 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #6A5ACD;"&gt; 6.439 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #6A5ACD;"&gt; 9.10 &lt;/td&gt;
+   &lt;td style="text-align:left;background-color: white;font-weight: bold;color: #6A5ACD;"&gt; &amp;lt;0.0001 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+--
+
+but what if mother's education provides a valid instrument?
+---
+
+We can check/test the *relevance* of .hi-pink[mother's education] for .hi-purple[education].
+
+--
+
+This regression is known as the .hi-slate[*first stage*:]
+&lt;br&gt; The effect of the .pink[instrument] on our .purple[endogenous explanatory variable].
+
+$$
+`\begin{align}
+  \color{#6A5ACD}{\text{Education}_i} = \gamma_0 + \gamma_1 \color{#e64173}{\left( \text{Mother's Education} \right)_i} + v_i
+\end{align}`
+$$
+
+--
+
+.hi-slate[First-stage results:]
+&lt;table class="table" style="font-size: 20px; margin-left: auto; margin-right: auto;"&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Term &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Est. &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; S.E. &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; t stat. &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; p-Value &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;background-color: white;"&gt; Intercept &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 10.487 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 0.306 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 34.32 &lt;/td&gt;
+   &lt;td style="text-align:left;background-color: white;"&gt; &amp;lt;0.0001 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;background-color: white;font-weight: bold;color: #e64173;"&gt; Mother's Education &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #e64173;"&gt; 0.294 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #e64173;"&gt; 0.027 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #e64173;"&gt; 10.75 &lt;/td&gt;
+   &lt;td style="text-align:left;background-color: white;font-weight: bold;color: #e64173;"&gt; &amp;lt;0.0001 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+--
+
+The *p*-value suggests a very strong relationship (very *relevant*).
+---
+layout: false
+
+# Instrumental variables
+## Visualizing the first stage
+
+&lt;img src="11_instrumental_variables_files/figure-html/first_stage_plot-1.svg" style="display: block; margin: auto;" /&gt;
+---
+count: false
+
+# Instrumental variables
+## Visualizing the first stage
+
+&lt;img src="11_instrumental_variables_files/figure-html/first_stage_plot2-1.svg" style="display: block; margin: auto;" /&gt;
+---
+# Instrumental variables
+## Exogeneity
+
+**Q:** What does .hi[exogeneity] mean in this case?
+--
+&lt;br&gt;**A:** We need two things
+
+1. .pink[Mother's education (our instrument)] must only affect earnings through .purple[education (our endogenous explanatory variable)].
+2. .pink[Mother's education] must be uncorrelated with other factors that affect .orange[wages (our outcome variable)].
+
+--
+
+We want to be able to compare two people (*A* and *B*) whose mothers have different levels of education and say that the only differences between the two people (*A* and *B*) are due to their mothers' educational levels.
+
+--
+
+**Q:** Does *mother's education* seem likely to satisfy exogeneity?
+---
+layout: true
+# Instrumental variables
+## Example in .mono[R]
+---
+
+Now, let's estimate the .hi-turquoise[*reduced form*]:
+&lt;br&gt; The effect of the .pink[instrument] on our .orange[outcome variable].
+
+$$
+`\begin{align}
+  \color{#FFA500}{\text{Wage}_i} = \pi_0 + \pi_1 \color{#e64173}{\left( \text{Mother's Education} \right)_i} + w_i
+\end{align}`
+$$
+
+--
+
+.hi-turquoise[Reduced-form results:]
+&lt;table class="table" style="font-size: 20px; margin-left: auto; margin-right: auto;"&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Term &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Est. &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; S.E. &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; t stat. &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; p-Value &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;background-color: white;"&gt; Intercept &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 633.34 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 58.58 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 10.81 &lt;/td&gt;
+   &lt;td style="text-align:left;background-color: white;"&gt; &amp;lt;0.0001 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;background-color: white;font-weight: bold;color: #e64173;"&gt; Mother's Education &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #e64173;"&gt; 31.81 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #e64173;"&gt; 5.24 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #e64173;"&gt; 6.07 &lt;/td&gt;
+   &lt;td style="text-align:left;background-color: white;font-weight: bold;color: #e64173;"&gt; &amp;lt;0.0001 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+--
+
+**Q.sub[1]:** How do we interpret this estimated coefficient `\(\left( \hat{\pi}_1 \right)\)`?
+--
+&lt;br&gt;**Q.sub[2]:** If our instrument is *valid*, can we interpret these estimates as .hi[causal]?
+---
+
+So what is our IV-based estimate for the returns to education?
+$$
+`\begin{align}
+  \color{#FFA500}{\text{Wage}_i} = \beta_0 + \beta_1 \color{#6A5ACD}{\text{Education}}_i + u_i
+\end{align}`
+$$
+
+--
+
+We know that the IV estimate for `\(\beta_1\)` is
+
+$$
+`\begin{align}
+  \hat{\beta}_1^\text{IV} = \dfrac{\color{#20B2AA}{\hat{\pi}_1}}{\color{#314f4f}{\hat{\gamma}_1}}
+\end{align}`
+$$
+
+--
+
+1. In the .hi-turquoise[reduced-form equation], we estimated `\(\color{#20B2AA}{\hat{\pi}_1 \approx 31.81}\)`.
+2. In the .hi-slate[first-stage equation], we estimated `\(\color{#314f4f}{\hat{\gamma}_1 \approx 0.294}\)`.
+
+--
+
+$$
+`\begin{align}
+  \implies\hat{\beta}_1^\text{IV} = \dfrac{\color{#20B2AA}{\hat{\pi}_1}}{\color{#314f4f}{\hat{\gamma}_1}} = \dfrac{\color{#20B2AA}{31.81}}{\color{#314f4f}{0.294}} \approx 108.2
+\end{align}`
+$$
+---
+
+**Alternative:** Use the function `iv_robust()` from the `estimatr` package.
+
+This new function `iv_robust` works very similar to our good friend `lm`:
+
+`iv_robust(y ~ x | z, data = dataset)`
+
+- `formula` Specify the regression followed by `|` and your instrument (`z`).
+- `data` You still need a dataset.
+
+***Note:*** As you might guess by its name, `iv_robust` calculates heteroskedasticity-robust standard errors by default.
+
+---
+
+In practice...
+
+
+```r
+# Estimate our IV regression
+iv_est &lt;- iv_robust(wage ~ education | education_mom, data = wage_df)
+```
+
+&lt;table class="table" style="font-size: 20px; margin-left: auto; margin-right: auto;"&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Term &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Est. &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; S.E. &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; t stat. &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; p-Value &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;background-color: white;"&gt; Intercept &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; -501.474 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 226.476 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; -2.21 &lt;/td&gt;
+   &lt;td style="text-align:left;background-color: white;"&gt; 0.0271 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;background-color: white;font-weight: bold;color: #6A5ACD;"&gt; Education &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #6A5ACD;"&gt; 108.214 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #6A5ACD;"&gt; 16.810 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #6A5ACD;"&gt; 6.44 &lt;/td&gt;
+   &lt;td style="text-align:left;background-color: white;font-weight: bold;color: #6A5ACD;"&gt; &amp;lt;0.0001 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+---
+layout: true
+# Instrumental variables
+## More
+---
+
+So now we know how to "do" instrumental variables
+--
+ *when we have one endogenous variable and one exogenous variable.*
+
+--
+
+1. Estimate the reduced form (regress .orange[outcome var.] on .pink[instrument]).
+2. Estimate the first stage (regress .purple[expl. var.] on .pink[instrument]).
+3. Calculate the IV estimate using the estimates from (1) and (2).
+
+Our magical .pink[instrument] isolates the exogenous variation in our .purple[endogenous variable].
+
+--
+
+**Q:** What if we want more?
+--
+ (_E.g._, more instruments or endog. variables)
+--
+&lt;br&gt;**A:** Too bad.
+---
+count: false
+
+So now we know how to "do" instrumental variables *when we have one endogenous variable and one exogenous variable.*
+
+1. Estimate the reduced form (regress .orange[outcome var.] on .pink[instrument]).
+2. Estimate the first stage (regress .purple[expl. var.] on .pink[instrument]).
+3. Calculate the IV estimate using the estimates from (1) and (2).
+
+Our magical .pink[instrument] isolates the exogenous variation in our .purple[endogenous variable].
+
+**Q:** What if we want more? (_E.g._, more instruments or endog. variables)
+&lt;br&gt;**A:** .st[Too bad.] Extend IV to .hi[two-stage least squares (2SLS)].
+---
+layout: false
+class: inverse, middle
+# Two-stage least squares
+---
+layout: true
+# Two-stage least squares
+## Intro
+---
+name: 2sls_intro
+
+The intuition and insights of IV carry over into two-stage least squares.
+
+--
+
+**Plus:** The *first stage* that we've been discussing is actually the *first* of the *two stages* in two-stage least squares.
+
+--
+
+$$
+`\begin{align}
+  {\color{#c5c5c5}{\text{Endogenous model}}}&amp; &amp;\color{#FFA500}{\text{Outcome}_i} &amp;= \beta_0 + \beta_1 \color{#6A5ACD}{\left( \text{Endog. var.} \right)_i} + u_i\\[0.5em]
+  {\text{First stage}}&amp; &amp;\color{#6A5ACD}{\left( \text{Endog. var.} \right)_i} &amp;= \pi_0 + \pi_1 \color{#e64173}{\text{Instrument}_i} + v_i\\[0.25em]
+  {\text{Second stage}}&amp; &amp;\color{#FFA500}{\text{Outcome}_i} &amp;= \delta_0 + \delta_1 \color{#6A5ACD}{\widehat{\left( \text{Endog. var.} \right)}_i} + \varepsilon_i\\[0.5em]
+  {\color{#c5c5c5}{\text{Reduced form}}}&amp; &amp;\color{#FFA500}{\text{Outcome}_i} &amp;= \pi_0 + \pi_1 \color{#e64173}{\text{Instrument}_i} + w_i\\[0.25em]
+\end{align}`
+$$
+
+where `\(\color{#6A5ACD}{\widehat{\left( \text{Endog. var.} \right)}_i}\)` denotes the predicted values (*fitted values*) from the first-stage regression.
+---
+
+Two-stage least squares is very flexible—we include other controls, additional endogenous variables, *and* have multiple instruments.
+
+**But** don't get too distracted by this fancy flexiblity.
+
+We still need .hi[valid] instruments.
+---
+layout: true
+# Two-stage least squares
+## In .mono[R]
+---
+name: 2sls_r
+
+Back to our *returns to education* example.
+
+$$
+`\begin{align}
+  \color{#FFA500}{\text{Wage}_i} = \beta_0 + \beta_1 \color{#6A5ACD}{\text{Education}}_i + u_i
+\end{align}`
+$$
+
+Imagine that mother's *and* father's education are both valid instruments.
+
+Then our .hi-slate[first-stage regression] is
+$$
+`\begin{align}
+  \color{#6A5ACD}{\text{Education}}_i = \gamma_0 + \gamma_1 \color{#e64173}{\left( \text{Mother's education} \right)}_i + \gamma_2 \color{#e64173}{\left( \text{Father's education} \right)}_i + v_i
+\end{align}`
+$$
+which we can estimate via OLS.
+
+--
+
+**Q:** Why?
+---
+
+$$
+`\begin{align}
+  \color{#6A5ACD}{\text{Education}}_i = \gamma_0 + \gamma_1 \color{#e64173}{\left( \text{Mother's education} \right)}_i + \gamma_2 \color{#e64173}{\left( \text{Father's education} \right)}_i + v_i
+\end{align}`
+$$
+
+
+```r
+stage1 &lt;- lm(education ~ education_mom + education_dad, wage_df)
+```
+
+.hi-slate[First-stage results:]
+&lt;table class="table" style="font-size: 20px; margin-left: auto; margin-right: auto;"&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Term &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Est. &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; S.E. &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; t stat. &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; p-Value &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;background-color: white;"&gt; Intercept &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 9.845 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 0.305 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 32.31 &lt;/td&gt;
+   &lt;td style="text-align:left;background-color: white;"&gt; &amp;lt;0.0001 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;background-color: white;font-weight: bold;color: #e64173;"&gt; Mother's Education &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #e64173;"&gt; 0.149 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #e64173;"&gt; 0.032 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #e64173;"&gt; 4.62 &lt;/td&gt;
+   &lt;td style="text-align:left;background-color: white;font-weight: bold;color: #e64173;"&gt; &amp;lt;0.0001 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;background-color: white;font-weight: bold;color: #e64173;"&gt; Father's Education &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #e64173;"&gt; 0.216 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #e64173;"&gt; 0.028 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #e64173;"&gt; 7.84 &lt;/td&gt;
+   &lt;td style="text-align:left;background-color: white;font-weight: bold;color: #e64173;"&gt; &amp;lt;0.0001 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+--
+
+Our instruments each appear to be *relevant*.
+--
+&lt;br&gt;Formally, we should jointly test them (_e.g._, `\(F\)` test).
+---
+
+Using our .slate[estimated first stage], we grab the *fitted* .purple[endogenous variable]
+$$
+`\begin{align}
+  \color{#6A5ACD}{\widehat{\text{Education}}}_i = \widehat{\gamma}_0 + \widehat{\gamma}_1 \color{#e64173}{\left( \text{Mother's education} \right)}_i + \widehat{\gamma}_2 \color{#e64173}{\left( \text{Father's education} \right)}_i
+\end{align}`
+$$
+
+--
+
+
+```r
+# Add fitted values from first stage
+wage_df$education_hat &lt;- stage1$fitted.values
+```
+
+--
+
+Now we use OLS (again) to estimate the .hi-green[second-stage regression]
+$$
+`\begin{align}
+  \color{#FFA500}{\text{Wage}_i} = \delta_0 + \delta_1 \color{#6A5ACD}{\widehat{\text{Education}}}_i + \varepsilon_i
+\end{align}`
+$$
+---
+
+$$
+`\begin{align}
+  \color{#FFA500}{\text{Wage}_i} = \delta_0 + \delta_1 \color{#6A5ACD}{\widehat{\text{Education}}}_i + \varepsilon_i
+\end{align}`
+$$
+
+
+```r
+stage2 &lt;- lm(wage ~ education_hat, wage_df)
+```
+
+.hi-green[Second-stage results:]
+&lt;table class="table" style="font-size: 20px; margin-left: auto; margin-right: auto;"&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Term &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Est. &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; S.E. &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; t stat. &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; p-Value &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;background-color: white;"&gt; Intercept &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; -454.683 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 198.149 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; -2.29 &lt;/td&gt;
+   &lt;td style="text-align:left;background-color: white;"&gt; 0.022 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;background-color: white;font-weight: bold;color: #6A5ACD;"&gt; Fitted Education &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #6A5ACD;"&gt; 104.789 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #6A5ACD;"&gt; 14.462 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #6A5ACD;"&gt; 7.25 &lt;/td&gt;
+   &lt;td style="text-align:left;background-color: white;font-weight: bold;color: #6A5ACD;"&gt; &amp;lt;0.0001 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+---
+layout: false
+class: clear
+
+.purple[Ordinary least squares]
+&lt;table class="table" style="font-size: 20px; margin-left: auto; margin-right: auto;"&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Term &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Est. &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; S.E. &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; t stat. &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; p-Value &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;background-color: white;"&gt; Intercept &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 176.504 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 89.152 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 1.98 &lt;/td&gt;
+   &lt;td style="text-align:left;background-color: white;"&gt; 0.0481 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;background-color: white;font-weight: bold;color: #6A5ACD;"&gt; Education &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #6A5ACD;"&gt; 58.594 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #6A5ACD;"&gt; 6.439 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #6A5ACD;"&gt; 9.10 &lt;/td&gt;
+   &lt;td style="text-align:left;background-color: white;font-weight: bold;color: #6A5ACD;"&gt; &amp;lt;0.0001 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;br&gt;.slate[Instrumental variables]
+&lt;table class="table" style="font-size: 20px; margin-left: auto; margin-right: auto;"&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Term &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Est. &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; S.E. &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; t stat. &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; p-Value &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;background-color: white;"&gt; Intercept &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; -501.474 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 226.476 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; -2.21 &lt;/td&gt;
+   &lt;td style="text-align:left;background-color: white;"&gt; 0.0271 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;background-color: white;font-weight: bold;color: darkslategrey;"&gt; Education &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: darkslategrey;"&gt; 108.214 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: darkslategrey;"&gt; 16.810 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: darkslategrey;"&gt; 6.44 &lt;/td&gt;
+   &lt;td style="text-align:left;background-color: white;font-weight: bold;color: darkslategrey;"&gt; &amp;lt;0.0001 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;br&gt;.green[Two-stage least squares w/ two instruments]
+&lt;table class="table" style="font-size: 20px; margin-left: auto; margin-right: auto;"&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Term &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Est. &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; S.E. &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; t stat. &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; p-Value &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;background-color: white;"&gt; Intercept &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; -454.683 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 198.149 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; -2.29 &lt;/td&gt;
+   &lt;td style="text-align:left;background-color: white;"&gt; 0.022 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;background-color: white;font-weight: bold;color: #8bb174;"&gt; Education &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #8bb174;"&gt; 104.789 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #8bb174;"&gt; 14.462 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #8bb174;"&gt; 7.25 &lt;/td&gt;
+   &lt;td style="text-align:left;background-color: white;font-weight: bold;color: #8bb174;"&gt; &amp;lt;0.0001 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+---
+layout: false
+
+# Two-stage least squares
+## In .mono[R]
+
+As you probably guessed, .mono[R] will do both of the stages for you.
+
+--
+
+`iv_robust(y ~ x1 + x2 + ⋯ | z1 + z2 + ⋯, data)`
+
+--
+
+In our case, we have
+- one explanatory variable (`x`) (.purple[education])
+- two instruments (`z`) (.pink[parents' educations])
+
+
+```r
+iv_robust(wage ~ education | education_mom + education_dad, data = wage_df)
+```
+
+&lt;table class="table" style="font-size: 20px; margin-left: auto; margin-right: auto;"&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Term &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Est. &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; S.E. &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; t stat. &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; p-Value &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;background-color: white;"&gt; Intercept &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; -454.683 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; 199.946 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;"&gt; -2.27 &lt;/td&gt;
+   &lt;td style="text-align:left;background-color: white;"&gt; 0.0233 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;background-color: white;font-weight: bold;color: #6A5ACD;"&gt; Education, fitted &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #6A5ACD;"&gt; 104.789 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #6A5ACD;"&gt; 14.852 &lt;/td&gt;
+   &lt;td style="text-align:right;background-color: white;font-weight: bold;color: #6A5ACD;"&gt; 7.06 &lt;/td&gt;
+   &lt;td style="text-align:left;background-color: white;font-weight: bold;color: #6A5ACD;"&gt; &amp;lt;0.0001 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+---
+name: more
+
+# Two-stage least squares
+## There's more!
+
+Because 2SLS .hi[isolates exogenous variation in an endogenous variable], we apply it in other settings that are biased from *endogenous* relationships.
+
+--
+
+.hi[Common applications]
+
+- **General causal inference** for observational data (as we've seen).
+- **Experiments:** Randomize a treatment that affects an endog. variable.
+- **Measurement error:** Regress noisy `\(x_1\)` on noisy `\(x_2\)` to capture signal.
+- **Simultaneous relationships** (_e.g._, `\(p\)` and `\(q\)` from supply and demand).
+
+However, in any 2SLS/IV setting, you need to mind the requirements for .hi[valid instruments]—.pink[exogeneity] and .pink[relevance].
+
+---
+layout: false
+# Table of contents
+
+.pull-left[
+### Admin
+.smallest[
+
+1. [Schedule](#schedule)
+1. [Causality review](#causality_review)
+]
+]
+
+.pull-right[
+### Instrumental variables
+.smallest[
+
+1. [Introduction](#intro)
+1. [What is an instrument?](#instruments)
+  - [Relevant](#relevant)
+  - [Exogenous](#exogenous)
+1. [IV Estimation](#iv_estimation)
+1. [Venn diagrams](#venn)
+1. [Example in .mono[R]](#r_example)
+1. [Two-stage least squares](#2sls_intro)
+  - [Introduction](#2sls_intro)
+  - [Back to .mono[R]](#2sls_r)
+1. [More applications](#more)
+]
+]
+---
+exclude: true
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script>
+(function() {
+  var i, text, code, codes = document.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+})();
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
