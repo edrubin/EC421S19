@@ -31,9 +31,7 @@ The slides below (linked by their topic) are .html files that will only work pro
 
 [Midterm](https://raw.githack.com/edrubin/EC421S19/master/Midterm/Exam/midterm.pdf) | [Midterm solutions](https://raw.githack.com/edrubin/EC421S19/master/Midterm/Exam/midterm_key.pdf)
 
-Midterm review materials:
-
-[Review topics](https://raw.githack.com/edrubin/EC421S19/master/Midterm/Topics/midterm_topics.pdf) | [Review problems](https://raw.githack.com/edrubin/EC421S19/master/Midterm/Review/midterm_review.pdf) | [Previous midterm](https://raw.githack.com/edrubin/EC421S19/master/Midterm/practice_exam.pdf) | [Previous midterm's solutions](https://raw.githack.com/edrubin/EC421S19/master/Midterm/practice_key.pdf)
+Midterm review materials: [Review topics](https://raw.githack.com/edrubin/EC421S19/master/Midterm/Topics/midterm_topics.pdf) | [Review problems](https://raw.githack.com/edrubin/EC421S19/master/Midterm/Review/midterm_review.pdf) | [Previous midterm](https://raw.githack.com/edrubin/EC421S19/master/Midterm/practice_exam.pdf) | [Previous midterm's solutions](https://raw.githack.com/edrubin/EC421S19/master/Midterm/practice_key.pdf)
 
 *Note:* We will not provide solutions for the review problems.
 
