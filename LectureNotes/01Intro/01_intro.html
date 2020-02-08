@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
   <head>
     <title>Introduction and Overview</title>
-    <meta charset="utf-8">
+    <meta charset="utf-8" />
     <meta name="author" content="Edward Rubin" />
-    <meta name="date" content="2019-04-01" />
+    <meta name="date" content="2020-01-09" />
     <link href="01_intro_files/remark-css/default.css" rel="stylesheet" />
     <link href="01_intro_files/remark-css/metropolis.css" rel="stylesheet" />
     <link href="01_intro_files/remark-css/metropolis-fonts.css" rel="stylesheet" />
@@ -26,7 +26,7 @@ class: center, middle, inverse, title-slide
 # Introduction and Overview
 ## EC 421, Set 1
 ### Edward Rubin
-### 01 April 2019
+### 09 January 2020
 
 ---
 
@@ -97,7 +97,7 @@ We want to test estimate/test the relationship `\(\text{GPA}=f(H, \text{SAT}, \t
 - __Q:__ How do we interpret `\(\beta_1\)`?
 --
 
-- __A:__ An additional hour in class correlates with a `\(\beta_1\)` unit increase in an individual's GPA.
+- __A:__ An additional hour in class correlates with a `\(\beta_1\)` unit increase in an individual's GPA (controlling for SAT and PCT).
 
 
 --
@@ -155,7 +155,7 @@ However, the results you learned required assumptions.
 --
 
 EC421 asks "**what happens when we violate these assumptions?**"
-- Can we find a fix?
+- Can we find a fix? (Especially: How/when is `\(\beta\)` *causal*?)
 - What happens if we don't (or can't) apply a fix?
 
 OLS still does some amazing things—but you need to know when to be **cautious, confident, or dubious**.
@@ -404,8 +404,8 @@ leaflet() %&gt;%
   addMarkers(lng = -123.075, lat = 44.045, popup = "The University of Oregon")
 ```
 
-<div id="htmlwidget-c260cf2f10915b3b1a3c" style="width:756px;height:432px;" class="leaflet html-widget"></div>
-<script type="application/json" data-for="htmlwidget-c260cf2f10915b3b1a3c">{"x":{"options":{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}}},"calls":[{"method":"addTiles","args":["//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",null,null,{"minZoom":0,"maxZoom":18,"tileSize":256,"subdomains":"abc","errorTileUrl":"","tms":false,"noWrap":false,"zoomOffset":0,"zoomReverse":false,"opacity":1,"zIndex":1,"detectRetina":false,"attribution":"&copy; <a href=\"http://openstreetmap.org\">OpenStreetMap<\/a> contributors, <a href=\"http://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA<\/a>"}]},{"method":"addMarkers","args":[44.045,-123.075,null,null,null,{"interactive":true,"draggable":false,"keyboard":true,"title":"","alt":"","zIndexOffset":0,"opacity":1,"riseOnHover":false,"riseOffset":250},"The University of Oregon",null,null,null,null,{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},null]}],"limits":{"lat":[44.045,44.045],"lng":[-123.075,-123.075]}},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-8837b30bf7d4ed5ef814" style="width:756px;height:432px;" class="leaflet html-widget"></div>
+<script type="application/json" data-for="htmlwidget-8837b30bf7d4ed5ef814">{"x":{"options":{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}}},"calls":[{"method":"addTiles","args":["//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",null,null,{"minZoom":0,"maxZoom":18,"tileSize":256,"subdomains":"abc","errorTileUrl":"","tms":false,"noWrap":false,"zoomOffset":0,"zoomReverse":false,"opacity":1,"zIndex":1,"detectRetina":false,"attribution":"&copy; <a href=\"http://openstreetmap.org\">OpenStreetMap<\/a> contributors, <a href=\"http://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA<\/a>"}]},{"method":"addMarkers","args":[44.045,-123.075,null,null,null,{"interactive":true,"draggable":false,"keyboard":true,"title":"","alt":"","zIndexOffset":0,"opacity":1,"riseOnHover":false,"riseOffset":250},"The University of Oregon",null,null,null,null,{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},null]}],"limits":{"lat":[44.045,44.045],"lng":[-123.075,-123.075]}},"evals":[],"jsHooks":[]}</script>
 
 ---
 class: inverse, middle
@@ -507,7 +507,12 @@ class: inverse, middle
 
 ---
 exclude: true
+
+
+```{R, generate pdfs, include = F, ev, eval = Fcktape("01-intro.html", "01-intro.pdf")
+page
     </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
 <script>var slideshow = remark.create({
 "highlightStyle": "github",
@@ -517,16 +522,74 @@ exclude: true
 if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
   window.dispatchEvent(new Event('resize'));
 });
-(function() {
-  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
   if (!r) return;
   s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
   d.head.appendChild(s);
-})();</script>
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
 
 <script>
 (function() {
-  var i, text, code, codes = document.getElementsByTagName('code');
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
   for (i = 0; i < codes.length;) {
     code = codes[i];
     if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
@@ -540,7 +603,8 @@ if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
     }
     i++;
   }
-})();
+};
+slideshow._releaseMath(document);
 </script>
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>

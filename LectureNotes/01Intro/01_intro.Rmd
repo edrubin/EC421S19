@@ -99,7 +99,7 @@ We want to test estimate/test the relationship $\text{GPA}=f(H, \text{SAT}, \tex
 - __Q:__ How do we interpret $\beta_1$?
 --
 
-- __A:__ An additional hour in class correlates with a $\beta_1$ unit increase in an individual's GPA.
+- __A:__ An additional hour in class correlates with a $\beta_1$ unit increase in an individual's GPA (controlling for SAT and PCT).
 
 
 --
@@ -157,7 +157,7 @@ However, the results you learned required assumptions.
 --
 
 EC421 asks "**what happens when we violate these assumptions?**"
-- Can we find a fix?
+- Can we find a fix? (Especially: How/when is $\beta$ *causal*?)
 - What happens if we don't (or can't) apply a fix?
 
 OLS still does some amazing things—but you need to know when to be **cautious, confident, or dubious**.
@@ -595,7 +595,3 @@ class: inverse, middle
 
 ---
 exclude: true
-
-```{R, generate pdfs, include = F}
-system("decktape remark 01_intro.html 01_intro.pdf --chrome-arg=--allow-file-access-from-files")
-```
